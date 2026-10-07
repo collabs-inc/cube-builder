@@ -7,6 +7,7 @@ import { EventEmitter } from 'node:events';
 import { RingBuffer } from './ring-buffer.js';
 import { TerminalModeTracker } from './terminal-modes.js';
 import { BuilderError } from '../shared/errors.js';
+import { decodeBase64 } from '../shared/bytes.js';
 import type { SpawnParams, SessionInfo, ReadResult, TerminalEvent } from '../shared/terminal-protocol.js';
 
 interface Session { info: SessionInfo; pty: IPty; ring: RingBuffer; modes: TerminalModeTracker; killed?: ReturnType<typeof setTimeout> }
@@ -63,8 +64,7 @@ export class TerminalSessions extends EventEmitter {
   write(id: string, bytes: string): void {
     const s = this.session(id);
     if (s.info.exited) throw new BuilderError('session-exited', 'Terminal has exited');
-    if (typeof bytes !== 'string' || bytes.length > 1024 * 1024 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(bytes)) throw new BuilderError('invalid-input', 'Invalid terminal bytes');
-    s.pty.write(Buffer.from(bytes, 'base64'));
+    s.pty.write(decodeBase64(bytes, 512 * 1024, 'Terminal input'));
   }
   resize(id: string, cols: number, rows: number): void { size(cols, rows); const s = this.session(id); if (!s.info.exited) s.pty.resize(cols, rows); s.info.cols = cols; s.info.rows = rows; }
   kill(id: string): void {

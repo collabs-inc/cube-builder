@@ -1,0 +1,60 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm, writeFile, readFile, mkdir, symlink } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { startServer } from '../../src/server/http.js';
+
+test('repositories, worktrees, conflict-aware saves and sandboxed previews use the local filesystem', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'builder-files-'));
+  const app = await startServer({ port: 0, stateDir: join(root, 'state') });
+  const base = `http://127.0.0.1:${app.port}`;
+  const call = async (method: string, params: unknown = {}) => {
+    const response = await fetch(`${base}/api`, { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: JSON.stringify({ id: 'test', method, params }) });
+    const reply = await response.json() as any;
+    if (!reply.ok) throw new Error(reply.error.message); return reply.result;
+  };
+  const git = (cwd: string, ...args: string[]) => execFileSync('git', ['-c', 'user.name=Builder Test', '-c', 'user.email=builder@example.test', '-c', 'commit.gpgsign=false', ...args], { cwd, encoding: 'utf8' });
+  try {
+    const repoPath = join(root, 'a repo with spaces');
+    const repo = await call('repos.create', { path: repoPath });
+    assert.equal(repo.root, repoPath);
+    await writeFile(join(repoPath, 'notes.md'), 'first'); git(repoPath, 'add', '.'); git(repoPath, 'commit', '-qm', 'Initial');
+    assert.equal((await call('repos.add', { path: repoPath })).id, repo.id);
+    const worktree = await call('worktrees.create', { repoId: repo.id, path: join(root, 'feature worktree'), branch: 'feature' });
+    assert.equal(await readFile(join(worktree.root, 'notes.md'), 'utf8'), 'first');
+    await writeFile(join(worktree.root, 'untracked.txt'), 'keep');
+    await assert.rejects(call('worktrees.remove', { repoId: repo.id, path: worktree.root }), /uncommitted|dirty/i);
+    await rm(join(worktree.root, 'untracked.txt'));
+    await call('worktrees.remove', { repoId: repo.id, path: worktree.root });
+    const clone = await call('repos.clone', { url: repoPath, path: join(root, 'cloned repo') });
+    assert.equal(await readFile(join(clone.root, 'notes.md'), 'utf8'), 'first');
+    const file = join(repoPath, 'notes.md');
+    const read = await call('files.read', { path: file });
+    assert.equal(read.content, 'first');
+    await writeFile(file, 'external');
+    await assert.rejects(call('files.write', { path: file, content: 'lost edit', revision: read.revision }), /changed/i);
+    assert.equal(await readFile(file, 'utf8'), 'external');
+    const latest = await call('files.read', { path: file });
+    await call('files.write', { path: file, content: 'saved', revision: latest.revision });
+    assert.equal(await readFile(file, 'utf8'), 'saved');
+    await writeFile(join(repoPath, 'demo.html'), '<script>document.body.dataset.ran="yes"</script>');
+    await writeFile(join(root, 'secret.txt'), 'secret');
+    await symlink(join(root, 'secret.txt'), join(repoPath, 'escape.txt'));
+    const item = await call('files.open', { path: join(repoPath, 'demo.html'), repoId: repo.id });
+    assert.equal(item.type, 'artifact');
+    const preview = await call('previews.create', { itemId: item.id });
+    const page = await fetch(base + preview.url);
+    assert.equal(page.status, 200);
+    assert.match(page.headers.get('content-security-policy')!, /sandbox/);
+    assert.doesNotMatch(page.headers.get('content-security-policy')!, /allow-same-origin/);
+    assert.equal((await fetch(base + preview.url.replace('demo.html', 'escape.txt'))).status, 403);
+    assert.equal((await fetch(base + preview.url.replace('demo.html', '.git/config'))).status, 403);
+    assert.equal((await fetch(base + '/preview/unknown/demo.html')).status, 404);
+    await call('repos.remove', { id: repo.id });
+    assert.equal(await readFile(file, 'utf8'), 'saved');
+    const folder = join(root, 'plain directory'); await mkdir(folder);
+    assert.equal((await call('repos.add', { path: folder })).root, folder);
+  } finally { await app.close(); await rm(root, { recursive: true, force: true }); }
+});

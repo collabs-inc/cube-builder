@@ -11,6 +11,10 @@ import { ensureWorker } from './worker-runtime.js';
 import { Terminals } from './terminals.js';
 import { createMethods } from './methods.js';
 import { broadcast } from './events.js';
+import { Repos } from './repos.js';
+import { Files } from './files.js';
+import { Previews } from './previews.js';
+import { Watches } from './watches.js';
 
 const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
 export function json(res: ServerResponse, status: number, value: unknown): void {
@@ -35,7 +39,11 @@ export async function startServer(options: { port: number; stateDir: string; web
   const worker = await ensureWorker(options.stateDir);
   const terminals = new Terminals(registry, worker);
   await terminals.reconcile();
-  const dispatch = createMethods(registry, terminals);
+  const repos = new Repos(registry), files = new Files(registry), previews = new Previews(registry);
+  const watches = new Watches(registry, files);
+  watches.on('changed', paths => broadcast(sockets, { type: 'files', paths }));
+  watches.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
+  const dispatch = createMethods(registry, terminals, repos, files, previews);
   registry.on('changed', snapshot => broadcast(sockets, { type: 'snapshot', snapshot }));
   terminals.on('event', event => broadcast(sockets, { type: 'terminal', event }));
   terminals.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
@@ -47,6 +55,7 @@ export async function startServer(options: { port: number; stateDir: string; web
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost');
     if (url.pathname === '/health' && req.method === 'GET') { json(res, 200, { status: 'ok' }); return; }
+    if (url.pathname.startsWith('/preview/') && req.method === 'GET') { await previews.serve(url.pathname, res, req.headers.range); return; }
     if (url.pathname === '/api') {
       if (req.method !== 'POST') { json(res, 405, { error: 'Use POST' }); return; }
       if (!validateControlRequest(req.headers)) { json(res, 403, { error: 'Origin refused' }); return; }
@@ -81,7 +90,7 @@ export async function startServer(options: { port: number; stateDir: string; web
       for (const ws of sockets.clients) ws.terminate();
       await new Promise<void>(resolve => sockets.close(() => resolve()));
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-      terminals.dispose(); await registry.flush(); worker.disconnect();
+      watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
     },
   };
 }
