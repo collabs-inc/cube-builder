@@ -1,3 +1,10 @@
+import { browserCommand } from './browser.js';
+import { randomUUID } from 'node:crypto';
+import { mkdir } from 'node:fs/promises';
+import { join } from 'node:path';
+import { resolveCommand } from './agents.js';
+import { Attention } from './attention.js';
+import { injectAttentionArgs } from './attention/hooks.js';
 import { EventEmitter } from 'node:events';
 import { basename } from 'node:path';
 import { Registry } from './registry.js';
@@ -9,12 +16,16 @@ import type { TerminalEvent } from '../shared/terminal-protocol.js';
 import { text, integer } from './validation.js';
 
 export class Terminals extends EventEmitter {
+  private attention: Attention;
+  private launching = new Map<string, Promise<TerminalItem>>();
   constructor(private registry: Registry, private worker: WorkerClient) {
-    super(); worker.on('event', this.onEvent);
+    super(); this.attention = new Attention(registry, error => this.emit('failure', error)); worker.on('event', this.onEvent);
   }
   private onEvent = (event: TerminalEvent) => {
     const item = this.registry.snapshot().items.find(i => i.type === 'term' && i.sessionId === event.id);
     if (!item) return;
+    if (event.type === 'data') this.attention.output(item.id, Buffer.from(event.data, 'base64'), event.seq);
+    else this.attention.exited(item.id);
     this.emit('event', { ...event, id: item.id });
     if (event.type === 'exit') void this.registry.mutate(null, draft => {
       const row = draft.items.find(i => i.id === item.id);
@@ -29,21 +40,33 @@ export class Terminals extends EventEmitter {
       for (const row of draft.items) if (row.type === 'term') { const s = live.find(s => s.id === row.sessionId); row.exited = s?.exited ?? true; row.exitCode = s?.exitCode ?? null; }
     });
   }
-  async create(params: TerminalCreate): Promise<TerminalItem> {
+  create(params: TerminalCreate): Promise<TerminalItem> {
+    const requestId = text(params.requestId, 'request ID', 160);
+    const pending = this.launching.get(requestId); if (pending) return pending;
+    const task = this.createNew(params).finally(() => this.launching.delete(requestId));
+    this.launching.set(requestId, task); return task;
+  }
+  private async createNew(params: TerminalCreate): Promise<TerminalItem> {
     const requestId = text(params.requestId, 'request ID', 160);
     const existing = this.registry.snapshot().items.find((i): i is TerminalItem => i.type === 'term' && i.requestId === requestId);
     if (existing) return existing;
     const cwd = text(params.cwd, 'working directory');
-    const command = text(params.command ?? process.env.SHELL ?? '/bin/sh', 'command');
+    const requested = text(params.command ?? params.harness ?? process.env.SHELL ?? '/bin/sh', 'command');
+    const command = await resolveCommand(requested, process.env.PATH, cwd);
     const args = params.args ?? [];
     if (!Array.isArray(args) || args.some(a => typeof a !== 'string' || a.includes('\0')) || args.length > 100) throw new BuilderError('invalid-request', 'Invalid command arguments');
-    const session = await this.worker.spawn({ requestId, cwd, command, args, cols: integer(params.cols ?? 80, 'columns', 1, 1000), rows: integer(params.rows ?? 24, 'rows', 1, 1000) });
+    const harness = params.harness ? text(params.harness, 'agent harness', 80) : undefined;
+    const launchId = randomUUID(), spool = join(this.registry.stateDir, 'attention');
+    await mkdir(spool, { recursive: true, mode: 0o700 });
+    const injected = harness ? injectAttentionArgs(harness, command, args, spool, launchId, process.env) : null;
+    const session = await this.worker.spawn({ requestId, cwd, command, args: injected?.args ?? args, env: { ...injected?.env, BROWSER: await browserCommand(this.registry.stateDir) }, cols: integer(params.cols ?? 80, 'columns', 1, 1000), rows: integer(params.rows ?? 24, 'rows', 1, 1000) });
     const now = new Date().toISOString();
-    const item: TerminalItem = { id: session.id, type: 'term', repoId: params.repoId ?? null, cwd, title: basename(command), createdAt: now, updatedAt: now, requestId, sessionId: session.id, command, args, exited: session.exited, exitCode: session.exitCode };
-    const snapshot = await this.registry.mutate(null, draft => { if (!draft.items.some(i => i.id === item.id)) draft.items.push(item); });
+    const item: TerminalItem = { id: session.id, type: 'term', repoId: params.repoId ?? null, cwd, title: basename(command), createdAt: now, updatedAt: now, requestId, sessionId: session.id, command, args, harness, launchId, attentionHooks: !!injected, attention: harness ? 'idle' : undefined, exited: session.exited, exitCode: session.exitCode };
+    await this.registry.mutate(null, draft => { if (!draft.items.some(i => i.id === item.id)) draft.items.push(item); });
     // The child can exit before the registry write completes.
+    this.attention.register(item);
     await this.reconcile();
-    return snapshot.items.find(i => i.id === item.id) as TerminalItem;
+    return this.registry.snapshot().items.find(i => i.id === item.id) as TerminalItem;
   }
   private item(id: unknown): TerminalItem {
     text(id, 'terminal ID', 160);
@@ -52,9 +75,9 @@ export class Terminals extends EventEmitter {
     return item;
   }
   read(params: { id: string; since: number; maxBytes?: number }) { const row = this.item(params.id); return this.worker.read(row.sessionId, { since: params.since, maxBytes: params.maxBytes }); }
-  write(params: { id: string; bytes: string }) { const row = this.item(params.id); return this.worker.write(row.sessionId, params.bytes); }
+  async write(params: { id: string; bytes: string }) { const row = this.item(params.id); await this.worker.write(row.sessionId, params.bytes); this.attention.input(row.id, Buffer.from(params.bytes, 'base64')); }
   resize(params: { id: string; cols: number; rows: number }) { const row = this.item(params.id); return this.worker.resize(row.sessionId, params.cols, params.rows); }
   async close(id: string) { const row = this.item(id); await this.worker.kill(row.sessionId); await this.registry.mutate(null, draft => { draft.items = draft.items.filter(i => i.id !== id); }); }
   async stopAll() { await this.worker.stopAll(); await this.reconcile(); }
-  dispose() { this.worker.off('event', this.onEvent); }
+  dispose() { this.worker.off('event', this.onEvent); this.attention.dispose(); }
 }

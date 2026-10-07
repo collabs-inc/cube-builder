@@ -66,6 +66,7 @@ interface ScrollbackPatch {
 
 interface TerminalTabProps {
 	host: TerminalHost;
+	fontSize?: number;
 	sessionId: string;
 	visible: boolean;
 	/**
@@ -235,6 +236,7 @@ interface TerminalTabProps {
 
 function TerminalTab({
 	host,
+	fontSize = 12,
 	sessionId,
 	visible,
 	theme,
@@ -261,6 +263,8 @@ function TerminalTab({
 }: TerminalTabProps) {
 	const containerRef = useRef<HTMLDivElement>(null);
 	const fitRef = useRef<{ fit(): void } | null>(null);
+	const sizeRef = useRef<((size: number) => void) | null>(null);
+	useEffect(() => { sizeRef.current?.(fontSize); }, [fontSize]);
 	const writeRef = useRef<Terminal["write"] | null>(null);
 	const redrawRef = useRef<(() => void) | null>(null);
 	const reclaimSizeRef = useRef<(() => void) | null>(null);
@@ -391,7 +395,7 @@ function TerminalTab({
 		const term = new Terminal({
 			theme: getTheme(theme),
 			fontFamily: 'Menlo, Monaco, "Courier New", monospace',
-			fontSize: 12,
+			fontSize,
 			fontWeight: "300",
 			fontWeightBold: "500",
 			cursorBlink: !readOnly,
@@ -445,6 +449,7 @@ function TerminalTab({
 		const fit = new FitAddon();
 		term.loadAddon(fit);
 		term.open(container);
+		sizeRef.current = size => { term.options.fontSize = size; fitRef.current?.fit(); };
 		const disposeLinkHighlight = installWrappedLinkHighlight(term);
 		termRef.current = term;
 		// Off-screen cold mounts have no measurable grid yet. Hold replay and
@@ -1342,6 +1347,7 @@ function TerminalTab({
 			container.removeEventListener("wheel", onWheel);
 			detachTouchScroll();
 			host.offPtyData(sessionId, handleData);
+			sizeRef.current = null;
 			pushInbandRef.current = null;
 			offShellBlur();
 			disposeRenderer();

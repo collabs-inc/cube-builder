@@ -1,3 +1,4 @@
+import { listAgents } from './agents.js';
 import { Registry } from './registry.js';
 import { Terminals } from './terminals.js';
 import { BuilderError } from '../shared/errors.js';
@@ -9,6 +10,7 @@ type Handlers = { [K in keyof MethodMap]: (params: MethodMap[K]['params']) => Me
 export function createMethods(registry: Registry, terminals: Terminals, repos: Repos, files: Files, previews: Previews) {
   const handlers: Handlers = {
     snapshot: () => registry.snapshot(),
+    'agents.list': () => listAgents(),
     'repos.add': p => repos.add(p.path),
     'repos.create': p => repos.create(p.path),
     'repos.clone': p => repos.clone(p.url, p.path),

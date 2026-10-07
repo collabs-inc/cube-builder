@@ -8,7 +8,7 @@ import { BuilderError } from '../shared/errors.js';
 export class Registry extends EventEmitter {
   warning?: string;
   private queue: Promise<unknown> = Promise.resolve();
-  private constructor(private stateDir: string, private data: BuilderSnapshot) { super(); }
+  private constructor(readonly stateDir: string, private data: BuilderSnapshot) { super(); }
   static async open(stateDir: string): Promise<Registry> {
     await mkdir(stateDir, { recursive: true, mode: 0o700 });
     const empty: BuilderSnapshot = { revision: 0, repos: [], items: [], capabilities: { platform: process.platform, home: homedir() } };

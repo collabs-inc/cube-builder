@@ -2,6 +2,7 @@ import type { BuilderSnapshot, TerminalItem, BuilderRepo, BuilderWorktree, FileI
 import type { ReadResult } from './terminal-protocol.js';
 export interface TerminalCreate { requestId: string; cwd: string; command?: string; args?: string[]; cols?: number; rows?: number; repoId?: string | null; harness?: string }
 export interface MethodMap {
+  'agents.list': { params: Record<string, never>; result: { id: string; name: string; available: boolean; command: string | null }[] };
   snapshot: { params: Record<string, never>; result: BuilderSnapshot };
   'repos.add': { params: { path: string }; result: BuilderRepo };
   'repos.create': { params: { path: string }; result: BuilderRepo };

@@ -7,11 +7,12 @@ import { beginLoad, finishLoad, initialFrameState } from './artifact-item-logic'
 const Terminal = lazy(() => import('../../components/Terminal/TerminalTab'));
 const CodeEditor = lazy(() => import('../../components/CodeEditorView').then(m => ({ default: m.CodeEditorView })));
 const Editor = lazy(() => import('../../components/Editor').then(m => ({ default: m.Editor })));
-export function Content({ item, visible, focused, theme, report, openPath }: { item: BuilderItem; visible: boolean; focused: boolean; theme: 'light' | 'dark'; report: (error: unknown) => void; openPath: (path: string) => void }) {
+export function Content({ item, visible, focused, theme, fontSize, report, openPath }: { item: BuilderItem; visible: boolean; focused: boolean; theme: 'light' | 'dark'; fontSize?: number; report: (error: unknown) => void; openPath: (path: string) => void }) {
+  const [openUrl, setOpenUrl] = useState<string | null>(null);
   const host = useMemo(() => createTerminalHost(services, item.cwd, report), [item.cwd, report]);
-  return <Suspense fallback={<div className="pane-message">Loading…</div>}>
-    {item.type === 'term' ? <Terminal host={host} sessionId={item.id} visible={visible} focused={focused} theme={theme} remote readOnly={item.exited} onOpenPath={openPath} allowAbsolutePaths onTransferStatus={status => { if (status?.kind === 'errors') report(status.messages.join('\n')); }} /> : <FileContent item={item} theme={theme} report={report} />}
-  </Suspense>;
+  return <>{openUrl && <div className="terminal-link"><a href={openUrl} target="_blank" rel="noopener noreferrer">Open link requested by terminal</a><button onClick={() => setOpenUrl(null)}>Dismiss</button></div>}<Suspense fallback={<div className="pane-message">Loading…</div>}>
+    {item.type === 'term' ? <Terminal host={host} sessionId={item.id} visible={visible} focused={focused} theme={theme} fontSize={fontSize} onOpenUrlRequest={setOpenUrl} remote readOnly={item.exited} onOpenPath={path => openPath(path.startsWith('/') ? path : item.cwd + '/' + path)} allowAbsolutePaths onTransferStatus={status => { if (status?.kind === 'errors') report(status.messages.join('\n')); }} /> : <FileContent item={item} theme={theme} report={report} />}
+  </Suspense></>;
 }
 function FileContent({ item, theme, report }: { item: FileItem; theme: 'light' | 'dark'; report: (error: unknown) => void }) {
   const [mode, setMode] = useState<'preview' | 'source'>(/\.(md|markdown)$/i.test(item.filePath) || item.type !== 'file' ? 'preview' : 'source');

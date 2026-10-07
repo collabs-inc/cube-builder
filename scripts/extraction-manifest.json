@@ -378,5 +378,55 @@
     "file": "test/web/terminal-alt-screen-replay.test.ts",
     "source": "packages/components/src/Terminal/alt-screen-replay.test.ts",
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/state.ts",
+    "source": "src/main/cubed/attention/state.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/adapters.ts",
+    "source": "src/main/cubed/attention/adapters.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/bell.ts",
+    "source": "src/main/cubed/attention/bell.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/input.ts",
+    "source": "src/main/cubed/attention/input.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/hooks.ts",
+    "source": "src/main/cubed/attention/hooks.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/opencode.ts",
+    "source": "src/main/cubed/attention/opencode.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/attention/spool.ts",
+    "source": "src/main/cubed/attention/spool.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/attention-state.test.ts",
+    "source": "src/main/cubed/attention/state.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/attention-bell.test.ts",
+    "source": "src/main/cubed/attention/bell.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/attention-input.test.ts",
+    "source": "src/main/cubed/attention/input.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
   }
 ]
