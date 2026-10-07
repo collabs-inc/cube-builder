@@ -6,7 +6,7 @@ import { pipeline } from 'node:stream/promises';
 import { Registry } from './registry.js';
 import { isWithin } from './repos.js';
 import { BuilderError } from '../shared/errors.js';
-const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif', '.pdf': 'application/pdf', '.css': 'text/css', '.js': 'text/javascript', '.json': 'application/json', '.woff2': 'font/woff2', '.mp4': 'video/mp4', '.txt': 'text/plain' };
+const TYPES: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.htm': 'text/html; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.avif': 'image/avif', '.pdf': 'application/pdf', '.css': 'text/css', '.js': 'text/javascript', '.mjs': 'text/javascript', '.json': 'application/json', '.woff2': 'font/woff2', '.mp4': 'video/mp4', '.txt': 'text/plain' };
 interface Capability { root: string; file: string; tree: boolean; expiresAt: number }
 export class Previews {
   private tokens = new Map<string, Capability>();
@@ -49,7 +49,10 @@ export class Previews {
         'content-type': TYPES[extname(canonical).toLowerCase()] ?? 'application/octet-stream',
         'content-length': Math.max(0, end - start + 1), 'accept-ranges': 'bytes',
         ...(status === 206 ? { 'content-range': `bytes ${start}-${end}/${s.size}` } : {}),
-        'content-security-policy': "sandbox allow-scripts allow-forms allow-downloads allow-modals allow-popups; frame-ancestors 'self'",
+        'content-security-policy': "sandbox allow-scripts allow-forms allow-downloads allow-modals allow-popups",
+        // Capabilities are already the read authority. Opaque sandbox modules
+        // and fonts need anonymous CORS; control routes never send this header.
+        'access-control-allow-origin': '*',
         'x-content-type-options': 'nosniff', 'referrer-policy': 'no-referrer', 'cache-control': 'no-store',
       });
       if (s.size === 0) { response.end(); return; }

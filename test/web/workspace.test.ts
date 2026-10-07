@@ -20,3 +20,11 @@ test('screens retain independent placements and opening an item travels to its e
   store.open('a'); expect(store.get().activeScreenId).toEqual(first);
   store.reconcile(['a']); expect(store.get().mounted).toEqual(['a']);
 });
+test('screen changes and hiding the active pane keep narrow-view focus on a visible pane', () => {
+  const store = createWorkspace('phone-focus', localStorage);
+  store.open('a'); store.open('b'); store.zoom('b'); store.hide('b');
+  expect(store.get().activeItemId).toBe('a'); expect(store.get().zoom).toBeNull();
+  const first = store.get().activeScreenId; store.newScreen();
+  expect(store.get().activeItemId).toBeNull(); store.open('c'); store.selectScreen(first);
+  expect(store.get().activeItemId).toBe('a');
+});

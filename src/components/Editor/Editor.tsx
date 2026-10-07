@@ -363,6 +363,7 @@ function getChecklistNavContext(editor: any): ChecklistNavContext | null {
 
 interface EditorProps {
 	currentItem: ViewerItem;
+	onDraftChange?: (text: string) => void;
 	onTextChange: (text: string) => Promise<WriteResult | void>;
 	theme: "light" | "dark";
 	editingDisabled?: boolean;
@@ -371,6 +372,7 @@ interface EditorProps {
 export default function Editor({
 	currentItem,
 	onTextChange,
+	onDraftChange,
 	theme,
 	editingDisabled,
 }: EditorProps) {
@@ -505,6 +507,7 @@ export default function Editor({
 		if (isProgrammaticUpdateRef.current) return;
 		if (!contentLoadedRef.current) return;
 		if (editingDisabledRef.current) return;
+		onDraftChange?.(postProcessMarkdown(editor.blocksToMarkdownLossy(markEmptyParagraphs(editor.document)).trim()));
 		await checkForDividerPattern();
 
 		const itemId = currentItem?.id;
@@ -537,19 +540,13 @@ export default function Editor({
 				debounceTimerRef.current = null;
 			}
 		}, 1000);
-	}, [checkForDividerPattern, currentItem?.id, editor, onTextChange]);
+	}, [checkForDividerPattern, currentItem?.id, editor, onTextChange, onDraftChange]);
 
 	const handleEditorBlur = useCallback(async () => {
-		if (showConflict) return;
-		if (editingDisabledRef.current) return;
-		const itemId = currentItem?.id;
-		if (!itemId) return;
-		const markedBlocks = markEmptyParagraphs(editor.document);
-		const raw = editor.blocksToMarkdownLossy(markedBlocks).trim();
-		const markdown = postProcessMarkdown(raw);
-		lastSavedMarkdownRef.current = markdown;
-		onTextChange(markdown);
-	}, [showConflict, currentItem?.id, editor, onTextChange]);
+		if (showConflict || editingDisabledRef.current) return;
+		// A blur is the same pending save as the debounce, not a second write.
+		await flushPendingSave("blur");
+	}, [showConflict, flushPendingSave]);
 
 	const handleConflictReload = useCallback(() => {
 		const stashed = externalContentRef.current;

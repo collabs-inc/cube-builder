@@ -1,3 +1,4 @@
+import { copyText } from './clipboard';
 import type { TerminalHost, DataListener } from '../../components/Terminal/host';
 import type { BuilderServices } from './types';
 import { bytesToBase64 } from './assets';
@@ -9,8 +10,9 @@ export function createTerminalHost(api: BuilderServices, cwd: string, report: (e
     openExternal: url => { if (/^https?:\/\//i.test(url)) window.open(url, '_blank', 'noopener,noreferrer'); },
     ptyWrite: (id, text) => send(api.call('terminals.write', { id, bytes: bytesToBase64(new TextEncoder().encode(text)) })),
     ptyResize: (id, cols, rows) => send(api.call('terminals.resize', { id, cols, rows })),
-    writeClipboardText: text => navigator.clipboard.writeText(text),
+    writeClipboardText: copyText,
     onPtyData(id, callback) {
+      let firstRead = true;
       let cursor = 0, running = false, pending = false, closed = false;
       async function drain() {
         pending = true; if (running || closed) return; running = true;
@@ -19,8 +21,9 @@ export function createTerminalHost(api: BuilderServices, cwd: string, report: (e
             pending = false;
             const result = await api.call('terminals.read', { id, since: cursor, maxBytes: 1024 * 1024 });
             if (closed) break;
-            if (result.reset || cursor === 0) callback({ sessionId: id, data: new TextEncoder().encode((result.reset ? '\x1bc' : '') + result.modes) });
-            callback({ sessionId: id, data: Uint8Array.from(atob(result.data), c => c.charCodeAt(0)) });
+            const replay = firstRead || result.reset; firstRead = false;
+            if (result.reset || cursor === 0) callback({ sessionId: id, data: new TextEncoder().encode((result.reset ? '\x1bc' : '') + result.modes), replay });
+            callback({ sessionId: id, data: Uint8Array.from(atob(result.data), c => c.charCodeAt(0)), replay });
             cursor = result.seq;
           }
         } catch (error) { if (!closed) report(error); }

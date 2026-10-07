@@ -14,7 +14,7 @@ import { GitBranch } from "@phosphor-icons/react/dist/csr/GitBranch";
 import type { BuilderSnapshot, BuilderItem, BuilderRepo, DirectoryListing } from '../shared/model';
 import { services } from './services/http';
 import { createWorkspace } from './state/workspace';
-import { railGeometry, resolveDropTarget, type MoveTarget } from './state/layout-ops';
+import { railGeometry, resolveDropTarget, focusTarget, keyboardMoveTarget, type Direction, type MoveTarget } from './state/layout-ops';
 import { screenToPixelColumns } from './state/screen-ops';
 import { startPointerDrag } from './items/use-pointer-drag';
 import { Content } from './items/Content';
@@ -57,6 +57,12 @@ export default function App() {
   useEffect(() => {
     const key = (event: KeyboardEvent) => {
       if (!(event.ctrlKey || event.metaKey) || !event.altKey) return;
+      const direction = ({ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'up', ArrowDown: 'down' } as Record<string, Direction>)[event.key];
+      if (direction && layout.activeItemId) {
+        event.preventDefault(); const columns = layout.screens.find(s => s.id === layout.activeScreenId)!.columns;
+        if (event.shiftKey) { const target = keyboardMoveTarget(columns, layout.activeItemId, direction); if (target) workspace.move(layout.activeItemId, target); }
+        else { const target = focusTarget(columns, layout.activeItemId, direction); if (target) workspace.focus(target); }
+      }
       if (event.key === 'n') { event.preventDefault(); workspace.newScreen(); }
       if (event.key === 'w' && layout.activeItemId) { event.preventDefault(); workspace.hide(layout.activeItemId); }
       if (event.key === 'Enter' && layout.activeItemId) { event.preventDefault(); workspace.zoom(layout.activeItemId); }

@@ -27,10 +27,10 @@ export function createWorkspace(id: string, storage: Storage) {
         screens: state.screens.map(s => s.id !== activeScreenId || s.columns.some(c => c.panes.some(p => p.itemId === itemId)) ? s : insertScreenPane(s, itemId, { kind: 'column', railIndex: s.columns.length }, uid())) });
     },
     focus: (itemId: string) => save({ ...state, activeItemId: itemId }),
-    selectScreen: (activeScreenId: string) => { if (state.screens.some(s => s.id === activeScreenId)) save({ ...state, activeScreenId, zoom: null }); },
-    newScreen() { const screen = blank(); save({ ...state, screens: [...state.screens, screen], activeScreenId: screen.id, zoom: null }); },
+    selectScreen: (activeScreenId: string) => { const screen = state.screens.find(s => s.id === activeScreenId); if (screen) save({ ...state, activeScreenId, activeItemId: screen.columns.flatMap(c => c.panes).find(p => p.itemId === state.activeItemId)?.itemId ?? screen.columns[0]?.panes[0]?.itemId ?? null, zoom: null }); },
+    newScreen() { const screen = blank(); save({ ...state, screens: [...state.screens, screen], activeScreenId: screen.id, activeItemId: null, zoom: null }); },
     renameScreen: (id: string, name: string) => save({ ...state, screens: state.screens.map(s => s.id === id ? { ...s, name, customName: true } : s) }),
-    hide: (itemId: string) => updateScreen(s => removeScreenPane(s, itemId)),
+    hide(itemId: string) { const screens = state.screens.map(s => s.id === state.activeScreenId ? removeScreenPane(s, itemId) : s); const screen = screens.find(s => s.id === state.activeScreenId)!; save({ ...state, screens, activeItemId: state.activeItemId === itemId ? screen.columns[0]?.panes[0]?.itemId ?? null : state.activeItemId, zoom: state.zoom === itemId ? null : state.zoom }); },
     move: (itemId: string, target: MoveTarget) => updateScreen(s => moveScreenPane(s, itemId, target, uid())),
     resizeColumn: (columnId: string, delta: number) => updateScreen(s => resizeScreenDivider(s, columnId, delta)),
     resizePane: (columnId: string, seamIndex: number, delta: number) => updateScreen(s => ({ ...s, columns: resizePaneRatio(s.columns, columnId, seamIndex, delta) })),

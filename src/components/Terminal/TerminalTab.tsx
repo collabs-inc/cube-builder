@@ -426,14 +426,7 @@ function TerminalTab({
 			allowTransparency: theme === "dark",
 			macOptionIsMeta: false,
 			overviewRuler: { width: 8 },
-			// The WebGL renderer below paints to a GPU surface, so rendered
-			// text has no DOM representation at all by default — xterm's own
-			// accessibility tree (`.xterm-accessibility-tree`, one div per
-			// screen row) is the one place a driven Playwright script can
-			// read a tile's real on-screen content, and it only exists when
-			// this is on. Gated on CUBE_E2E (never true in a shipped
-			// build) rather than always-on: it costs a DOM write per line
-			// for every real user, for a tree only ever read here.
+			// Keep the terminal renderer independent of its embedding environment.
 			screenReaderMode: false,
 			// OSC 8 hyperlinks. Without this, xterm's default handler runs a
 			// blocking confirm() and a raw window.open. The URI is whatever
@@ -866,6 +859,7 @@ function TerminalTab({
 		// decodeOsc52Write refuses read queries, so a remote process can
 		// never see what the user has copied.
 		term.parser.registerOscHandler(52, (data) => {
+			if (pendingParsesRef.current > 0) return true;
 			const text = decodeOsc52Write(data);
 			if (text !== null) void host.writeClipboardText(text);
 			return true;
@@ -913,6 +907,7 @@ function TerminalTab({
 		// ends up after those frames land too.
 		type Chunk =
 			| Uint8Array
+			| { replay: true; data: Uint8Array }
 			| { inband: true; reset: boolean; data: string; id: number; oldLength: number; oldViewportY: number };
 		let dataBuffer: Chunk[] = [];
 		let flushTimer: number | undefined;
@@ -947,6 +942,12 @@ function TerminalTab({
 					write(chunk, () => {
 						parsedSeq += bytes;
 					});
+					continue;
+				}
+				if ('replay' in chunk) {
+					pendingParsesRef.current++;
+					const gen = sessionGenRef.current;
+					write(chunk.data, () => { if (gen === sessionGenRef.current) pendingParsesRef.current--; });
 					continue;
 				}
 				// An in-band patch: everything queued before it has been
@@ -999,11 +1000,12 @@ function TerminalTab({
 		const handleData = (payload: {
 			sessionId: string;
 			data: Uint8Array;
+			replay?: boolean;
 		}) => {
 			if (payload.sessionId !== sessionId) return;
 			seqCursor += byteLengthOf(payload.data);
 			onSeqAdvance?.(seqCursor);
-			dataBuffer.push(payload.data);
+			dataBuffer.push(payload.replay ? { replay: true, data: payload.data } : payload.data);
 			if (flushTimer === undefined) {
 				flushTimer = window.setTimeout(
 					flushData,

@@ -10,7 +10,10 @@ export class Watches extends EventEmitter {
   private paths = new Set<string>();
   private timer?: ReturnType<typeof setTimeout>;
   private closed = false;
-  constructor(private registry: Registry, private files: Files) { super(); registry.on('changed', this.sync); this.sync(); }
+  private fingerprints = new Map<string, string>();
+  private polling = false;
+  private pollTimer: ReturnType<typeof setInterval>;
+  constructor(private registry: Registry, private files: Files) { super(); registry.on('changed', this.sync); this.sync(); this.pollTimer = setInterval(() => { void this.pollOpened(); }, 1000); this.pollTimer.unref(); }
   private sync = () => {
     if (this.closed) return;
     const snapshot = this.registry.snapshot();
@@ -31,6 +34,22 @@ export class Watches extends EventEmitter {
       } catch (error) { queueMicrotask(() => this.emit('failure', error)); }
     }
   };
+  private async pollOpened() {
+    if (this.closed || this.polling) return; this.polling = true;
+    try {
+      const paths = new Set(this.registry.snapshot().items.flatMap(item => item.type === 'term' ? [] : [item.filePath]));
+      for (const path of this.fingerprints.keys()) if (!paths.has(path)) this.fingerprints.delete(path);
+      const changed: string[] = [];
+      for (const path of paths) {
+        let fingerprint = 'missing';
+        try { const s = await stat(path); fingerprint = `${s.ino}:${s.size}:${s.mtimeMs}:${s.ctimeMs}`; } catch {}
+        if (this.fingerprints.get(path) !== fingerprint) { this.fingerprints.set(path, fingerprint); changed.push(path); }
+      }
+      // Linux recursive fs.watch can retain the old inode after an atomic
+      // editor save. Poll only opened files to close that gap at bounded cost.
+      if (!this.closed && changed.length) this.emit('changed', changed);
+    } finally { this.polling = false; }
+  }
   private async discover(root: string) {
     for (const entry of await readdir(root, { withFileTypes: true })) if (!this.closed && entry.isFile() && extname(entry.name).toLowerCase() === '.html') await this.files.open(join(root, entry.name));
   }
@@ -44,5 +63,5 @@ export class Watches extends EventEmitter {
       }
     }
   }
-  close() { this.closed = true; clearTimeout(this.timer); this.registry.off('changed', this.sync); for (const watcher of this.watchers.values()) watcher.close(); this.watchers.clear(); }
+  close() { this.closed = true; clearInterval(this.pollTimer); clearTimeout(this.timer); this.registry.off('changed', this.sync); for (const watcher of this.watchers.values()) watcher.close(); this.watchers.clear(); }
 }

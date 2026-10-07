@@ -79,3 +79,16 @@ test('expired capabilities and sibling resources of non-HTML previews are refuse
     assert.equal((await fetch(base + current.url.replace('image.png', 'other.txt'))).status, 403);
   } finally { await new Promise<void>(resolve => server.close(() => resolve())); await rm(root, { recursive: true, force: true }); }
 });
+
+test('an external edit immediately after an atomic save remains observable', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'builder-atomic-watch-'));
+  const registry = await Registry.open(join(root, 'state')), files = new Files(registry), repos = new Repos(registry);
+  const path = join(root, 'note.md'); await writeFile(path, 'initial'); await repos.add(root); await files.open(path);
+  const watches = new Watches(registry, files);
+  try {
+    const read = await files.read(path); await files.write({ path, revision: read.revision, content: 'saved' });
+    await new Promise(r => setTimeout(r, 250));
+    const changed = new Promise<void>((resolve, reject) => { const timer = setTimeout(() => reject(new Error('External edit was not reported')), 2500); watches.on('changed', paths => { if (paths.includes(path)) { clearTimeout(timer); resolve(); } }); });
+    await writeFile(path, 'external'); await changed;
+  } finally { watches.close(); await registry.flush(); await rm(root, { recursive: true, force: true }); }
+});

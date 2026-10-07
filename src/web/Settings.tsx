@@ -12,5 +12,5 @@ export function Settings({ preferences, save, close, stopAll }: { preferences: P
     <label><span><input type="checkbox" checked={preferences.confirmClose} onChange={e => save({ ...preferences, confirmClose: e.target.checked })} /> Confirm before stopping a terminal</span></label>
     <p>Terminals keep running when you hide panes, close the browser, stop the app server, or update the app. Stop them here before uninstalling if you want them to end.</p>
     <button type="button" onClick={stopAll}>Stop all Builder terminals…</button>{error && <p role="alert">{error}</p>}
-    <p>Shortcuts: Ctrl/⌘ + Alt + 1–9 selects a screen; N creates one; W hides a pane; Enter zooms it.</p><footer><button>Done</button></footer></form></div>;
+    <p>Shortcuts: Ctrl/⌘ + Alt + 1–9 selects a screen; N creates one; W hides a pane; Enter zooms it. Arrow keys focus a neighboring pane; add Shift to move it.</p><footer><button>Done</button></footer></form></div>;
 }

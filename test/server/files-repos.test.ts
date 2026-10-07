@@ -49,6 +49,8 @@ test('repositories, worktrees, conflict-aware saves and sandboxed previews use t
     assert.equal(page.status, 200);
     assert.match(page.headers.get('content-security-policy')!, /sandbox/);
     assert.doesNotMatch(page.headers.get('content-security-policy')!, /allow-same-origin/);
+    assert.doesNotMatch(page.headers.get('content-security-policy')!, /frame-ancestors/, 'opaque previews must also work when the app itself is embedded');
+    assert.equal(page.headers.get('access-control-allow-origin'), '*', 'capability resources support opaque-origin modules and fonts');
     assert.equal((await fetch(base + preview.url.replace('demo.html', 'escape.txt'))).status, 403);
     assert.equal((await fetch(base + preview.url.replace('demo.html', '.git/config'))).status, 403);
     assert.equal((await fetch(base + '/preview/unknown/demo.html')).status, 404);

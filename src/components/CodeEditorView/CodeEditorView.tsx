@@ -238,6 +238,7 @@ function getOrCreateModel(
 interface CodeEditorViewProps {
   filePath: string;
   content: string;
+  onDraftChange?: (content: string) => void;
   onContentChange: (content: string) => Promise<WriteResult | void>;
   theme: "light" | "dark";
   editingDisabled?: boolean;
@@ -248,6 +249,7 @@ export function CodeEditorView({
   filePath,
   content,
   onContentChange,
+  onDraftChange,
   theme,
   editingDisabled = false,
   className,
@@ -256,11 +258,13 @@ export function CodeEditorView({
   const editorRef = useRef<monaco.editor.IStandaloneCodeEditor | null>(null);
   const modelRef = useRef<monaco.editor.ITextModel | null>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const editVersionRef = useRef(0);
   const isDirtyRef = useRef(false);
   const diskContentRef = useRef(content);
   const [showDirtyBanner, setShowDirtyBanner] = useState(false);
   const activeFilePathRef = useRef(filePath);
   const activeOnContentChangeRef = useRef(onContentChange);
+  const draftCallback = useRef(onDraftChange); draftCallback.current = onDraftChange;
   const suppressChangeRef = useRef(false);
 
   // Create editor on mount
@@ -296,12 +300,14 @@ export function CodeEditorView({
     const disposable = editor.onDidChangeModelContent(() => {
       if (suppressChangeRef.current) return;
       isDirtyRef.current = true;
+      editVersionRef.current++;
+      draftCallback.current?.(editor.getValue());
       if (debounceRef.current) clearTimeout(debounceRef.current);
       debounceRef.current = setTimeout(async () => {
-        const value = editor.getValue();
-        const result = await activeOnContentChangeRef.current(value);
         debounceRef.current = null;
-        if (result?.conflict) return;
+        const value = editor.getValue(), version = editVersionRef.current;
+        const result = await activeOnContentChangeRef.current(value);
+        if (result?.ok === false || version !== editVersionRef.current || editorRef.current !== editor) return;
         diskContentRef.current = value;
         isDirtyRef.current = false;
         setShowDirtyBanner(false);
@@ -314,15 +320,16 @@ export function CodeEditorView({
         clearTimeout(debounceRef.current);
         debounceRef.current = null;
       }
-      const value = editor.getValue();
+      const value = editor.getValue(), version = editVersionRef.current;
       const result = await activeOnContentChangeRef.current(value);
-      if (result?.conflict) return;
+      if (result?.ok === false || version !== editVersionRef.current || editorRef.current !== editor) return;
       diskContentRef.current = value;
       isDirtyRef.current = false;
       setShowDirtyBanner(false);
     });
 
     return () => {
+      editVersionRef.current++;
       if (isDirtyRef.current) {
         if (debounceRef.current) {
           clearTimeout(debounceRef.current);
@@ -402,7 +409,7 @@ export function CodeEditorView({
     const editor = editorRef.current;
     if (!editor) return;
 
-    if (content === diskContentRef.current) return;
+    if (content === diskContentRef.current || content === editor.getValue()) return;
 
     if (!isDirtyRef.current) {
       const model = modelRef.current ?? editor.getModel();
@@ -430,6 +437,7 @@ export function CodeEditorView({
       model.setValue(content);
       suppressChangeRef.current = false;
     }
+    editVersionRef.current++;
     diskContentRef.current = content;
     isDirtyRef.current = false;
     setShowDirtyBanner(false);
@@ -439,11 +447,12 @@ export function CodeEditorView({
     }
   }, [content]);
 
-  const handleOverwrite = useCallback(() => {
+  const handleOverwrite = useCallback(async () => {
     const editor = editorRef.current;
     if (!editor) return;
-    const value = editor.getValue();
-    activeOnContentChangeRef.current(value);
+    const value = editor.getValue(), version = editVersionRef.current;
+    const result = await activeOnContentChangeRef.current(value);
+    if (result?.ok === false || version !== editVersionRef.current || editorRef.current !== editor) return;
     diskContentRef.current = value;
     isDirtyRef.current = false;
     setShowDirtyBanner(false);
