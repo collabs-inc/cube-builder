@@ -1,0 +1,128 @@
+/* Adapted from src/windows/app/src/items/pane-chrome.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+/* Shared pane appearance for Columns and Canvas. Surface files own layout,
+   clipping, resize handles, and fullscreen behavior. They paint these tokens
+   on the visible card: Columns uses its inner surface so the transparent
+   layout gutter never receives a second background or an offset shadow. */
+.pane-chrome {
+  --pane-chrome-radius: var(--radius-pane);
+  --pane-chrome-border: var(--surface-edge);
+  --pane-chrome-bg: var(--background);
+  /* Close controls share a target size and inset from the visible tile edge. */
+  --pane-chrome-close-inset: 6px;
+  --pane-chrome-action-size: 24px;
+  /* Tight enough to fit the 4px gutter beside the docked sidebar, which
+     clips anything wider; slightly darker to keep the lift. */
+  --pane-chrome-shadow: 0 1px 4px rgba(24, 24, 24, 0.10);
+}
+
+.dark .pane-chrome {
+  --pane-chrome-shadow: 0 1px 4px rgba(0, 0, 0, 0.24);
+}
+
+/* A single tint and edge for terminal/tree cards, including their headers,
+   shared with the persona frame. */
+.pane-chrome.pane-chrome-glass {
+  --pane-chrome-bg: var(--pane-term-bg);
+  --pane-chrome-border: color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+
+/* The focused tile wears a soft ink ring: black on light, white on dark. After
+   the glass rule, which sets the same token at the same specificity. */
+.pane-chrome.is-active {
+  --pane-chrome-border: color-mix(in srgb, var(--foreground) 60%, transparent);
+}
+
+/* Paint the conversation ground once, across its header and body. */
+.pane-chrome[data-item-type="agent"],
+.pane-chrome[data-tile-type="agent"],
+.mobile-item-header-conversation {
+  --pane-chrome-bg: color-mix(in srgb, var(--background) 85%, transparent);
+}
+
+.pane-chrome-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  flex: none;
+  height: 36px;
+  padding: 0 var(--pane-chrome-close-inset) 0 12px;
+  background: transparent;
+  border-bottom: none;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--foreground);
+  user-select: none;
+  cursor: grab;
+}
+
+.pane-chrome-header:active {
+  cursor: grabbing;
+}
+
+/* The conversation supplies its identity and controls inside the same
+   header as pane management, on one continuous card surface. */
+.pane-conversation-header {
+  height: 36px;
+  gap: 4px;
+  padding: 0 var(--pane-chrome-close-inset) 0 16px;
+}
+.agent-header-host {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  container-type: inline-size;
+}
+.agent-header-host:empty::before {
+  content: attr(data-placeholder);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: var(--muted-foreground);
+}
+.pane-conversation-header .tile-title-group {
+  display: none;
+}
+
+.pane-chrome-title {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  opacity: 0.7;
+}
+
+.pane-chrome-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--pane-chrome-action-size);
+  height: var(--pane-chrome-action-size);
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  flex: none;
+  opacity: 0.6;
+  transition: background var(--motion-fast) ease, opacity var(--motion-fast) ease;
+}
+
+.pane-chrome-action:hover {
+  background: var(--focus-bg);
+  opacity: 1;
+}
+
+.pane-chrome-body {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+}
+
+/* TerminalTab.css owns the terminal's 12px inset in both views. Adding
+   padding to pane-chrome-term here would double that content inset. */

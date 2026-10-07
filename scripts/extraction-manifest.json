@@ -8,5 +8,375 @@
     "file": "src/worker/terminal-modes.ts",
     "source": "src/main/cubed/terminal-modes.ts",
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/layout-ops.test.ts",
+    "source": "src/windows/app/src/state/layout-ops.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/screen-ops.test.ts",
+    "source": "src/windows/app/src/state/screen-ops.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/state/layout-ops.ts",
+    "source": "src/windows/app/src/state/layout-ops.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/state/screen-ops.ts",
+    "source": "src/windows/app/src/state/screen-ops.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/items/use-pointer-drag.ts",
+    "source": "src/windows/app/src/items/use-pointer-drag.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/items/pane-chrome.css",
+    "source": "src/windows/app/src/items/pane-chrome.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/items/ViewSwitcher.css",
+    "source": "src/windows/app/src/items/ViewSwitcher.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/items/FileItem.css",
+    "source": "src/windows/app/src/items/FileItem.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/items/ArtifactItem.css",
+    "source": "src/windows/app/src/items/ArtifactItem.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/items/artifact-item-logic.ts",
+    "source": "src/windows/app/src/items/artifact-item-logic.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/sidebar/MiniRepoRow.tsx",
+    "source": "src/windows/app/src/sidebar/MiniRepoRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/sidebar/MiniFolderRow.tsx",
+    "source": "src/windows/app/src/sidebar/MiniFolderRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/sidebar/DisclosureRow.tsx",
+    "source": "src/windows/app/src/sidebar/DisclosureRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/sidebar/ReposSidebar.css",
+    "source": "src/windows/app/src/sidebar/ReposSidebar.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/sidebar/MiniRepoTree.css",
+    "source": "src/windows/app/src/sidebar/MiniRepoTree.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/source-app.css",
+    "source": "src/windows/app/src/App.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/web/cube-icons.tsx",
+    "source": "src/windows/app/src/desktop/apps/cube-icons.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/theme/styles.css",
+    "source": "packages/theme/src/styles.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/CodeEditorView/CodeEditorView.css",
+    "source": "packages/components/src/CodeEditorView/CodeEditorView.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/CodeEditorView/CodeEditorView.tsx",
+    "source": "packages/components/src/CodeEditorView/CodeEditorView.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/CodeEditorView/index.ts",
+    "source": "packages/components/src/CodeEditorView/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/CodeEditorView/monaco-react-shim.d.ts",
+    "source": "packages/components/src/CodeEditorView/monaco-react-shim.d.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ConceptList/ConceptList.tsx",
+    "source": "packages/components/src/ConceptList/ConceptList.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ConceptList/index.ts",
+    "source": "packages/components/src/ConceptList/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Editor/Blocknote.css",
+    "source": "packages/components/src/Editor/Blocknote.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Editor/Editor.tsx",
+    "source": "packages/components/src/Editor/Editor.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Editor/EditorConflictBanner.tsx",
+    "source": "packages/components/src/Editor/EditorConflictBanner.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Editor/ImageBlock.tsx",
+    "source": "packages/components/src/Editor/ImageBlock.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Editor/index.ts",
+    "source": "packages/components/src/Editor/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ImageView/ImageView.tsx",
+    "source": "packages/components/src/ImageView/ImageView.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ItemDetailView/ItemDetailView.tsx",
+    "source": "packages/components/src/ItemDetailView/ItemDetailView.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ItemDetailView/index.ts",
+    "source": "packages/components/src/ItemDetailView/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/LoadingPulse/LoadingPulse.css",
+    "source": "packages/components/src/LoadingPulse/LoadingPulse.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/LoadingPulse/LoadingPulse.tsx",
+    "source": "packages/components/src/LoadingPulse/LoadingPulse.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/LoadingPulse/index.ts",
+    "source": "packages/components/src/LoadingPulse/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Markdown/Markdown.tsx",
+    "source": "packages/components/src/Markdown/Markdown.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Markdown/MarkdownContent.css",
+    "source": "packages/components/src/Markdown/MarkdownContent.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Markdown/index.ts",
+    "source": "packages/components/src/Markdown/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/SourceList/SourceList.tsx",
+    "source": "packages/components/src/SourceList/SourceList.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/SourceList/index.ts",
+    "source": "packages/components/src/SourceList/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/TerminalTab.css",
+    "source": "packages/components/src/Terminal/TerminalTab.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/TerminalTab.tsx",
+    "source": "packages/components/src/Terminal/TerminalTab.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/byte-cursor.ts",
+    "source": "packages/components/src/Terminal/byte-cursor.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/dictation-sync.ts",
+    "source": "packages/components/src/Terminal/dictation-sync.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/file-drop.ts",
+    "source": "packages/components/src/Terminal/file-drop.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/history-top.ts",
+    "source": "packages/components/src/Terminal/history-top.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/image-paste.ts",
+    "source": "packages/components/src/Terminal/image-paste.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/index.ts",
+    "source": "packages/components/src/Terminal/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/osc-open-url.ts",
+    "source": "packages/components/src/Terminal/osc-open-url.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/osc52.ts",
+    "source": "packages/components/src/Terminal/osc52.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/path-links.ts",
+    "source": "packages/components/src/Terminal/path-links.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/renderer-lifecycle.ts",
+    "source": "packages/components/src/Terminal/renderer-lifecycle.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/sanitizeAgentTitle.ts",
+    "source": "packages/components/src/Terminal/sanitizeAgentTitle.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/theme.ts",
+    "source": "packages/components/src/Terminal/theme.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/touch-scroll.ts",
+    "source": "packages/components/src/Terminal/touch-scroll.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/web-link.ts",
+    "source": "packages/components/src/Terminal/web-link.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/Terminal/wrapped-link.ts",
+    "source": "packages/components/src/Terminal/wrapped-link.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/shared/viewer-item.ts",
+    "source": "packages/shared/src/viewer-item.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/shared/viewer-types.ts",
+    "source": "packages/shared/src/types.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ExcerptDisplay/ExcerptDisplay.tsx",
+    "source": "packages/components/src/ExcerptDisplay/ExcerptDisplay.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/ExcerptDisplay/index.ts",
+    "source": "packages/components/src/ExcerptDisplay/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-byte-cursor.test.ts",
+    "source": "packages/components/src/Terminal/byte-cursor.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-dictation-sync.test.ts",
+    "source": "packages/components/src/Terminal/dictation-sync.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-file-drop.test.ts",
+    "source": "packages/components/src/Terminal/file-drop.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-history-top.test.ts",
+    "source": "packages/components/src/Terminal/history-top.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-image-paste.test.ts",
+    "source": "packages/components/src/Terminal/image-paste.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-osc-open-url.test.ts",
+    "source": "packages/components/src/Terminal/osc-open-url.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-osc52.test.ts",
+    "source": "packages/components/src/Terminal/osc52.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-path-links.test.ts",
+    "source": "packages/components/src/Terminal/path-links.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-sanitizeAgentTitle.test.ts",
+    "source": "packages/components/src/Terminal/sanitizeAgentTitle.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-theme.test.ts",
+    "source": "packages/components/src/Terminal/theme.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-web-link.test.ts",
+    "source": "packages/components/src/Terminal/web-link.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-utf8-frame-boundary.test.ts",
+    "source": "packages/components/src/Terminal/utf8-frame-boundary.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "test/web/terminal-alt-screen-replay.test.ts",
+    "source": "packages/components/src/Terminal/alt-screen-replay.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
   }
 ]

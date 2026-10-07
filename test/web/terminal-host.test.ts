@@ -1,0 +1,22 @@
+import { test, expect } from 'vitest';
+import { createTerminalHost } from '../../src/web/services/terminal-host';
+import type { BuilderServices } from '../../src/web/services/types';
+import type { BuilderEvent } from '../../src/shared/events';
+const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+test('terminal adapter reads by byte cursor across overlap and reconnect without duplicate output', async () => {
+  let notify!: (event: BuilderEvent) => void;
+  let pending!: (result: unknown) => void;
+  const cursors: number[] = [], chunks: Uint8Array[] = [];
+  const api = { call: async (_method: string, params: { since: number }) => { cursors.push(params.since); return new Promise(resolve => { pending = resolve; }); }, subscribe(callback: typeof notify) { notify = callback; return () => {}; } } as unknown as BuilderServices;
+  const host = createTerminalHost(api, '/tmp', error => { throw error; });
+  const callback = (event: { data: Uint8Array }) => chunks.push(event.data);
+  host.onPtyData('s', callback);
+  notify({ type: 'terminal', event: { type: 'data', id: 's', data: btoa('abc'), seq: 3 } });
+  pending({ seq: 3, data: btoa('abc'), reset: false, modes: '' }); await tick();
+  expect(cursors).toEqual([0, 3]);
+  pending({ seq: 3, data: '', reset: false, modes: '' }); await tick();
+  notify({ type: 'snapshot', snapshot: {} as never });
+  pending({ seq: 5, data: btoa('de'), reset: false, modes: '' }); await tick();
+  expect(new TextDecoder().decode(Uint8Array.from(chunks.flatMap(c => [...c])))).toBe('abcde');
+  host.offPtyData('s', callback);
+});

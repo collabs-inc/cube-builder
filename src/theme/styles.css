@@ -1,0 +1,235 @@
+/* Adapted from packages/theme/src/styles.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+@import url('https://fonts.googleapis.com/css2?family=Geist:wght@100..900&family=Geist+Mono:wght@100..900&family=IBM+Plex+Mono:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300..700&display=swap');
+@import "tailwindcss";
+
+@custom-variant dark (&:is(.dark *));
+
+/* ── Design tokens ── */
+
+:root {
+	font-size: 16px;
+	--font-sans: -apple-system, BlinkMacSystemFont, 'Inter', system-ui, sans-serif;
+	--font-mono: 'Geist Mono';
+	/* Keep dialogs and workspace chrome in the same native UI face. */
+	--font-inter: var(--font-sans);
+
+	/* Core */
+	--background: rgb(248, 248, 248);
+	--foreground: rgb(32, 32, 32);
+	--border: rgba(32, 32, 32, 0.14);
+	--muted-background: rgb(244, 244, 244);
+	--muted-foreground: rgb(113, 113, 113);
+	--radius: 0.875rem;
+
+	/* Surfaces share a corner scale, edge treatment and motion cadence. */
+	--radius-control: 8px;
+	--radius-pane: 16px;
+	--radius-dialog: 22px;
+	--surface-raised: rgb(255, 255, 255);
+	--surface-edge: rgba(32, 32, 32, 0.13);
+	--shadow-control: 0 1px 3px rgba(24, 24, 24, 0.08), 0 0 0 0.5px rgba(24, 24, 24, 0.04);
+	--shadow-pane: 0 3px 12px rgba(24, 24, 24, 0.07);
+	--shadow-dialog: 0 24px 80px rgba(24, 24, 24, 0.18), 0 4px 16px rgba(24, 24, 24, 0.08);
+	--motion-fast: 160ms;
+	--motion-surface: 240ms;
+	--ease-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+
+	/* Scrollbar */
+	--scrollbar-width: 6px;
+	--scrollbar-thumb: color-mix(in srgb, var(--foreground) 10%, transparent);
+	--scrollbar-thumb-hover: color-mix(in srgb, var(--foreground) 18%, transparent);
+
+	/* Item type accent colors */
+	--item-type-note: oklch(76.8% 0.233 130.85);
+	--item-type-doc: oklch(79.5% 0.184 86.047);
+	--item-type-bookmark: oklch(70.5% 0.213 47.604);
+	--item-type-pdf: oklch(63.7% 0.237 25.331);
+	--item-type-concept: oklch(54.6% 0.245 262.881);
+	--item-type-skill: oklch(65% 0.2 195);
+	--item-type-default: #737373;
+
+	/* Card */
+	--card: rgb(242, 242, 242);
+	--card-foreground: rgb(9, 9, 9);
+
+	/* UI components */
+	--input: rgb(238, 238, 238);
+	--ring: rgb(182, 182, 182);
+	--primary: rgb(24, 24, 24);
+	--primary-foreground: rgb(250, 250, 250);
+	--secondary: rgb(244, 244, 244);
+	--secondary-foreground: rgb(24, 24, 24);
+	--destructive: rgb(251, 44, 54);
+	/* The positive counterpart to --destructive: something is live and
+	   working. Deep enough to clear 4.5:1 on the near-white ground, and
+	   held at hue ~155 so it cannot be read as --item-type-note, which is
+	   a chartreuse at hue 131. */
+	--success: rgb(15, 122, 61);
+	--success-hover: rgb(11, 95, 47);
+
+	/* Links */
+	--link: rgb(37, 99, 235);
+	--link-hover: rgb(29, 78, 216);
+
+	/* Inline code */
+	--code: rgb(180, 35, 42);
+
+	/* Chat message colors */
+	--chat-message-user-bg: rgb(57, 57, 57);
+	--chat-message-user-text: rgb(255, 255, 255);
+}
+
+.dark {
+	/* Core */
+	--background: rgb(18, 18, 18);
+	--foreground: rgb(220, 220, 220);
+	--border: rgba(255, 255, 255, 0.14);
+	--muted-background: rgb(24, 24, 24);
+	--muted-foreground: rgb(132, 132, 132);
+	--surface-raised: rgb(48, 48, 48);
+	--surface-edge: rgba(255, 255, 255, 0.14);
+	--shadow-control: 0 1px 4px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.05);
+	--shadow-pane: 0 3px 12px rgba(0, 0, 0, 0.16);
+	--shadow-dialog: 0 24px 80px rgba(0, 0, 0, 0.4), 0 4px 16px rgba(0, 0, 0, 0.2);
+	--scrollbar-thumb: color-mix(in srgb, var(--foreground) 10%, transparent);
+	--scrollbar-thumb-hover: color-mix(in srgb, var(--foreground) 20%, transparent);
+
+	/* UI components */
+	--input: rgb(36, 36, 36);
+	--ring: rgb(88, 88, 88);
+	--primary: rgb(250, 250, 250);
+	--primary-foreground: rgb(24, 24, 24);
+	--secondary: rgba(23, 23, 23, 0);
+	--secondary-foreground: rgb(250, 250, 250);
+	--destructive: rgb(251, 44, 54);
+	--success: rgb(61, 220, 132);
+	--success-hover: rgb(110, 231, 168);
+
+	/* Links */
+	--link: rgb(147, 197, 253);
+	--link-hover: rgb(191, 219, 254);
+
+	/* Card */
+	--card: rgb(24, 24, 24);
+	--card-foreground: rgb(250, 250, 250);
+
+	/* Inline code */
+	--code: rgb(239, 118, 122);
+
+	/* Chat message colors */
+	--chat-message-user-bg: rgb(50, 50, 50);
+	--chat-message-user-text: rgb(255, 255, 255);
+}
+
+@media (prefers-reduced-motion: reduce) {
+	:root {
+		--motion-fast: 0ms;
+		--motion-surface: 0ms;
+	}
+}
+
+/* ── Tailwind theme mapping ── */
+
+@theme inline {
+	--font-family-sans: var(--font-sans);
+	--font-family-mono: var(--font-mono);
+	--color-background: var(--background);
+	--color-foreground: var(--foreground);
+	--color-border: var(--border);
+	--color-muted-background: var(--muted-background);
+	--color-muted-foreground: var(--muted-foreground);
+	--color-input: var(--input);
+	--color-ring: var(--ring);
+	--color-primary: var(--primary);
+	--color-primary-foreground: var(--primary-foreground);
+	--color-secondary: var(--secondary);
+	--color-secondary-foreground: var(--secondary-foreground);
+	--color-destructive: var(--destructive);
+	--color-success: var(--success);
+	--color-accent: var(--accent);
+	--color-accent-foreground: var(--accent-foreground);
+	--color-card: var(--card);
+	--color-card-foreground: var(--card-foreground);
+	--color-chat-message-user-bg: var(--chat-message-user-bg);
+	--color-chat-message-user-text: var(--chat-message-user-text);
+	--radius-sm: calc(var(--radius) - 4px);
+	--radius-md: calc(var(--radius) - 2px);
+	--radius-lg: var(--radius);
+	--radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ── Global base styles ── */
+
+@keyframes surface-enter {
+	from { opacity: 0; transform: translateY(6px) scale(0.985); }
+	to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@layer base {
+	* {
+		@apply border-border outline-ring/50;
+	}
+
+	html,
+	body,
+	#root {
+		height: 100%;
+		margin: 0;
+		overflow: hidden;
+	}
+
+	body {
+		background-color: transparent;
+		@apply text-foreground;
+		font-family: var(--font-sans);
+		-webkit-font-smoothing: antialiased;
+	}
+
+	*[data-drag-region] {
+		-webkit-app-region: drag;
+	}
+
+	/* All scroll containers use quiet, transparent scrollbars by default.
+	   No opt-in class is required; component-specific hidden bars still win. */
+	:where(*) {
+		scrollbar-gutter: auto;
+		scrollbar-width: thin;
+		scrollbar-color: transparent transparent;
+	}
+
+	:where(*)::-webkit-scrollbar {
+		width: var(--scrollbar-width);
+		height: var(--scrollbar-width);
+		background-color: transparent;
+	}
+
+	:where(*)::-webkit-scrollbar-track {
+		background-color: transparent;
+	}
+
+	:where(*)::-webkit-scrollbar-corner {
+		background-color: transparent;
+	}
+
+	:where(*)::-webkit-scrollbar-thumb {
+		background: transparent;
+		border-radius: 4px;
+	}
+
+	:where(*):hover {
+		scrollbar-color: var(--scrollbar-thumb) transparent;
+	}
+
+	:where(*):hover::-webkit-scrollbar-thumb {
+		background: var(--scrollbar-thumb);
+	}
+
+	:where(*):hover::-webkit-scrollbar-thumb:hover {
+		background: var(--scrollbar-thumb-hover);
+	}
+
+	::selection {
+		background: var(--foreground);
+		color: var(--background);
+	}
+}

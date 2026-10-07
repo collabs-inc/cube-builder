@@ -1,0 +1,332 @@
+/* Adapted from packages/components/src/Editor/Blocknote.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+.bn-container * {
+	transition: none !important;
+	color: var(--foreground) !important;
+}
+
+.bn-container {
+	--bn-colors-editor-background: var(--background-editable) !important;
+	border-radius: 8px !important;
+	margin: 24px 0px;
+}
+
+.bn-editor {
+	padding: 14px 0;
+	min-height: 480px;
+}
+
+.canvas-tile-embed .bn-container {
+	margin-top: 0;
+}
+
+.canvas-tile-embed .bn-editor {
+	padding-top: 0;
+}
+
+.bn-default-styles {
+	font-weight: 450;
+	font-family: var(--font-sans);
+	font-size: 1rem;
+}
+
+a {
+	color: var(--link-color);
+	font-weight: 500;
+	text-decoration: underline;
+}
+
+a:hover {
+	opacity: 0.7;
+}
+
+strong {
+	font-weight: 660;
+}
+
+/* Headings */
+
+.bn-block-content[data-content-type="heading"] {
+	letter-spacing: 0px;
+
+	--level: 2.0rem;
+
+	line-height: 2.5rem;
+
+	margin-top: 1rem;
+	margin-bottom: 0.5rem;
+}
+
+.bn-block-content[data-content-type="heading"][data-level="2"] {
+	--level: 1.6rem;
+
+	line-height: 2.5rem;
+
+	margin-top: 1rem;
+	margin-bottom: 0.3rem;
+}
+
+.bn-block-content[data-content-type="heading"][data-level="3"],
+.bn-block-content[data-content-type="heading"][data-level="4"],
+.bn-block-content[data-content-type="heading"][data-level="5"],
+.bn-block-content[data-content-type="heading"][data-level="6"] {
+	--level: 1.2rem;
+
+	line-height: 2rem;
+
+	margin-top: 0.2rem;
+	margin-bottom: 0;
+}
+
+
+/* Unordered lists */
+
+/* Remove left border from indented bullet list items */
+.bn-block-group .bn-block-group .bn-block-outer:not([data-prev-depth-changed]):before {
+	border-left: none !important;
+}
+
+.bn-block-outer:not([data-prev-type])>.bn-block>.bn-block-content[data-content-type=bulletListItem]:before {
+	content: "•";
+	font-size: 1.6rem;
+	position: relative;
+	top: -0.525rem;
+	right: -0.05rem;
+	transition: none !important;
+}
+
+/* Checklists */
+
+.bn-block-content[data-content-type="checkListItem"] input[type="checkbox"] {
+	margin-top: 6.5px;
+	margin-left: 5px;
+	margin-right: 8px;
+	background-color: transparent !important;
+	background: transparent !important;
+	-webkit-appearance: none !important;
+	-moz-appearance: none !important;
+	appearance: none !important;
+	border: 1px solid var(--bn-colors-editor-text) !important;
+	width: 0.75rem !important;
+	height: 0.75rem !important;
+	border-radius: 0px !important;
+	position: relative !important;
+}
+
+.bn-block-content[data-content-type="checkListItem"] input[type="checkbox"]:checked {
+	background-color: var(--bn-colors-editor-text) !important;
+}
+
+.bn-block-content[data-content-type="checkListItem"] input[type="checkbox"]:checked::after {
+	content: "✓" !important;
+	position: absolute !important;
+	top: -0.2rem !important;
+	left: -0.02rem !important;
+	color: var(--bn-colors-editor-background) !important;
+	font-size: 0.7rem !important;
+	font-weight: 900 !important;
+}
+
+/* Mantine Overrides */
+
+
+.bn-side-menu {
+	display: none !important;
+}
+
+.bn-toolbar * {
+	font-family: var(--font-mono) !important;
+	font-weight: 400;
+}
+
+html.dark button.bn-button:hover {
+	background-color: rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Add cursor style for blocknote buttons */
+.bn-toolbar button {
+	cursor: default !important;
+}
+
+/* Placeholder styling */
+.bn-block-content .bn-inline-content:has(> .ProseMirror-trailingBreak:only-child)::before {
+	opacity: 0.3;
+	color: inherit;
+	font: inherit;
+}
+
+/* Code block scrollbar styling */
+.bn-block-content[data-content-type="codeBlock"] pre {
+	scrollbar-width: thin;
+	scrollbar-color: var(--scrollbar-thumb) transparent;
+	white-space: pre;
+	overflow-x: auto;
+}
+
+.bn-block-content[data-content-type="codeBlock"] pre::-webkit-scrollbar {
+	height: var(--scrollbar-width);
+	width: var(--scrollbar-width);
+	background: transparent;
+}
+
+.bn-block-content[data-content-type="codeBlock"] pre::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+	border-radius: 4px;
+}
+
+.bn-block-content[data-content-type="codeBlock"] pre:hover::-webkit-scrollbar-thumb {
+	background: var(--scrollbar-thumb);
+}
+
+.bn-block-content[data-content-type="codeBlock"] pre::-webkit-scrollbar-thumb:hover {
+	background: var(--scrollbar-thumb-hover);
+}
+
+.bn-block-content[data-content-type="codeBlock"] {
+	margin: 0.8rem 0;
+	padding: 0rem;
+	background-color: var(--color-codeblock-background, rgb(235, 235, 235));
+	color: var(--foreground);
+}
+
+pre {
+	font-size: 0.85rem;
+	opacity: 0.7;
+}
+
+/* Inline code styling - override BlockNote's default */
+code:not(pre code),
+.bn-inline-content code {
+	font-size: 0.85rem !important;
+	color: var(--color-inline-code, rgb(160, 40, 40)) !important;
+}
+
+/* Tables */
+
+.bn-block-content[data-content-type="table"] {
+	font-size: 0.9rem;
+}
+
+/* Dividers */
+
+/* Selected node outline (images, dividers) */
+
+.bn-block-content.ProseMirror-selectednode > *,
+.ProseMirror-selectednode > .bn-block-content > * {
+	outline: 1.5px solid black !important;
+}
+
+html.dark .bn-block-content.ProseMirror-selectednode > *,
+html.dark .ProseMirror-selectednode > .bn-block-content > * {
+	outline: 1.5px solid white !important;
+}
+
+/* Image blocks */
+
+.bn-block-content[data-content-type="image"] {
+	margin: 8px 0;
+}
+
+.bn-block-content[data-content-type="image"] .bn-file-block-content-wrapper {
+	width: 100% !important;
+	max-width: 100% !important;
+}
+
+.bn-block-content[data-content-type="image"] .bn-visual-media-wrapper {
+	width: 100% !important;
+}
+
+.bn-block-content[data-content-type="image"] .bn-visual-media-wrapper img,
+.bn-block-content[data-content-type="image"] .image-block-img {
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+}
+
+/* Hide resize handles */
+.bn-block-content[data-content-type="image"] .bn-visual-media-resize-handle {
+	display: none !important;
+}
+
+.image-block-loading {
+	padding: 12px 16px;
+	color: var(--foreground);
+	opacity: 0.4;
+	font-size: 0.85rem;
+}
+
+.image-block-not-found {
+	padding: 12px 16px;
+	border: 1px dashed var(--border);
+	border-radius: 4px;
+	color: var(--foreground);
+	opacity: 0.5;
+	font-size: 0.85rem;
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.image-block-not-found-icon {
+	font-size: 1.2rem;
+}
+
+.image-block-empty {
+	padding: 12px 16px;
+	color: var(--foreground);
+	opacity: 0.3;
+	font-size: 0.85rem;
+}
+
+/* Divider block styling */
+.bn-block-content[data-content-type="divider"] {
+	padding-top: 10px;
+	padding-bottom: 10px;
+	width: 100%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+}
+
+/* Conflict banner */
+
+.editor-conflict-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  background: var(--background-secondary);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  color: var(--foreground);
+}
+
+.editor-conflict-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.editor-conflict-banner-actions button {
+  padding: 2px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.editor-conflict-banner-actions button:hover {
+  background-color: color-mix(in srgb, var(--border) 50%, transparent);
+}
+
+/* Divider block styling - hr */
+
+.bn-block-content[data-content-type="divider"] hr {
+	width: 100%;
+	border: none;
+	height: 1px !important;
+	background-color: var(--border) !important;
+	margin: 0 auto;
+}

@@ -1,0 +1,87 @@
+/* Adapted from packages/components/src/LoadingPulse/LoadingPulse.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+/* No fill of its own: a tint here covers the body but not the title bar
+   above it, and the seam between the two was visible on every loading
+   tile. The travelling rim below and the label are the loading signal. */
+.loading-pulse {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  animation: none;
+  display: grid;
+  place-items: center;
+}
+
+.loading-pulse > .loading-pulse-label {
+  font: 400 12px/1.5 var(--font-sans);
+  color: color-mix(in srgb, var(--foreground) 40%, transparent);
+  text-align: center;
+  padding: 12px;
+  pointer-events: none;
+}
+
+@property --loading-edge-angle {
+  syntax: "<angle>";
+  inherits: false;
+  initial-value: 0deg;
+}
+
+/* A short neutral beam travels around the rim. Mask out the entire center
+   so neither the glass nor anything underneath the focus ring animates. */
+.pane-chrome:has(.loading-pulse)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--pane-chrome-radius);
+  padding: 1.5px;
+  background: conic-gradient(from var(--loading-edge-angle),
+    transparent 0deg 290deg,
+    color-mix(in srgb, var(--foreground) 8%, transparent) 325deg,
+    color-mix(in srgb, var(--foreground) 45%, transparent) 354deg,
+    transparent 360deg);
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: 2;
+  animation: loading-edge-travel 4s linear infinite;
+}
+
+.rail-pane-chromeless-movable:has(.loading-pulse)::before {
+  inset: var(--chromeless-rim-width);
+  border-radius: var(--chromeless-corner-radius);
+}
+
+.pane-chrome.is-active:has(.loading-pulse)::before {
+  inset: 2px;
+  border-radius: calc(var(--pane-chrome-radius) - 2px);
+}
+
+.rail-pane-chromeless-movable.is-active:has(.loading-pulse)::before {
+  inset: calc(var(--chromeless-rim-width) + 2px);
+  border-radius: calc(var(--chromeless-corner-radius) - 2px);
+}
+
+/* A pulse inside hidden content (a pane veiled while its machine is not
+   running) is not loading anything the viewer can see: no beam. */
+.pane-chrome:has([hidden] .loading-pulse)::before,
+.rail-pane-chromeless-movable:has([hidden] .loading-pulse)::before {
+  content: none;
+  animation: none;
+}
+
+.rail-pane-zoomed:has(.loading-pulse)::before,
+.canvas-tile.tile-fullscreen:has(.loading-pulse)::before {
+  inset: 0;
+  border-radius: 0;
+}
+
+@keyframes loading-edge-travel {
+  to { --loading-edge-angle: 360deg; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pane-chrome:has(.loading-pulse)::before {
+    animation: none;
+    background: color-mix(in srgb, var(--foreground) 22%, transparent);
+  }
+}

@@ -1,0 +1,55 @@
+/* Adapted from packages/components/src/CodeEditorView/CodeEditorView.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+.code-editor-view {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  background: var(--background);
+}
+
+.code-editor-container {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Sticky code fades into the same card surface instead of drawing a dark
+   dividing line over the scrolling content. */
+.code-editor-view .sticky-widget {
+  background: var(--background);
+  box-shadow: 0 6px 12px var(--background);
+}
+
+
+.code-editor-dirty-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 16px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--foreground);
+  background-color: color-mix(in srgb, var(--border) 30%, transparent);
+  flex-shrink: 0;
+}
+
+.code-editor-dirty-banner-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.code-editor-dirty-banner button {
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 2px 8px;
+  font-size: 0.7rem;
+  font-family: var(--font-mono);
+  color: var(--foreground);
+  cursor: pointer;
+  transition: background-color 0.15s;
+}
+
+.code-editor-dirty-banner button:hover {
+  background-color: color-mix(in srgb, var(--border) 50%, transparent);
+}

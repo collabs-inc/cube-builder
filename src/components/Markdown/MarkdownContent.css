@@ -1,0 +1,230 @@
+/* Adapted from packages/components/src/Markdown/MarkdownContent.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+.markdown-content {
+	/* color: var(--foreground, inherit);
+	word-break: break-word;
+	overflow-wrap: break-word; */
+}
+
+.markdown-content h1,
+.markdown-content h2,
+.markdown-content h3,
+.markdown-content h4,
+.markdown-content h5,
+.markdown-content h6 {
+	font-weight: 600;
+	color: var(--foreground, inherit);
+}
+
+.markdown-content h1 {
+	font-size: 1.5rem;
+	line-height: 1.1;
+	margin: 2rem 0 1rem 0;
+}
+
+.markdown-content h2 {
+	font-size: 1.3rem;
+	line-height: 1.15;
+	margin: 1.8rem 0 0.8rem 0;
+}
+
+.markdown-content h3 {
+	font-size: 1.1rem;
+	line-height: 1.15;
+	margin: 1.6rem 0 0.6rem 0;
+}
+
+.markdown-content h4 {
+	font-size: 1.05rem;
+	line-height: 1.15;
+	margin: 1.4rem 0 0.5rem 0;
+}
+
+.markdown-content h5 {
+	font-size: 1rem;
+	line-height: 1.15;
+	margin: 1.2rem 0 0.4rem 0;
+}
+
+.markdown-content h6 {
+	font-size: 0.95rem;
+	line-height: 1.15;
+	margin: 1rem 0 0.3rem 0;
+}
+
+.markdown-content p {
+	margin: 0.8rem 0;
+	color: var(--foreground, inherit);
+}
+
+.markdown-content ol,
+.markdown-content ul {
+	margin: 0.8rem 0;
+	padding-left: 1.4rem;
+	list-style-position: outside;
+	color: var(--foreground, inherit);
+}
+
+.markdown-content ol {
+	list-style-type: decimal;
+}
+
+.markdown-content ol ol {
+	list-style-type: lower-alpha;
+}
+
+.markdown-content ol ol ol {
+	list-style-type: lower-roman;
+}
+
+.markdown-content ul {
+	list-style-type: disc;
+}
+
+.markdown-content ul ul {
+	list-style-type: circle;
+}
+
+.markdown-content ul ul ul {
+	list-style-type: square;
+}
+
+.markdown-content li {
+	margin: 0.2rem 0;
+}
+
+.markdown-content li p {
+	margin: 0.2rem 0;
+}
+
+.markdown-content a {
+	color: var(--foreground);
+	text-decoration: underline;
+}
+
+.markdown-content code:not(pre code) {
+	font-family: var(--font-mono);
+	color: var(--color-inline-code, rgb(160, 40, 40));
+	padding: 2px 4px;
+	background: color-mix(in srgb,
+			var(--border, rgba(255, 255, 255, 0.08)) 15%,
+			transparent);
+	border-radius: 3px;
+}
+
+.markdown-content blockquote {
+	border-left: 4px solid color-mix(in srgb,
+			var(--foreground, currentColor) 40%,
+			var(--border, rgba(0, 0, 0, 0.2)));
+	padding-left: 16px;
+	margin: 16px 0;
+	font-style: italic;
+	color: color-mix(in srgb,
+			var(--foreground, currentColor) 60%,
+			var(--color-text-secondary, var(--muted-foreground, currentColor)));
+}
+
+.markdown-content blockquote p {
+	margin: 0.6rem 0;
+}
+
+.markdown-content img {
+	max-width: 100%;
+	height: auto;
+	border-radius: 8px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+	margin: 16px 0;
+	display: block;
+}
+
+.markdown-content pre {
+	background: var(--color-codeblock-background, rgba(255, 255, 255, 0.06));
+	padding: 1rem;
+	border-radius: 0.5rem;
+	border: 1px solid var(--border, rgba(255, 255, 255, 0.08));
+	overflow: auto;
+	white-space: pre-wrap;
+	word-wrap: break-word;
+	word-break: break-word;
+	overflow-wrap: break-word;
+	font-size: 0.8rem;
+	position: relative;
+	padding-right: 44px;
+	/* leave room for copy button */
+}
+
+.markdown-content pre code {
+	background: transparent;
+	display: block;
+	white-space: inherit;
+	word-wrap: inherit;
+	word-break: inherit;
+	overflow-wrap: inherit;
+	padding: 0;
+	border-radius: 0;
+	font-family: var(--font-mono);
+}
+
+.markdown-content hr {
+	margin: 32px 0;
+	border: none;
+	border-top: 1px solid color-mix(in srgb,
+			var(--foreground, currentColor) 70%,
+			transparent);
+}
+
+/* Copy button inside code blocks - inherits base styles, only adds positioning */
+.markdown-content pre .code-copy-btn {
+	position: absolute;
+	top: 8px;
+	right: 8px;
+}
+
+.markdown-content .katex-display {
+	overflow-x: auto;
+	overflow-y: hidden;
+	padding: 12px;
+	margin: 16px 0;
+	background: color-mix(in srgb,
+			var(--border, rgba(255, 255, 255, 0.08)) 15%,
+			transparent);
+	border-radius: 6px;
+	border: 1px solid color-mix(in srgb,
+			var(--border, rgba(255, 255, 255, 0.08)) 30%,
+			transparent);
+}
+
+.markdown-content .katex-display>.katex {
+	display: inline-block;
+	min-width: 100%;
+	text-align: center;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar {
+	height: 8px;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar-track {
+	background: color-mix(in srgb,
+			var(--border, rgba(255, 255, 255, 0.08)) 20%,
+			transparent);
+	border-radius: 4px;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar-thumb {
+	background: color-mix(in srgb,
+			var(--border, rgba(255, 255, 255, 0.08)) 60%,
+			transparent);
+	border-radius: 4px;
+}
+
+.markdown-content .katex-display::-webkit-scrollbar-thumb:hover {
+	background: var(--border, rgba(255, 255, 255, 0.16));
+}
+
+.markdown-content table {
+	font-size: 0.9rem;
+}
+
+.markdown-content .katex {
+	max-width: 100%;
+}

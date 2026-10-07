@@ -1,0 +1,77 @@
+/* Adapted from packages/components/src/Terminal/TerminalTab.css at 600e05f2294df5c71026b723915306a74c8cfd3a. */
+/* ============================================================================
+   TERMINAL TAB
+   ============================================================================ */
+
+.terminal-tab {
+	position: relative;
+	width: 100%;
+	height: 100%;
+}
+
+.terminal-renderer-loading {
+	position: absolute;
+	inset: 0;
+	z-index: 2;
+	display: grid;
+	place-items: center;
+	background: var(--background);
+	color: var(--muted-foreground);
+	pointer-events: none;
+}
+.terminal-renderer-loading::after {
+	content: "";
+	width: 18px;
+	height: 18px;
+	border: 2px solid currentColor;
+	border-right-color: transparent;
+	border-radius: 50%;
+	animation: terminal-renderer-spin 900ms linear infinite;
+}
+@keyframes terminal-renderer-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) {
+	.terminal-renderer-loading::after { animation: none; }
+}
+
+/* Breathing room between the pane edges and the grid. Lives on the .xterm
+   element (not .terminal-tab) because the fit addon reads the terminal
+   element's own computed padding when sizing cols/rows — padding here is
+   subtracted from the fit for free; padding on the container would not be. */
+.terminal-tab .xterm {
+	padding: 12px;
+}
+
+/* xterm 6 draws its scrollbar inside this container. Extend it through 9px
+   of the terminal's 12px right padding, leaving a 3px gap at the pane edge.
+   The fitted .xterm-screen keeps its text inset and column count. */
+.terminal-tab .xterm-scrollable-element {
+	margin-right: -9px;
+	background: transparent !important;
+}
+
+/* Reduce contrast equally for the normal, hover, and dragging colors. */
+.terminal-tab .xterm-scrollable-element > .scrollbar > .slider {
+	opacity: 0.75;
+}
+
+.terminal-tab .xterm-viewport {
+	background: transparent !important;
+}
+
+.terminal-tab .xterm-decoration-overview-ruler {
+	display: none !important;
+}
+
+/* Scrollbar styling for the xterm viewport */
+.terminal-tab .xterm-viewport::-webkit-scrollbar {
+	width: 7px;
+}
+
+.terminal-tab .xterm-viewport::-webkit-scrollbar-thumb {
+	background: rgba(121, 121, 121, 0.4);
+	border-radius: 4px;
+}
+
+.terminal-tab .xterm-viewport::-webkit-scrollbar-thumb:hover {
+	background: rgba(121, 121, 121, 0.7);
+}
