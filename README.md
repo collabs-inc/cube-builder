@@ -102,8 +102,9 @@ previews. Run it after building:
 node --import tsx test/browser/run.ts
 ```
 
-Linux was exercised locally with real PTYs and browser interaction. Cube's
-installation fixture is maintained in the host project's test suite. The CI matrix also targets macOS; a configured CI job
+Linux was exercised locally with real PTYs, browser interaction, and Cube's
+install/update/uninstall lifecycle. The host fixture is maintained in Cube's
+own test suite. The CI matrix also targets macOS; a configured CI job
 is not a claim that a macOS run has passed.
 
 Adapted source files are listed in `scripts/extraction-manifest.json`. See
