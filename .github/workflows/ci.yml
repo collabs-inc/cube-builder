@@ -21,6 +21,7 @@ jobs:
       - run: npm run typecheck
       - run: npm run build
       - run: npm test
+        timeout-minutes: 3
       - run: npm audit --audit-level=moderate
       - if: runner.os == 'Linux'
         run: npx playwright install --with-deps chromium

@@ -1,4 +1,5 @@
 import { test } from 'node:test';
+import { watch } from 'node:fs';
 import assert from 'node:assert/strict';
 import { realpath, mkdtemp, rm, readFile, writeFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -52,14 +53,16 @@ test('external filesystem changes are observed and root HTML artifacts are disco
   const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-watch-')));
   const registry = await Registry.open(join(root, 'state')); const files = new Files(registry);
   const repos = new Repos(registry); const watches = new Watches(registry, files);
+  const events: unknown[] = [];
+  const diagnostic = watch(root, { recursive: true }, (event, name) => events.push({ event, name }));
   try {
     await repos.add(root);
-    const changed = once(watches, 'changed');
+    const changed = once(watches, 'changed', { signal: AbortSignal.timeout(5000) });
     const path = join(root, 'chart.html'); await writeFile(path, '<h1>Chart</h1>');
-    const [paths] = await changed; assert.ok(paths.includes(path));
+    const [paths] = await changed.catch(error => { console.error('Watch diagnostics', { events, snapshot: registry.snapshot() }); throw error; }); assert.ok(paths.includes(path));
     for (let i = 0; i < 100 && !registry.snapshot().items.some(i => i.type === 'artifact'); i++) await new Promise(r => setTimeout(r, 20));
     assert.equal(registry.snapshot().items.filter(i => i.type === 'artifact').length, 1);
-  } finally { watches.close(); await registry.flush(); await rm(root, { recursive: true, force: true }); }
+  } finally { diagnostic.close(); watches.close(); await registry.flush(); await rm(root, { recursive: true, force: true }); }
 });
 
 test('expired capabilities and sibling resources of non-HTML previews are refused', async () => {

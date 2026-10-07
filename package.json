@@ -13,7 +13,7 @@
     "dev": "npm run build && npm start",
     "test": "npm run test:node && npm run test:web",
     "typecheck": "tsc --noEmit",
-    "test:node": "node --import tsx --test test/server/*.test.ts test/worker/*.test.ts",
+    "test:node": "node --import tsx --test --test-timeout=30000 test/server/*.test.ts test/worker/*.test.ts",
     "test:web": "vitest run",
     "test:browser": "node --import tsx test/browser/run.ts",
     "check:public": "node scripts/check-public.mjs"
