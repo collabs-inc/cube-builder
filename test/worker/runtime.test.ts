@@ -84,3 +84,18 @@ test('a socket left by a crashed owner is recovered without signaling another pr
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('a dropped transport reconnects to the same live PTY', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'builder-reconnect-'));
+  const client = await ensureWorker(root);
+  try {
+    const terminal = await client.spawn({ requestId: 'transport', cwd: root, command: '/bin/sh', args: [], cols: 80, rows: 24 });
+    const restored = once(client, 'reconnected');
+    (client as any).socket.destroy();
+    const deadline = setTimeout(() => {}, 6000);
+    try { await restored; } finally { clearTimeout(deadline); }
+    assert.equal((await client.list())[0]!.pid, terminal.pid);
+    await client.write(terminal.id, Buffer.from('echo TRANSPORT_OK\n').toString('base64'));
+    await client.stopAll();
+  } finally { client.disconnect(); await rm(root, { recursive: true, force: true }); }
+});

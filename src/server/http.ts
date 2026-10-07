@@ -16,7 +16,7 @@ import { Files } from './files.js';
 import { Previews } from './previews.js';
 import { Watches } from './watches.js';
 
-const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
+const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
 export function json(res: ServerResponse, status: number, value: unknown): void {
   res.writeHead(status, { 'content-type': 'application/json', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' }).end(JSON.stringify(value));
 }
@@ -47,7 +47,8 @@ export async function startServer(options: { port: number; stateDir: string; web
   registry.on('changed', snapshot => broadcast(sockets, { type: 'snapshot', snapshot }));
   terminals.on('event', event => broadcast(sockets, { type: 'terminal', event }));
   terminals.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
-  worker.on('disconnected', () => broadcast(sockets, { type: 'error', message: 'Terminal worker disconnected. Reload Builder to reconnect.' }));
+  worker.on('disconnected', () => broadcast(sockets, { type: 'error', message: 'Terminal worker disconnected. Reconnecting…' }));
+  worker.on('reconnected', () => { void terminals.reconcile().then(() => { for (const socket of sockets.clients) socket.close(1012, 'Terminal transport restored'); }).catch(error => broadcast(sockets, { type: 'error', message: errorPayload(error).message })); });
   sockets.on('connection', socket => { socket.on('error', () => {}); socket.send(JSON.stringify({ type: 'snapshot', snapshot: registry.snapshot() })); });
   const server = createServer((req, res) => {
     void handle(req, res).catch(error => { if (!res.headersSent) json(res, 400, { error: errorPayload(error) }); else res.end(); });

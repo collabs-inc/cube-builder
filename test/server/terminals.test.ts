@@ -58,5 +58,23 @@ test('persisted sessions missing after a reboot are shown as ended without relau
     const row = registry.snapshot().items[0]!;
     assert.equal(row.type === 'term' && row.exited, true);
     assert.equal((await worker.list()).length, 0);
+    await terminals.close('gone');
+    assert.equal(registry.snapshot().items.length, 0);
   } finally { terminals.dispose(); worker.disconnect(); await rm(stateDir, { recursive: true, force: true }); }
+});
+
+test('reconciliation recovers a PTY created just before registry persistence crashed', async () => {
+  const stateDir = await mkdtemp(join(tmpdir(), 'builder-orphan-'));
+  const registry = await Registry.open(stateDir);
+  const worker = await ensureWorker(stateDir);
+  const terminals = new Terminals(registry, worker);
+  try {
+    const session = await worker.spawn({ requestId: 'crashed-create', cwd: stateDir, command: '/bin/sh', args: [], cols: 80, rows: 24 });
+    await terminals.reconcile();
+    const row = registry.snapshot().items[0];
+    assert.equal(row?.type === 'term' && row.sessionId, session.id);
+    assert.equal((await terminals.create({ requestId: 'crashed-create', cwd: stateDir })).id, row?.id);
+    assert.equal((await worker.list()).length, 1);
+    await terminals.close(row!.id);
+  } finally { await worker.stopAll(); terminals.dispose(); worker.disconnect(); await rm(stateDir, { recursive: true, force: true }); }
 });

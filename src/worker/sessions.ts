@@ -10,22 +10,24 @@ import { BuilderError } from '../shared/errors.js';
 import { decodeBase64 } from '../shared/bytes.js';
 import type { SpawnParams, SessionInfo, ReadResult, TerminalEvent } from '../shared/terminal-protocol.js';
 
-interface Session { info: SessionInfo; pty: IPty; ring: RingBuffer; modes: TerminalModeTracker; killed?: ReturnType<typeof setTimeout> }
+interface Session { info: SessionInfo; pty: IPty; ring: RingBuffer; modes: TerminalModeTracker; forgotten?: boolean; killed?: ReturnType<typeof setTimeout> }
 function size(cols: number, rows: number) {
   if (![cols, rows].every(n => Number.isInteger(n) && n >= 1 && n <= 1000)) throw new BuilderError('invalid-size', 'Terminal dimensions must be between 1 and 1000');
 }
 export class TerminalSessions extends EventEmitter {
   private readonly sessions = new Map<string, Session>();
   private readonly requests = new Map<string, string>();
+  private readonly forgotten = new Set<string>();
   spawn(params: SpawnParams): SessionInfo {
     if (!params || typeof params.requestId !== 'string' || !params.requestId || params.requestId.length > 160) throw new BuilderError('invalid-request', 'Missing terminal request ID');
+    if (this.forgotten.has(params.requestId)) throw new BuilderError('session-closed', 'Terminal was explicitly closed');
     const known = this.requests.get(params.requestId);
     if (known) return { ...this.session(known).info };
     size(params.cols, params.rows);
     if (!params.command || typeof params.command !== 'string' || !Array.isArray(params.args) || params.args.some(x => typeof x !== 'string')) throw new BuilderError('invalid-command', 'Invalid command');
     if (!statSync(params.cwd).isDirectory()) throw new BuilderError('invalid-directory', 'Working directory is not a directory');
     const pty = spawn(params.command, params.args, { cwd: params.cwd, cols: params.cols, rows: params.rows, name: 'xterm-256color', env: { ...process.env, ...params.env, TERM: 'xterm-256color' }, encoding: null });
-    const info: SessionInfo = { id: randomUUID(), requestId: params.requestId, pid: pty.pid, cwd: params.cwd, command: params.command, args: params.args, cols: params.cols, rows: params.rows, createdAt: new Date().toISOString(), exited: false, exitCode: null };
+    const info: SessionInfo = { recovery: params.recovery, id: randomUUID(), requestId: params.requestId, pid: pty.pid, cwd: params.cwd, command: params.command, args: params.args, cols: params.cols, rows: params.rows, createdAt: new Date().toISOString(), exited: false, exitCode: null };
     const session: Session = { info, pty, ring: new RingBuffer(4 * 1024 * 1024), modes: new TerminalModeTracker() };
     this.sessions.set(info.id, session); this.requests.set(params.requestId, info.id);
     pty.onData(raw => {
@@ -40,6 +42,7 @@ export class TerminalSessions extends EventEmitter {
       // Keep bounded diagnostics for ended sessions, without retaining a full
       // multi-megabyte allocation for every command ever launched.
       session.ring.compact(256 * 1024);
+      if (session.forgotten) this.sessions.delete(info.id);
     });
     return { ...info };
   }
@@ -48,7 +51,7 @@ export class TerminalSessions extends EventEmitter {
     if (!value) throw new BuilderError('session-missing', 'Terminal session no longer exists');
     return value;
   }
-  list(): SessionInfo[] { return [...this.sessions.values()].map(s => ({ ...s.info })); }
+  list(): SessionInfo[] { return [...this.sessions.values()].filter(s => !s.forgotten).map(s => ({ ...s.info })); }
   read(id: string, options: { since: number; maxBytes?: number }): ReadResult {
     const s = this.session(id);
     const maxBytes = options.maxBytes ?? 256 * 1024;
@@ -74,9 +77,15 @@ export class TerminalSessions extends EventEmitter {
     s.killed = setTimeout(() => { if (!s.info.exited) { try { process.kill(-s.info.pid, 'SIGKILL'); } catch {} try { s.pty.kill('SIGKILL'); } catch {} } }, 1500);
     s.killed.unref();
   }
+  forget(id: string): void {
+    const s = this.session(id); this.kill(id); s.forgotten = true;
+    this.requests.delete(s.info.requestId); this.forgotten.add(s.info.requestId);
+    if (this.forgotten.size > 1000) this.forgotten.delete(this.forgotten.values().next().value!);
+    if (s.info.exited) this.sessions.delete(id);
+  }
   async close(): Promise<void> {
     for (const s of this.sessions.values()) this.kill(s.info.id);
     const deadline = Date.now() + 3000;
-    while (this.list().some(s => !s.exited) && Date.now() < deadline) await new Promise(r => setTimeout(r, 20));
+    while ([...this.sessions.values()].some(s => !s.info.exited) && Date.now() < deadline) await new Promise(r => setTimeout(r, 20));
   }
 }

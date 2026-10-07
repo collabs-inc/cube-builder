@@ -50,6 +50,7 @@ export async function startWorkerServer(socketPath: string): Promise<{ close(): 
                 case 'read': result = sessions.read(p.id, p.options); break;
                 case 'write': result = sessions.write(p.id, p.bytes); break;
                 case 'resize': result = sessions.resize(p.id, p.cols, p.rows); break;
+                case 'forget': result = sessions.forget(p.id); break;
                 case 'kill': result = sessions.kill(p.id); break;
                 case 'stopAll': await sessions.close(); result = null; break;
                 default: throw new BuilderError('unknown-method', 'Unknown worker method');

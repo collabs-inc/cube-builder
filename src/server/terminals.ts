@@ -35,10 +35,17 @@ export class Terminals extends EventEmitter {
   async reconcile() {
     const live = await this.worker.list();
     const rows = this.registry.snapshot().items.filter((i): i is TerminalItem => i.type === 'term');
-    if (!rows.some(row => { const s = live.find(s => s.id === row.sessionId); return row.exited !== (s?.exited ?? true) || row.exitCode !== (s?.exitCode ?? null); })) return;
+    const missing = live.filter(s => !rows.some(row => row.sessionId === s.id));
+    if (!missing.length && !rows.some(row => { const s = live.find(s => s.id === row.sessionId); return row.exited !== (s?.exited ?? true) || row.exitCode !== (s?.exitCode ?? null); })) return;
     await this.registry.mutate(null, draft => {
+      for (const session of missing) {
+        if (draft.items.some(i => i.type === 'term' && i.sessionId === session.id)) continue;
+        const r = session.recovery;
+        draft.items.push({ id: session.id, type: 'term', repoId: r?.repoId ?? null, cwd: session.cwd, title: basename(session.command), createdAt: session.createdAt, updatedAt: session.createdAt, requestId: session.requestId, sessionId: session.id, command: session.command, args: r?.args ?? session.args, harness: r?.harness, launchId: r?.launchId, attentionHooks: r?.attentionHooks, exited: session.exited, exitCode: session.exitCode });
+      }
       for (const row of draft.items) if (row.type === 'term') { const s = live.find(s => s.id === row.sessionId); row.exited = s?.exited ?? true; row.exitCode = s?.exitCode ?? null; }
     });
+    for (const item of this.registry.snapshot().items) if (item.type === 'term') this.attention.register(item);
   }
   create(params: TerminalCreate): Promise<TerminalItem> {
     const requestId = text(params.requestId, 'request ID', 160);
@@ -59,7 +66,7 @@ export class Terminals extends EventEmitter {
     const launchId = randomUUID(), spool = join(this.registry.stateDir, 'attention');
     await mkdir(spool, { recursive: true, mode: 0o700 });
     const injected = harness ? injectAttentionArgs(harness, command, args, spool, launchId, process.env) : null;
-    const session = await this.worker.spawn({ requestId, cwd, command, args: injected?.args ?? args, env: { ...injected?.env, BROWSER: await browserCommand(this.registry.stateDir) }, cols: integer(params.cols ?? 80, 'columns', 1, 1000), rows: integer(params.rows ?? 24, 'rows', 1, 1000) });
+    const session = await this.worker.spawn({ recovery: { repoId: params.repoId ?? null, harness, launchId, attentionHooks: !!injected, args }, requestId, cwd, command, args: injected?.args ?? args, env: { ...injected?.env, BROWSER: await browserCommand(this.registry.stateDir) }, cols: integer(params.cols ?? 80, 'columns', 1, 1000), rows: integer(params.rows ?? 24, 'rows', 1, 1000) });
     const now = new Date().toISOString();
     const item: TerminalItem = { id: session.id, type: 'term', repoId: params.repoId ?? null, cwd, title: basename(command), createdAt: now, updatedAt: now, requestId, sessionId: session.id, command, args, harness, launchId, attentionHooks: !!injected, attention: harness ? 'idle' : undefined, exited: session.exited, exitCode: session.exitCode };
     await this.registry.mutate(null, draft => { if (!draft.items.some(i => i.id === item.id)) draft.items.push(item); });
@@ -76,8 +83,8 @@ export class Terminals extends EventEmitter {
   }
   read(params: { id: string; since: number; maxBytes?: number }) { const row = this.item(params.id); return this.worker.read(row.sessionId, { since: params.since, maxBytes: params.maxBytes }); }
   async write(params: { id: string; bytes: string }) { const row = this.item(params.id); await this.worker.write(row.sessionId, params.bytes); this.attention.input(row.id, Buffer.from(params.bytes, 'base64')); }
-  resize(params: { id: string; cols: number; rows: number }) { const row = this.item(params.id); return this.worker.resize(row.sessionId, params.cols, params.rows); }
-  async close(id: string) { const row = this.item(id); await this.worker.kill(row.sessionId); await this.registry.mutate(null, draft => { draft.items = draft.items.filter(i => i.id !== id); }); }
+  resize(params: { id: string; cols: number; rows: number }) { const row = this.item(params.id); if (!row.exited) return this.worker.resize(row.sessionId, params.cols, params.rows); }
+  async close(id: string) { const row = this.item(id); try { await this.worker.forget(row.sessionId); } catch (error) { if (!(error instanceof BuilderError) || error.code !== 'session-missing') throw error; } this.attention.exited(id); await this.registry.mutate(null, draft => { draft.items = draft.items.filter(i => i.id !== id); }); }
   async stopAll() { await this.worker.stopAll(); await this.reconcile(); }
   dispose() { this.worker.off('event', this.onEvent); this.attention.dispose(); }
 }

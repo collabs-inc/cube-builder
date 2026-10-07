@@ -60,3 +60,16 @@ test('exit retains absolute byte cursors after compacting a large output tail', 
     assert.equal(Buffer.from(result.data, 'base64').toString(), 'xxxxxxxxxx');
   } finally { await sessions.close(); }
 });
+
+test('explicitly forgotten sessions release replay storage and refuse duplicate launch requests', async () => {
+  const sessions = new TerminalSessions();
+  try {
+    const params = { requestId: 'forget-me', cwd: '/tmp', command: '/bin/sh', args: [], cols: 80, rows: 24 };
+    const terminal = sessions.spawn(params);
+    sessions.forget(terminal.id);
+    assert.equal(sessions.list().length, 0);
+    assert.throws(() => sessions.spawn(params), /explicitly closed/);
+    await sessions.close();
+    assert.throws(() => sessions.read(terminal.id, { since: 0 }), /no longer exists/);
+  } finally { await sessions.close(); }
+});
