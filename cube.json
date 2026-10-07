@@ -1,0 +1,7 @@
+{
+  "name": "Cube Builder",
+  "description": "Repositories, terminals, agents, files and artifacts on this machine.",
+  "platforms": ["linux", "darwin"],
+  "install": "npm ci && npm run build",
+  "start": "node dist/server.js"
+}
