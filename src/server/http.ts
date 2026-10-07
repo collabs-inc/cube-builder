@@ -6,6 +6,11 @@ import { WebSocketServer } from 'ws';
 import { validateControlRequest } from './request-policy.js';
 import { isRequest } from '../shared/protocol.js';
 import { BuilderError, errorPayload } from '../shared/errors.js';
+import { Registry } from './registry.js';
+import { ensureWorker } from './worker-runtime.js';
+import { Terminals } from './terminals.js';
+import { createMethods } from './methods.js';
+import { broadcast } from './events.js';
 
 const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
 export function json(res: ServerResponse, status: number, value: unknown): void {
@@ -26,6 +31,16 @@ export async function readBody(req: IncomingMessage): Promise<unknown> {
 export async function startServer(options: { port: number; stateDir: string; webRoot?: string }): Promise<{ port: number; close(): Promise<void> }> {
   const webRoot = options.webRoot ?? fileURLToPath(new URL('./web', import.meta.url));
   const sockets = new WebSocketServer({ noServer: true, maxPayload: 1024 * 1024 });
+  const registry = await Registry.open(options.stateDir);
+  const worker = await ensureWorker(options.stateDir);
+  const terminals = new Terminals(registry, worker);
+  await terminals.reconcile();
+  const dispatch = createMethods(registry, terminals);
+  registry.on('changed', snapshot => broadcast(sockets, { type: 'snapshot', snapshot }));
+  terminals.on('event', event => broadcast(sockets, { type: 'terminal', event }));
+  terminals.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
+  worker.on('disconnected', () => broadcast(sockets, { type: 'error', message: 'Terminal worker disconnected. Reload Builder to reconnect.' }));
+  sockets.on('connection', socket => { socket.on('error', () => {}); socket.send(JSON.stringify({ type: 'snapshot', snapshot: registry.snapshot() })); });
   const server = createServer((req, res) => {
     void handle(req, res).catch(error => { if (!res.headersSent) json(res, 400, { error: errorPayload(error) }); else res.end(); });
   });
@@ -38,7 +53,8 @@ export async function startServer(options: { port: number; stateDir: string; web
       if (req.headers['content-type']?.split(';')[0] !== 'application/json') { json(res, 415, { error: 'Expected application/json' }); return; }
       const request = await readBody(req);
       if (!isRequest(request)) throw new BuilderError('invalid-request', 'Malformed request');
-      json(res, 200, { id: request.id, ok: false, error: { code: 'unknown-method', message: `Unknown method: ${request.method}` } });
+      try { json(res, 200, { id: request.id, ok: true, result: await dispatch(request.method, request.params) }); }
+      catch (error) { json(res, 200, { id: request.id, ok: false, error: errorPayload(error) }); }
       return;
     }
     if (!['GET', 'HEAD'].includes(req.method ?? '')) { res.writeHead(405).end(); return; }
@@ -65,6 +81,7 @@ export async function startServer(options: { port: number; stateDir: string; web
       for (const ws of sockets.clients) ws.terminate();
       await new Promise<void>(resolve => sockets.close(() => resolve()));
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
+      terminals.dispose(); await registry.flush(); worker.disconnect();
     },
   };
 }
