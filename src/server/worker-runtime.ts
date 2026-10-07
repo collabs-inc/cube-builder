@@ -1,4 +1,5 @@
-import { mkdir, readFile, writeFile, cp, rename, rm, stat, open } from 'node:fs/promises';
+import { repairPtyHelpers } from '../shared/pty-helper.mjs';
+import { mkdir, readFile, writeFile, cp, rename, rm, stat, open, readdir } from 'node:fs/promises';
 import { join, dirname, resolve } from 'node:path';
 import { tmpdir } from 'node:os';
 import { createHash, randomUUID } from 'node:crypto';
@@ -43,6 +44,7 @@ async function installRuntime(stateDir: string, entry: string): Promise<string> 
       await mkdir(dirname(to), { recursive: true });
       await cp(from, to, { recursive: true, dereference: true });
     }
+    await repairPtyHelpers(join(staging, 'node_modules/node-pty'));
     await writeFile(join(staging, 'ready'), key);
     await rename(staging, destination);
   } finally { await rm(staging, { recursive: true, force: true }); }
@@ -51,6 +53,10 @@ async function installRuntime(stateDir: string, entry: string): Promise<string> 
 export async function ensureWorker(stateDir: string, options: { workerEntry?: string } = {}): Promise<WorkerClient> {
   const socket = workerSocketPath(stateDir);
   await mkdir(stateDir, { recursive: true, mode: 0o700 });
+  // Compatible workers may still execute from an older copied runtime.
+  let runtimes: string[] = [];
+  try { runtimes = await readdir(join(stateDir, 'runtime')); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
+  for (const name of runtimes) if (/^[a-f0-9]{24}$/.test(name)) await repairPtyHelpers(join(stateDir, 'runtime', name, 'node_modules/node-pty'));
   await mkdir(dirname(socket), { recursive: true, mode: 0o700 });
   const socketDir = await stat(dirname(socket));
   if ((socketDir.mode & 0o077) !== 0 || (process.getuid && socketDir.uid !== process.getuid())) throw new BuilderError('unsafe-worker-directory', 'Worker socket directory is not private');

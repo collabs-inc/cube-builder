@@ -1,13 +1,13 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, writeFile, readFile, mkdir, symlink } from 'node:fs/promises';
+import { realpath, mkdtemp, rm, writeFile, readFile, mkdir, symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { startServer } from '../../src/server/http.js';
 
 test('repositories, worktrees, conflict-aware saves and sandboxed previews use the local filesystem', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'builder-files-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-files-')));
   const app = await startServer({ port: 0, stateDir: join(root, 'state') });
   const base = `http://127.0.0.1:${app.port}`;
   const call = async (method: string, params: unknown = {}) => {

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, readFile, writeFile, stat } from 'node:fs/promises';
+import { realpath, mkdtemp, rm, readFile, writeFile, stat } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { once } from 'node:events';
@@ -12,7 +12,7 @@ import { Previews } from '../../src/server/previews.js';
 import { Watches } from '../../src/server/watches.js';
 
 test('file mutations preserve existing bytes and reject stale destructive actions', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'builder-mutations-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-mutations-')));
   const registry = await Registry.open(join(root, 'state'));
   const files = new Files(registry);
   try {
@@ -36,7 +36,7 @@ test('file mutations preserve existing bytes and reject stale destructive action
 });
 
 test('failed clones clean only their newly created destination', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'builder-clone-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-clone-')));
   const repos = new Repos(await Registry.open(join(root, 'state')));
   try {
     const path = join(root, 'clone');
@@ -49,7 +49,7 @@ test('failed clones clean only their newly created destination', async () => {
 });
 
 test('external filesystem changes are observed and root HTML artifacts are discovered', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'builder-watch-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-watch-')));
   const registry = await Registry.open(join(root, 'state')); const files = new Files(registry);
   const repos = new Repos(registry); const watches = new Watches(registry, files);
   try {
@@ -63,7 +63,7 @@ test('external filesystem changes are observed and root HTML artifacts are disco
 });
 
 test('expired capabilities and sibling resources of non-HTML previews are refused', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'builder-preview-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-preview-')));
   const registry = await Registry.open(join(root, 'state')); const files = new Files(registry);
   const expired = new Previews(registry, 0); const normal = new Previews(registry);
   let mode = expired;
@@ -81,7 +81,7 @@ test('expired capabilities and sibling resources of non-HTML previews are refuse
 });
 
 test('an external edit immediately after an atomic save remains observable', async () => {
-  const root = await mkdtemp(join(tmpdir(), 'builder-atomic-watch-'));
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-atomic-watch-')));
   const registry = await Registry.open(join(root, 'state')), files = new Files(registry), repos = new Repos(registry);
   const path = join(root, 'note.md'); await writeFile(path, 'initial'); await repos.add(root); await files.open(path);
   const watches = new Watches(registry, files);

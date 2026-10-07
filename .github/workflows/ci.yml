@@ -26,6 +26,7 @@ jobs:
         run: npx playwright install --with-deps chromium
       - if: runner.os == 'Linux'
         run: npm run test:browser
+        timeout-minutes: 5
         env:
           BUILDER_BROWSER_DRIVER: playwright
       - if: failure()

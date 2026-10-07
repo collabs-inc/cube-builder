@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, rm, cp, mkdir, stat } from 'node:fs/promises';
+import { mkdtemp, rm, cp, mkdir, stat, readdir, chmod } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { ensureWorker, workerSocketPath } from '../../src/server/worker-runtime.js';
@@ -24,6 +24,13 @@ test('simultaneous startup uses one private worker and replacement installs reat
     const args = { requestId: 'retry', cwd: root, command: '/bin/sh', args: ['-c', 'read answer; printf "KEPT:%s" "$answer"; read rest'], cols: 80, rows: 24 };
     const [one, two] = await Promise.all([a.spawn(args), b.spawn(args)]);
     assert.equal(one.id, two.id);
+    const runtime = (await readdir(join(state, 'runtime'))).find(name => /^[a-f0-9]{24}$/.test(name))!;
+    const helper = join(state, 'runtime', runtime, 'node_modules/node-pty/prebuilds/darwin-arm64/spawn-helper');
+    await chmod(helper, 0o644);
+    const repaired = await ensureWorker(state); clients.push(repaired);
+    assert.equal(repaired.identity, a.identity);
+    assert.equal((await stat(helper)).mode & 0o111, 0o111);
+    assert.equal((await repaired.list())[0]!.pid, one.pid);
     a.disconnect(); b.disconnect();
     await rm(install, { recursive: true, force: true });
     const replacement = await ensureWorker(state);

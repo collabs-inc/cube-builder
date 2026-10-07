@@ -40,7 +40,11 @@ const command = async (...args: string[]) => {
     if (!ciBrowser) { const { chromium } = await import('playwright'); ciBrowser = await chromium.launch(); ciPage = await ciBrowser.newPage({ viewport: { width: 1280, height: 800 } }); }
     if (args[0] === 'open') await ciPage!.goto(args[1]!);
     else if (args[0] === 'run-code') console.log(await new Function(`return (${args[1]})`)()(ciPage));
-    else if (args[0] === 'screenshot') { await mkdir('test-results', { recursive: true }); await ciPage!.screenshot({ path: `test-results/browser-${Date.now()}.png` }); }
+    else if (args[0] === 'screenshot') {
+      await mkdir('test-results', { recursive: true }); console.log('Capturing browser diagnostics');
+      try { await ciPage!.screenshot({ path: `test-results/browser-${Date.now()}.png`, timeout: 5000 }); } catch (error) { console.warn('Optional screenshot unavailable:', String(error)); }
+      console.log('Browser diagnostics complete');
+    }
     return;
   }
   const result = await exec('cube-browser', ['--session', session, ...args], { timeout: 120_000, maxBuffer: 4 * 1024 * 1024 });
@@ -71,7 +75,8 @@ try {
   await run(`await page.locator('.mini-repo-row').hover(); await page.getByRole('button',{name:'Browse files',exact:true}).click(); await page.locator('input[type=file]').setInputFiles(${JSON.stringify(join(root, 'uploaded.txt'))}); await page.getByRole('button',{name:'· uploaded.txt',exact:true}).waitFor(); await page.getByRole('button',{name:'· picture.png',exact:true}).click(); await page.waitForFunction(() => [...document.querySelectorAll('.preview-content img')].some(i => i.naturalWidth === 1)); await page.locator('.mini-repo-row').hover(); await page.getByRole('button',{name:'Browse files',exact:true}).click(); await page.getByRole('button',{name:'· document.pdf',exact:true}).click(); await page.getByText('Page 1 of 1',{exact:true}).waitFor(); await page.waitForFunction(() => document.querySelector('.pdf-scroll canvas')?.height > 0); return 'upload, image and PDF';`);
   assert.equal(await readFile(join(repo, 'uploaded.txt'), 'utf8'), 'Uploaded from browser.');
   await command('screenshot');
-  await app.close(); app = await startServer({ port, stateDir, webRoot: resolve('dist/web') });
+  console.log('Restarting HTTP server with browser attached');
+  await app.close(); console.log('HTTP server stopped'); app = await startServer({ port, stateDir, webRoot: resolve('dist/web') });
   await run(`await page.waitForFunction(() => document.querySelector('.connection')?.textContent === 'Connected'); await page.reload(); await page.locator('.xterm-helper-textarea').focus(); await page.keyboard.type('printf AFTER_RESTART'); await page.keyboard.press('Enter'); await page.waitForFunction(async id => { const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:'read',method:'terminals.read',params:{id,since:0}})});return atob((await r.json()).result.data).includes('AFTER_RESTART'); },${JSON.stringify(terminal.id)}); return 'server and browser restart replay';`);
   assert.equal((await worker.list()).find(s => s.id === terminal.id)!.pid, pid);
   await run(`await page.evaluate(() => { Object.defineProperty(navigator.clipboard,'writeText',{configurable:true,value:()=>Promise.reject(new Error('test denied'))}); }); return 'clipboard denial configured';`);
@@ -81,6 +86,6 @@ try {
   await command('screenshot');
   await run(`await page.setViewportSize({width:1280,height:800}); await page.goto(${JSON.stringify(parentBase)}); const app=page.frameLocator('iframe[title=Builder]'); await app.locator('button[title="'+repo+'/preview.html"]').click(); await app.frameLocator('iframe[title="preview.html preview b"]').getByText('resource loaded;API blocked;WS blocked',{exact:true}).waitFor(); return 'nested iframe previews remain isolated';`);
   console.log('PASS: standalone browser, terminal lifetime, editors, previews, layout and security');
-} catch (error) { await command('screenshot').catch(() => {}); throw error; } finally {
+} catch (error) { console.error(error); await command('screenshot').catch(() => {}); throw error; } finally {
   parent.close(); await command('close').catch(() => {}); await worker.stopAll(); worker.disconnect(); await app.close(); await rm(root, { recursive: true, force: true });
 }
