@@ -3,7 +3,7 @@ import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } fro
 import type { BuilderItem, FileItem } from '../../shared/model';
 import { services } from '../services/http';
 import { createTerminalHost } from '../services/terminal-host';
-import { parseFileToViewerItem } from '../../shared/viewer-item';
+import { parseFileToViewerItem, splitFrontmatter } from '../../shared/viewer-item';
 import { beginLoad, finishLoad, initialFrameState } from './artifact-item-logic';
 const PdfView = lazy(() => import('../../components/PdfView/PdfView'));
 const Terminal = lazy(() => import('../../components/Terminal/TerminalTab'));
@@ -45,7 +45,7 @@ function FileContent({ item, theme, report }: { item: FileItem; theme: 'light' |
   const viewer = useMemo(() => parseFileToViewerItem(item.filePath, displayedContent ?? ''), [item.filePath, displayedContent]);
   const saveMarkdown = useCallback((body: string) => {
     // Preserve arbitrary YAML byte-for-byte; the rich editor edits the body.
-    const front = sourceRef.current?.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0] ?? '';
+    const front = splitFrontmatter(sourceRef.current ?? '').prefix;
     return save(front + body);
   }, [save]);
   return <div className="file-content">
@@ -54,7 +54,7 @@ function FileContent({ item, theme, report }: { item: FileItem; theme: 'light' |
     </div>}
     {error && <div role="alert" className="pane-message">{error}<button onClick={() => setReload(v => v + 1)}>Retry</button></div>}
     {mode === 'source' && text && content !== null && <CodeEditor key={reload} onDraftChange={value => documentState.current.edit(value)} filePath={item.filePath} content={displayedContent ?? ''} onContentChange={save} theme={theme} />}
-    {mode === 'preview' && markdown && content !== null && <Editor key={reload} onDraftChange={body => { const front = sourceRef.current?.match(/^---\r?\n[\s\S]*?\r?\n---(?:\r?\n|$)/)?.[0] ?? ''; documentState.current.edit(front + body); }} currentItem={viewer} onTextChange={saveMarkdown} theme={theme} />}
+    {mode === 'preview' && markdown && content !== null && <Editor key={reload} onDraftChange={body => { const front = splitFrontmatter(sourceRef.current ?? '').prefix; documentState.current.edit(front + body); }} currentItem={viewer} onTextChange={saveMarkdown} theme={theme} />}
     {item.type === 'pdf' && <PdfView itemId={item.id} />}
     {mode === 'preview' && !markdown && item.type !== 'pdf' && <Preview item={item} theme={theme} />}
   </div>;

@@ -39,7 +39,7 @@ test('simultaneous startup uses one private worker and replacement installs reat
     assert.match(output, /KEPT:alive/);
     await replacement.stopAll();
   } finally {
-    for (const client of clients) client.disconnect();
+    for (const client of clients) { await client.stopAll().catch(() => {}); client.disconnect(); }
     // The idle worker removes its socket after its last client disconnects.
     for (let i = 0; i < 100; i++) {
       try { await stat(workerSocketPath(state)); } catch { break; }
@@ -97,5 +97,5 @@ test('a dropped transport reconnects to the same live PTY', async () => {
     assert.equal((await client.list())[0]!.pid, terminal.pid);
     await client.write(terminal.id, Buffer.from('echo TRANSPORT_OK\n').toString('base64'));
     await client.stopAll();
-  } finally { client.disconnect(); await rm(root, { recursive: true, force: true }); }
+  } finally { const cleanup = await ensureWorker(root); await cleanup.stopAll(); cleanup.disconnect(); client.disconnect(); await rm(root, { recursive: true, force: true }); }
 });

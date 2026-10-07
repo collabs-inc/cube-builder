@@ -4,7 +4,7 @@
  * `body`/`#root`/`*` scoped to that window's whole document and an
  * `@import './Theme.css'` supplied viewer-only design tokens
  * (--color-text-secondary, --color-hover, etc.) beyond the base set
- * @cube/theme exports. Mounted inside the app shell's
+ * the local theme exports. Mounted inside the app shell's
  * main area instead (ItemHost.tsx -> FileItem.tsx), those selectors are
  * scoped down to .file-item and the extra tokens are declared locally here.
  * The ones this shared verbatim with the nav panel (--color-hover,

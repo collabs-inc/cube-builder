@@ -1,5 +1,5 @@
 // Adapted from packages/shared/src/viewer-item.ts at 600e05f2294df5c71026b723915306a74c8cfd3a.
-import fm from "front-matter";
+import { parseDocument } from "yaml";
 import type {
   ViewerItem,
   Quote,
@@ -43,26 +43,30 @@ function typeFromExtension(path: string): string {
   return path.slice(dot + 1).toUpperCase();
 }
 
+/** Parse once so rich editing preserves exactly the prefix the viewer removed. */
+export function splitFrontmatter(content: string): { attributes: FrontMatterAttributes; body: string; prefix: string } {
+  try {
+    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n(?:---|\.\.\.)(?:\r?\n|$)/);
+    if (match) {
+      const document = parseDocument(match[1]!, { schema: 'core' });
+      if (document.errors.length) throw document.errors[0];
+      const parsed = document.toJS({ maxAliasCount: 100 });
+      const attributes = parsed && typeof parsed === 'object' && !Array.isArray(parsed) ? parsed : {};
+      return { attributes, body: content.slice(match[0].length), prefix: match[0] };
+    }
+  } catch { /* Malformed metadata stays in the editable body. */ }
+  return { attributes: {}, body: content, prefix: '' };
+}
+
 export function parseFileToViewerItem(
   path: string,
   content: string,
   stats?: { ctime: string; mtime: string },
 ): ViewerItem {
-  let attributes: FrontMatterAttributes = {};
-  let body = content;
-
-  try {
-    const result = fm<FrontMatterAttributes>(content);
-    attributes = result.attributes;
-    body = result.body;
-  } catch {
-    // If frontmatter parsing fails, treat entire content as body
-  }
+  const { attributes, body } = splitFrontmatter(content);
 
   const quotes: Quote[] | undefined =
-    attributes.quotes?.map((q) =>
-      typeof q === "string" ? { text: q } : q,
-    );
+    Array.isArray(attributes.quotes) ? attributes.quotes.filter(q => typeof q === "string" || (q && typeof q.text === "string")).map(q => typeof q === "string" ? { text: q } : q) : undefined;
 
   const concepts: Concept[] | undefined =
     attributes.concepts;

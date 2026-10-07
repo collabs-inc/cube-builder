@@ -18,9 +18,9 @@
      half-clipped under the titlebar. */
   --rail-gutter: 4px;
 
-  /* @cube/theme's `@theme inline` block maps --color-accent-foreground to
+  /* the local theme's `@theme inline` block maps --color-accent-foreground to
      this but never declares it, so the app supplies the value. --card comes
-     from @cube/theme itself. */
+     from the local theme itself. */
   --accent-foreground: rgb(24, 24, 24);
 
   /* Its pair, which was missed: the theme block maps --color-accent to
@@ -86,7 +86,7 @@
 }
 
 /* html/body/#root sizing, the transparent background, the base font and
-   font-smoothing all come from @cube/theme's `@layer base` (main.tsx). */
+   font-smoothing all come from the local theme's `@layer base` (main.tsx). */
 
 /* Interface text is chrome, not content: a Cmd+A (or a drag that wanders)
    must not paint the sidebar rows, the view pill, tooltips and empty

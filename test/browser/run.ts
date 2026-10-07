@@ -32,7 +32,20 @@ const worker = await ensureWorker(stateDir);
 const parent = createServer((_req, res) => res.end(`<html><body style="margin:0"><iframe title="Builder" src="${base}" style="border:0;width:100vw;height:100vh"></iframe></body></html>`));
 parent.listen(0, '127.0.0.1'); await once(parent, 'listening');
 const parentBase = `http://127.0.0.1:${(parent.address() as {port:number}).port}`;
-const command = async (...args: string[]) => { const result = await exec('cube-browser', ['--session', session, ...args], { timeout: 120_000, maxBuffer: 4 * 1024 * 1024 }); if (result.stdout.trim()) console.log(result.stdout.trim()); };
+let ciBrowser: import('playwright').Browser | undefined;
+let ciPage: import('playwright').Page | undefined;
+const command = async (...args: string[]) => {
+  if (process.env.BUILDER_BROWSER_DRIVER === 'playwright') {
+    if (args[0] === 'close') { await ciBrowser?.close(); ciBrowser = undefined; return; }
+    if (!ciBrowser) { const { chromium } = await import('playwright'); ciBrowser = await chromium.launch(); ciPage = await ciBrowser.newPage({ viewport: { width: 1280, height: 800 } }); }
+    if (args[0] === 'open') await ciPage!.goto(args[1]!);
+    else if (args[0] === 'run-code') console.log(await new Function(`return (${args[1]})`)()(ciPage));
+    else if (args[0] === 'screenshot') { await mkdir('test-results', { recursive: true }); await ciPage!.screenshot({ path: `test-results/browser-${Date.now()}.png` }); }
+    return;
+  }
+  const result = await exec('cube-browser', ['--session', session, ...args], { timeout: 120_000, maxBuffer: 4 * 1024 * 1024 });
+  if (result.stdout.trim()) console.log(result.stdout.trim());
+};
 const run = async (body: string) => command('run-code', `async page => { page.setDefaultTimeout(10000); const repo = ${JSON.stringify(repo)}; const base = ${JSON.stringify(base)}; ${body} }`);
 const api = async (method: string, params: unknown = {}) => { const r = await fetch(base + '/api', { method: 'POST', headers: { origin: base, 'content-type': 'application/json' }, body: JSON.stringify({ id: 'test', method, params }) }); const data = await r.json() as any; if (!data.ok) throw new Error(JSON.stringify(data)); return data.result; };
 try {
