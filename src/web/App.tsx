@@ -21,7 +21,7 @@ import { Content } from './items/Content';
 import { MiniRepoRow } from './sidebar/MiniRepoRow';
 import { bytesToBase64 } from './services/assets';
 const workspace = createWorkspace('browser', localStorage);
-const initial: BuilderSnapshot = { revision: 0, repos: [], items: [], capabilities: { platform: '', home: '' } };
+const initial: BuilderSnapshot = { epoch: '', revision: 0, repos: [], items: [], capabilities: { platform: '', home: '' } };
 type Dialog = { title: string; fields: { name: string; label: string; value?: string }[]; submit: (values: Record<string, string>) => Promise<void> };
 export default function App() {
   const [preferences, setPreferences] = useState(loadPreferences), [settings, setSettings] = useState(false);
