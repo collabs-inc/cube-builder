@@ -80,7 +80,8 @@ try {
     await page.getByRole('button',{name:'Choose folder',exact:true}).click();
     await page.locator('.mini-repo-row').filter({hasText:'project'}).waitFor();
     await page.getByRole('textbox',{name:'Terminal input',exact:true}).first().focus();
-    await page.keyboard.type('printf BROWSER_ACCEPTANCE');await page.keyboard.press('Enter');return 'original add-repo and terminal workflow';`);
+    await page.keyboard.type("printf 'BROWSER_%s' LIVE_OUTPUT");await page.keyboard.press('Enter');
+    await page.locator('.xterm-accessibility-tree').filter({hasText:'BROWSER_LIVE_OUTPUT'}).first().waitFor();return 'original add-repo and live terminal output';`);
   let terminal:any;for(let n=0;n<100;n++){terminal=(await api('snapshot')).items.find((i:any)=>i.type==='term');if(terminal)break;await new Promise(r=>setTimeout(r,100));} if(!terminal)console.error('Fixture catalog',await api('snapshot'),'owned sessions',await worker.list());assert.ok(terminal);
   const pid=(await worker.list()).find(s=>s.id===terminal.sessionId)!.pid;
   await run(`await page.getByRole('tab').first().click({button:'right'});await page.getByRole('menuitem',{name:'Name screen…',exact:true}).click();
@@ -136,8 +137,9 @@ try {
   await command('screenshot');
   await app.close();app=await startServer({port,stateDir,webRoot:resolve('dist/web')});
   await reload();
-  await run(`await page.getByTitle(repo,{exact:true}).first().click();await page.getByRole('textbox',{name:'Terminal input',exact:true}).first().focus();await page.keyboard.type('printf AFTER_RESTART');await page.keyboard.press('Enter');
-    await page.waitForFunction(async id=>{const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:'read',method:'terminals.read',params:{id,since:0}})});return atob((await r.json()).result.data).includes('AFTER_RESTART');},${JSON.stringify(terminal.id)});return 'backend and page restart retained terminal';`);
+  await run(`await page.getByTitle(repo,{exact:true}).first().click();await page.getByRole('textbox',{name:'Terminal input',exact:true}).first().focus();await page.keyboard.type("printf 'AFTER_%s' RESTART_OUTPUT");await page.keyboard.press('Enter');
+    await page.locator('.xterm-accessibility-tree').filter({hasText:'AFTER_RESTART_OUTPUT'}).first().waitFor();
+    await page.waitForFunction(async id=>{const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:'read',method:'terminals.read',params:{id,since:0}})});return atob((await r.json()).result.data).includes('AFTER_RESTART_OUTPUT');},${JSON.stringify(terminal.id)});return 'backend and page restart retained terminal';`);
   assert.equal((await worker.list()).find(s=>s.id===terminal.sessionId)!.pid,pid);
   await run(`await page.keyboard.press('Control+,');await page.getByRole('button',{name:'Appearance',exact:true}).click();await page.getByRole('radio',{name:'dark',exact:true}).click();await page.getByRole('button',{name:'Close',exact:true}).click();await page.setViewportSize({width:390,height:844});await page.getByRole('textbox',{name:'Terminal input',exact:true}).first().waitFor({state:'visible'});return 'original settings and narrow layout';`);
   await command('screenshot');
