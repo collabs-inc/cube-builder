@@ -57,7 +57,12 @@ export class Previews {
         'content-type': TYPES[extname(canonical).toLowerCase()] ?? 'application/octet-stream',
         'content-length': Math.max(0, end - start + 1), 'accept-ranges': 'bytes',
         ...(status === 206 ? { 'content-range': `bytes ${start}-${end}/${s.size}` } : {}),
-        'content-security-policy': "sandbox allow-scripts allow-forms allow-downloads allow-modals allow-popups",
+        // Built-in PDF viewers are browser plugins and cannot render inside a
+        // CSP sandbox. This exception is limited to a single-file PDF capability
+        // with a fixed MIME type and nosniff. Artifact trees remain opaque.
+        ...(!capability.tree && extname(canonical).toLowerCase()==='.pdf' ? {} : {
+          'content-security-policy': "sandbox allow-scripts allow-forms allow-downloads allow-modals allow-popups",
+        }),
         // Capabilities are already the read authority. Opaque sandbox modules
         // and fonts need anonymous CORS; control routes never send this header.
         'access-control-allow-origin': '*',

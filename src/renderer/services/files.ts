@@ -1,3 +1,4 @@
+import { moveFileDrafts, pauseFileDraftSaves } from './drafts';
 import type { FilesService, FileStats } from './types';
 import { BuilderConnection, Signal } from './connection';
 import type { FsChangeEvent } from '@port/shared/types';
@@ -23,9 +24,14 @@ export function createFilesService(connection:BuilderConnection):FilesService & 
  }
  async function move(path:string,destination:string){
   if(path===destination)return path;
-  const info=await connection.api.call('files.stat',{path});
-  const result=await connection.api.call('files.rename',{path,destination,revision:info.revision});
-  await connection.refresh();renamed.emit(path,result.path);emitPath(path,3);emitPath(result.path,1);return result.path;
+  const paused=pauseFileDraftSaves(path);
+  try {
+   await paused.ready;
+   const info=await connection.api.call('files.stat',{path});
+   const result=await connection.api.call('files.rename',{path,destination,revision:info.revision});
+   moveFileDrafts(path,result.path);
+   await connection.refresh();renamed.emit(path,result.path);emitPath(path,3);emitPath(result.path,1);return result.path;
+  }finally{paused.resume()}
  }
  async function download(path:string,id:string=crypto.randomUUID()){
   const entry={path,state:{id,name:nameOf(path),phase:'preparing' as FileDownloadState['phase'],bytesReceived:0,bytesPerSecond:0},abort:new AbortController(),url:undefined as string|undefined};

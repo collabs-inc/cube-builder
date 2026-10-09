@@ -1,3 +1,4 @@
+import { moveFileDrafts } from './drafts';
 import type { BuilderServices } from '../../web/services/types';
 import type { BuilderSnapshot } from '../../shared/model';
 import type { BuilderEvent } from '../../shared/events';
@@ -30,6 +31,11 @@ export class BuilderConnection {
  }
  private accept(snapshot:BuilderSnapshot){
   if(this.current?.epoch===snapshot.epoch&&this.current.revision>=snapshot.revision)return;
+  if(this.current?.epoch===snapshot.epoch)for(const next of snapshot.items){
+   if(next.type==='term')continue;
+   const old=this.current.items.find(item=>item.id===next.id);
+   if(old&&old.type!=='term'&&old.filePath!==next.filePath)moveFileDrafts(old.filePath,next.filePath);
+  }
   this.current=snapshot;this.changed.emit(snapshot);
  }
  async refresh(){const before=this.received;const value=await this.api.call('snapshot',{});if(this.received===before)this.accept(value);return this.snapshot}

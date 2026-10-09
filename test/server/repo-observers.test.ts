@@ -1,6 +1,6 @@
 import {test} from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,realpath} from 'node:fs/promises';
 import {join} from 'node:path';
 import {tmpdir} from 'node:os';
 import {Registry} from '../../src/server/registry.js';
@@ -9,7 +9,7 @@ import {git} from '../../src/server/git.js';
 import {RepoObservers} from '../../src/server/repo-observers.js';
 async function until(check:()=>boolean){const end=Date.now()+5000;while(!check()&&Date.now()<end)await new Promise(r=>setTimeout(r,25));assert.ok(check(),'Git changes must reach the catalog without a client refresh')}
 test('original Git watchers adopt external worktrees and follow branch changes',async()=>{
- const root=await mkdtemp(join(tmpdir(),'builder-repo-observers-'));
+ const root=await realpath(await mkdtemp(join(tmpdir(),'builder-repo-observers-')));
  let observers:RepoObservers|undefined;
  try {
   const registry=await Registry.open(join(root,'state')),repos=new Repos(registry);

@@ -23,7 +23,7 @@ import { isImageFile } from "@port/shared/image";
 import { isBrowserPreviewImage } from "@port/shared/browser-image";
 import { parseCloudPath } from "@port/shared/path-utils";
 import { isPdfFile } from "@port/shared/pdf";
-import { fileDraft } from "../services/drafts";
+import { fileDraft, useDraftPersistenceError } from "../services/drafts";
 import { extractCoverImageUrl } from "@port/shared/extract-cover-image";
 import { ImageView } from "@builder/components/ImageView/ImageView";
 import { LoadingPulse } from "@builder/components/LoadingPulse";
@@ -96,6 +96,8 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
   const filePath = item.filePath ?? null;
   const [fileContent, setFileContent] = useState("");
   const [draftConflict, setDraftConflict] = useState(false);
+  const editorGenerationRef=useRef(0);
+  const editorGeneration=editorGenerationRef.current;
   const [previewUrl, setPreviewUrl] = useState<string | undefined>();
   const [reloadRevision, setReloadRevision] = useState(0);
   useEffect(() => {
@@ -106,6 +108,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
   },[filePath]);
   const lastWrittenContentRef = useRef<string | null>(null);
   const [loadedPath, setLoadedPath] = useState<string | null>(null);
+  const draftPersistenceError=useDraftPersistenceError(loadedPath);
   const [fileStats, setFileStats] = useState<{
     ctime: string;
     mtime: string;
@@ -203,6 +206,11 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
     if (pathChanged && isRenamingRef.current) {
       isRenamingRef.current = false;
       latestLoadTokenRef.current = null;
+      if(filePath){
+        const draft=fileDraft(filePath);
+        if(draft.value!==null)setFileContent(draft.value);
+        fileMtimeRef.current=draft.revision;
+      }
       setLoadedPath(filePath);
       setFileError(null);
       return;
@@ -305,13 +313,14 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
 
   const hasCoverImage = !!coverImageUrl && !coverImageFailed;
 
-  const saveContent = useCallback(async (path:string, content:string) => {
+  const saveContent = useCallback(async (path:string, content:string, generation:number) => {
+    if(generation!==editorGenerationRef.current)return {ok:false,mtime:""};
     const draft=fileDraft(path);
     if(draft.value===null)draft.edit(content);
     lastWrittenContentRef.current=content;
     try {
       const ok=await draft.save(content,async revision=>{
-        const result=await services.files.writeFile(path,content,revision??undefined);
+        const result=await services.files.writeFile(draft.path??path,content,revision??undefined);
         if(!result.ok)throw Object.assign(new Error("File changed on disk"),{code:'file-changed'});
         return result.revision??result.mtime;
       });
@@ -326,12 +335,25 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
   },[]);
   const saveViewerText = useCallback(async(text:string)=>{
     if(!loadedPath||!viewerItem||filePathRef.current!==loadedPath)return;
-    return saveContent(loadedPath,serializeViewerItem(viewerItem,text));
-  },[loadedPath,viewerItem,saveContent]);
+    return saveContent(loadedPath,serializeViewerItem(viewerItem,text),editorGeneration);
+  },[loadedPath,viewerItem,saveContent,editorGeneration]);
   const saveCodeContent = useCallback(async(text:string)=>{
     if(!loadedPath||filePathRef.current!==loadedPath)return;
-    return saveContent(loadedPath,text);
-  },[loadedPath,saveContent]);
+    return saveContent(loadedPath,text,editorGeneration);
+  },[loadedPath,saveContent,editorGeneration]);
+
+  const reloadFromDisk=()=>{
+    if(!loadedPath)return;
+    const path=loadedPath,draft=fileDraft(path);
+    // Dirty editor cleanup may save on unmount. Retire its callbacks and
+    // queued writes before unmounting, then read after in-flight writes settle.
+    editorGenerationRef.current++;
+    draft.invalidate();setLoadedPath(null);
+    void draft.settled().then(()=>{
+      draft.discard();
+      if(filePathRef.current===path){setDraftConflict(false);setReloadRevision(value=>value+1)}
+    });
+  };
 
   // Ordering race: `renameFile`'s response and the fs watcher's own
   // file-renamed broadcast (state/file-events.ts, subscribed once at
@@ -353,6 +375,10 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
     async (newTitle: string) => {
       if (!loadedPath) return;
       try {
+        // The original editor keeps pending text internally. Carry those
+        // bytes into its props before a rename changes its document identity.
+        const pending=fileDraft(loadedPath).value;
+        if(pending!==null)setFileContent(pending);
         const newPath = await services.files.renameFile(loadedPath, newTitle);
         isRenamingRef.current = true;
         await services.catalog.updateItem(item.machineId, item.id, {
@@ -421,10 +447,11 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
             />
           </div>
         )}
+        {draftPersistenceError && <div role="alert" className="file-conflict">Browser storage is unavailable or full. Editing and saving still work, but unsaved text cannot be recovered after a reload.</div>}
         {draftConflict && loadedPath && <div role="alert" className="file-conflict">
           This file changed on disk. Your draft is preserved.
           <button onClick={()=>{void services.desktop.clipboard.writeText(fileDraft(loadedPath).value??'')}}>Copy draft</button>
-          <button onClick={()=>{fileDraft(loadedPath).discard();setDraftConflict(false);setLoadedPath(null);setReloadRevision(value=>value+1)}}>Reload from disk</button>
+          <button onClick={reloadFromDisk}>Reload from disk</button>
         </div>}
         {displayState.kind === "error" && (
           <div className="empty-state" style={{ color: "#ef4444" }}>
@@ -437,7 +464,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
             <LazyItemDetailView
               item={viewerItem}
               onTextChange={saveViewerText}
-              onDraftChange={text=>{if(loadedPath)fileDraft(loadedPath).edit(serializeViewerItem(viewerItem,text))}}
+              onDraftChange={text=>{if(loadedPath&&filePathRef.current===loadedPath&&editorGenerationRef.current===editorGeneration)fileDraft(loadedPath).edit(serializeViewerItem(viewerItem,text))}}
               onTitleChange={handleRename}
               theme={theme}
               editingDisabled={editingDisabled}
@@ -450,7 +477,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
               filePath={displayedPath}
               content={fileContent}
               onContentChange={saveCodeContent}
-              onDraftChange={text=>{if(loadedPath)fileDraft(loadedPath).edit(text)}}
+              onDraftChange={text=>{if(loadedPath&&filePathRef.current===loadedPath&&editorGenerationRef.current===editorGeneration)fileDraft(loadedPath).edit(text)}}
               theme={theme}
               editingDisabled={editingDisabled}
             />
@@ -463,7 +490,8 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
           <iframe
             ref={pdfRef}
             src={previewUrl}
-            sandbox="allow-same-origin"
+            // The server grants this exact PDF a fixed application/pdf MIME.
+            // Native PDF viewers are disabled by iframe sandbox flags.
             style={{ width: "100%", height: "100%", border: "none" }}
             title={displayedPath}
           />

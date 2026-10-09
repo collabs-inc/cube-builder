@@ -1,6 +1,6 @@
 import type { BuilderSnapshot } from '../shared/model.js';
 import { EventEmitter } from 'node:events';
-import { mkdir, readFile, writeFile, rename, rm } from 'node:fs/promises';
+import { mkdir, readFile, writeFile, rename, rm, realpath } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
@@ -11,6 +11,7 @@ export class Registry extends EventEmitter {
   private constructor(readonly stateDir: string, private data: BuilderSnapshot) { super(); }
   static async open(stateDir: string): Promise<Registry> {
     await mkdir(stateDir, { recursive: true, mode: 0o700 });
+    stateDir=await realpath(stateDir);
     const empty: BuilderSnapshot = { epoch: randomUUID(), revision: 0, repos: [], items: [], capabilities: { platform: process.platform, home: homedir() } };
     const registry = new Registry(stateDir, empty);
     let raw: string;

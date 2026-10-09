@@ -51,10 +51,11 @@ export class Repos {
   }
   async refresh(id: string): Promise<BuilderRepo> {
     const repo = this.get(id); const worktrees = await listWorktrees(repo.root);
+    const canonical=new Map(await Promise.all(repo.worktrees.map(async tree=>[tree.id,await realpath(tree.root).catch(()=>tree.root)] as const)));
     await this.registry.mutate(null, draft => { const row = draft.repos.find(r => r.id === id); if (row) {
       const old=row.worktrees;
-      const refreshed=worktrees.map(tree=>{const previous=old.find(w=>w.root===tree.root);return previous?{...previous,...tree,id:previous.id}:tree});
-      row.worktrees=[...old.filter(tree=>tree.creation&&!refreshed.some(w=>w.root===tree.root)),...refreshed].sort((a,b)=>{const ai=old.findIndex(w=>w.id===a.id),bi=old.findIndex(w=>w.id===b.id);return (ai<0?old.length:ai)-(bi<0?old.length:bi)});
+      const refreshed=worktrees.map(tree=>{const previous=old.find(w=>(canonical.get(w.id)??w.root)===tree.root);return previous?{...previous,...tree,id:previous.id}:tree});
+      row.worktrees=[...old.filter(tree=>tree.creation&&!refreshed.some(w=>w.id===tree.id)),...refreshed].sort((a,b)=>{const ai=old.findIndex(w=>w.id===a.id),bi=old.findIndex(w=>w.id===b.id);return (ai<0?old.length:ai)-(bi<0?old.length:bi)});
     } }); return this.get(id);
   }
   async createWorktree(params: { repoId: string; path: string; branch: string; start?: string }) {
@@ -62,10 +63,11 @@ export class Repos {
     await git(repo.root, ['check-ref-format', '--branch', branch]);
     await mkdir(dirname(path), { recursive: true });
     await git(repo.root, ['worktree', 'add', '-b', branch, '--', path, ...(params.start ? [text(params.start, 'start revision')] : [])]);
-    return (await this.refresh(repo.id)).worktrees.find(w => resolve(w.root) === path)!;
+    const canonical=await realpath(path);
+    return (await this.refresh(repo.id)).worktrees.find(w => w.root === canonical)!;
   }
   async removeWorktree(params: { repoId: string; path: string }) {
-    const repo = await this.refresh(params.repoId); const path = absolutePath(params.path);
+    const repo = await this.refresh(params.repoId); const path = await realpath(absolutePath(params.path));
     const tree = repo.worktrees.find(w => resolve(w.root) === path);
     if (!tree || tree.main) throw new BuilderError('invalid-worktree', 'Only a registered secondary worktree can be removed');
     if (this.registry.snapshot().items.some(i => i.type === 'term' && !i.exited && isWithin(path, i.cwd))) throw new BuilderError('worktree-busy', 'Close running terminals in this worktree first');

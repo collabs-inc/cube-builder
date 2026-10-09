@@ -19,6 +19,7 @@ process.env.PATH=fixtureBin+':'+process.env.PATH;
 await writeFile(join(root, 'uploaded.txt'), 'Uploaded from browser.');
 await exec('git', ['init', '-b', 'main', repo]);
 await writeFile(join(repo, 'note.md'), '# Browser test\n\nInitial text.\n');
+await writeFile(join(repo,'code.ts'),'const original = true;\n');
 await writeFile(join(repo, 'picture.png'), Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aWQAAAABJRU5ErkJggg==', 'base64'));
 await writeFile(join(repo, 'fixture.json'), '{"message":"resource loaded"}');
 await writeFile(join(repo, 'preview.html'), `<!doctype html><title>Sandbox fixture</title><h1>Preview ready</h1><p id="status">loading</p><script type="module" src="./preview.js"></script>`);
@@ -27,8 +28,10 @@ try { const r = await fetch('/api', {method:'POST',headers:{'content-type':'appl
 await new Promise(resolve => { const ws = new WebSocket(location.origin.replace('http','ws')+'/events'); ws.onopen = () => {result.push('WS EXPOSED');ws.close();resolve();}; ws.onerror = () => {result.push('WS blocked');resolve();}; }); document.querySelector('#status').textContent = result.join(';');`);
 // Small valid PDF, with computed byte offsets rather than a browser-specific fixture.
 let pdf = '%PDF-1.4\n'; const offsets = [0];
-for (const [i, body] of ['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R >>','<< /Length 0 >>\nstream\n\nendstream'].entries()) { offsets.push(Buffer.byteLength(pdf)); pdf += `${i + 1} 0 obj\n${body}\nendobj\n`; }
-const xref = Buffer.byteLength(pdf); pdf += `xref\n0 5\n0000000000 65535 f \n${offsets.slice(1).map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
+const pdfText='BT /F1 18 Tf 20 100 Td (PDF preview ready) Tj ET';
+const pdfObjects=['<< /Type /Catalog /Pages 2 0 R >>','<< /Type /Pages /Kids [3 0 R] /Count 1 >>','<< /Type /Page /Parent 2 0 R /MediaBox [0 0 240 200] /Resources << /Font << /F1 5 0 R >> >> /Contents 4 0 R >>',`<< /Length ${Buffer.byteLength(pdfText)} >>\nstream\n${pdfText}\nendstream`,'<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>'];
+for (const [i, body] of pdfObjects.entries()) { offsets.push(Buffer.byteLength(pdf)); pdf += `${i + 1} 0 obj\n${body}\nendobj\n`; }
+const xref = Buffer.byteLength(pdf); pdf += `xref\n0 ${pdfObjects.length+1}\n0000000000 65535 f \n${offsets.slice(1).map(o => `${String(o).padStart(10, '0')} 00000 n \n`).join('')}trailer\n<< /Size ${pdfObjects.length+1} /Root 1 0 R >>\nstartxref\n${xref}\n%%EOF\n`;
 await writeFile(join(repo, 'document.pdf'), pdf);
 await exec('git', ['-C', repo, 'add', '.']); await exec('git', ['-C', repo, '-c', 'user.name=Test', '-c', 'user.email=test@example.invalid', 'commit', '-m', 'fixture']);
 let app = await startServer({ port: 0, stateDir, webRoot: resolve('dist/web') });
@@ -98,10 +101,32 @@ try {
   await writeFile(join(repo,'note.md'),'# Agent change\n\nExternal wins until explicitly resolved.\n');
   await run(`await page.getByRole('button',{name:'Copy draft',exact:true}).waitFor();await page.getByRole('button',{name:'Reload from disk',exact:true}).click();await page.locator('.bn-editor').getByText('External wins until explicitly resolved.',{exact:true}).waitFor();return 'external conflict preserved, explicit reload works';`);
   assert.doesNotMatch(await readFile(join(repo,'note.md'),'utf8'),/Immediate local draft/);
+  await run(`await page.route('**/api',async route=>{if(route.request().postDataJSON()?.method==='files.write')await route.abort();else await route.continue();});
+    await page.locator('.bn-editor').click();await page.keyboard.press('Control+End');await page.keyboard.type('Draft survives rename.');
+    await page.getByRole('textbox',{name:'Item title',exact:true}).fill('renamed.md');await page.getByRole('tab',{name:'Apps',exact:true}).click();
+    await page.waitForFunction(path=>Object.entries(localStorage).some(([key,value])=>key.endsWith(path)&&value.includes('Draft survives rename.')),repo+'/renamed.md');return 'dirty title rename retained draft';`);
+  await reload();
+  await run(`await page.locator('.bn-editor').getByText('Draft survives rename.',{exact:false}).waitFor();await page.unrouteAll();
+    await page.locator('.bn-editor').click();await page.keyboard.press('Control+End');await page.keyboard.type('Saved at renamed path.');await page.getByRole('tab',{name:'Apps',exact:true}).click();
+    await page.waitForFunction(async path=>{const r=await fetch('/api',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:'read',method:'files.read',params:{path}})});return (await r.json()).result.content.includes('Saved at renamed path.');},repo+'/renamed.md');return 'renamed draft saved after reload';`);
+  assert.match(await readFile(join(repo,'renamed.md'),'utf8'),/Draft survives rename/);await assert.rejects(stat(join(repo,'note.md')),{code:'ENOENT'});
+  await run(`${browse}await page.locator('.collection-item-row').filter({hasText:'code.ts'}).dblclick();await page.locator('.monaco-editor .view-lines').first().click({position:{x:40,y:8}});
+    await page.route('**/api',async route=>{if(route.request().postDataJSON()?.method==='files.write')await route.abort();else await route.continue();});
+    await page.keyboard.press('Control+A');await page.keyboard.type('const discarded = true;');
+    await page.waitForFunction(()=>Object.values(localStorage).some(value=>value.includes('const discarded = true;')));return 'real Monaco dirty editor';`);
+  await writeFile(join(repo,'code.ts'),'const external = true;\n');
+  await run(`await page.getByRole('button',{name:'Reload from disk',exact:true}).click();
+    await page.locator('.monaco-editor .view-lines').getByText('const external = true;',{exact:false}).waitFor();await page.unrouteAll();return 'Monaco discard does not save during unmount';`);
+  assert.equal(await readFile(join(repo,'code.ts'),'utf8'),'const external = true;\n');
   await run(`${browse}const row=page.locator('.collection-folder-row').first();await row.evaluate(el=>{const data=new DataTransfer();data.items.add(new File(['Uploaded from browser.'],'uploaded.txt',{type:'text/plain'}));el.dispatchEvent(new DragEvent('drop',{bubbles:true,cancelable:true,dataTransfer:data}));});
     ${browse}await page.locator('.collection-item-row').filter({hasText:'uploaded.txt'}).waitFor();
     await page.locator('.collection-item-row').filter({hasText:'picture.png'}).dblclick();await page.waitForFunction(()=>[...document.querySelectorAll('img')].some(i=>i.naturalWidth===1));
-    ${browse}await page.locator('.collection-item-row').filter({hasText:'document.pdf'}).dblclick();await page.locator('iframe[title="'+repo+'/document.pdf"]').waitFor();return 'file drop, image and PDF preview';`);
+    ${browse}await page.locator('.collection-item-row').filter({hasText:'document.pdf'}).dblclick();const pdfFrame=page.locator('iframe[title="'+repo+'/document.pdf"]');await pdfFrame.waitFor();
+    if(await pdfFrame.getAttribute('sandbox')!==null)throw Error('Native PDF viewer is sandbox-disabled');
+    await page.waitForFunction(path=>[...document.querySelectorAll('iframe')].some(frame=>frame.title===path&&frame.getAttribute('src')),repo+'/document.pdf');
+    const documentUrl=await pdfFrame.evaluate(frame=>frame.src);const documentResponse=await page.request.get(documentUrl);
+    if(documentResponse.headers()['content-type']!=='application/pdf'||documentResponse.headers()['content-security-policy']?.includes('sandbox'))throw Error('PDF response disables native rendering');
+    if(!(await documentResponse.text()).startsWith('%PDF-'))throw Error('PDF capability did not return a PDF');return 'file drop, image and native PDF response';`);
   assert.equal(await readFile(join(repo,'uploaded.txt'),'utf8'),'Uploaded from browser.');
   await run(`await page.locator('.mini-repo-row').filter({hasText:'project'}).first().click({button:'right'});await page.getByRole('menuitem',{name:'New worktree…',exact:true}).click();await page.getByLabel('Name',{exact:true}).fill('browser-branch');await page.getByRole('button',{name:'Create worktree',exact:true}).click();return 'original worktree dialog submitted';`);
   let snapshot:any;
@@ -120,5 +145,5 @@ try {
   await acceptBeforeUnload();
   await run(`const child=page.frameLocator('iframe[title=Builder]');await child.locator('.workspace-navigation [title="preview.html"]').first().click();await child.frameLocator('iframe[title="preview.html"]:visible').first().getByText('resource loaded;API blocked;WS blocked',{exact:true}).waitFor();return 'standalone app in ordinary parent iframe';`);
   console.log('PASS: original Builder browser workflows, durable drafts, sessions and preview isolation');
-} catch(error){console.error(error);await command('screenshot').catch(()=>{});throw error;}
+} catch(error){console.error(error);await run("return await page.evaluate(()=>({editors:[...document.querySelectorAll('.bn-editor')].map(el=>el.textContent),drafts:Object.fromEntries(Object.entries(localStorage).filter(([key])=>key.startsWith('builder-draft:')))}));").catch(()=>{});await command('screenshot').catch(()=>{});throw error;}
 finally{parent.close();await command('close').catch(()=>{});await worker.stopAll();worker.disconnect();await app.close();await rm(root,{recursive:true,force:true});}

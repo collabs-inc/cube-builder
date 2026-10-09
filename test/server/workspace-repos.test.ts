@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp,rm,writeFile,mkdir,readFile } from 'node:fs/promises';
+import { mkdtemp,rm,writeFile,mkdir,readFile,realpath,symlink } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Registry } from '../../src/server/registry.js';
@@ -10,9 +10,10 @@ import { Terminals } from '../../src/server/terminals.js';
 import { git } from '../../src/server/git.js';
 
 test('original worktree operations retain sidebar identity through creation, refresh, and removal refusal',async()=>{
- const dir=await mkdtemp(join(tmpdir(),'builder-worktrees-'));
+ const dir=await realpath(await mkdtemp(join(tmpdir(),'builder-worktrees-')));
  try {
-  const registry=await Registry.open(join(dir,'state')),repos=new Repos(registry);
+  await symlink(dir,join(dir,'alias'),'dir');
+  const registry=await Registry.open(join(dir,'alias','state')),repos=new Repos(registry);
   const repo=await repos.create(join(dir,'repo'));
   await git(repo.root,['-c','user.name=Test','-c','user.email=test@localhost','-c','commit.gpgsign=false','-c','core.hooksPath=/dev/null','commit','--allow-empty','-m','initial']);
   const service=new WorkspaceRepos(registry,repos,{close(){throw Error('No sessions in fixture')}} as unknown as Terminals);
