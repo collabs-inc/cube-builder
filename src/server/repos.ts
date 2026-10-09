@@ -51,7 +51,11 @@ export class Repos {
   }
   async refresh(id: string): Promise<BuilderRepo> {
     const repo = this.get(id); const worktrees = await listWorktrees(repo.root);
-    await this.registry.mutate(null, draft => { const row = draft.repos.find(r => r.id === id); if (row) row.worktrees = worktrees; }); return this.get(id);
+    await this.registry.mutate(null, draft => { const row = draft.repos.find(r => r.id === id); if (row) {
+      const old=row.worktrees;
+      const refreshed=worktrees.map(tree=>{const previous=old.find(w=>w.root===tree.root);return previous?{...previous,...tree,id:previous.id}:tree});
+      row.worktrees=[...old.filter(tree=>tree.creation&&!refreshed.some(w=>w.root===tree.root)),...refreshed].sort((a,b)=>{const ai=old.findIndex(w=>w.id===a.id),bi=old.findIndex(w=>w.id===b.id);return (ai<0?old.length:ai)-(bi<0?old.length:bi)});
+    } }); return this.get(id);
   }
   async createWorktree(params: { repoId: string; path: string; branch: string; start?: string }) {
     const repo = this.get(params.repoId); const path = absolutePath(params.path); const branch = text(params.branch, 'branch', 200);

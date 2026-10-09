@@ -296,7 +296,7 @@ function TerminalSessionController({ item, visible, focused = false }: TerminalI
   // it — the per-zone replacement for the old window-wide overlay, which
   // could only ever promise one thing for four different surfaces.
   const dropTarget = useDropTarget();
-  const isRemote = item.machineId !== LOCAL_MACHINE_ID;
+  const isRemote = true; // Browser file drops must upload to the installation machine.
   // One detector for the pane's lifetime, across reconnects: the
   // typed-since-Enter flag belongs to the user's train of thought, not
   // to any one pty attachment.

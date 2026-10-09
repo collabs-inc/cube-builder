@@ -72,6 +72,7 @@ export function ColumnBrowser({
   sessionsIn,
   decorateFile,
   onPickFile,
+  onPickFolder,
   onNewTerminal,
   onFileDragStart,
   onFolderDragStart,
@@ -87,6 +88,7 @@ export function ColumnBrowser({
   /** A file the caller recognises (an artifact…) keeps its place but takes this look. */
   decorateFile?: (file: Omit<PickedFile, "kind">) => FileDecoration | null;
   /** A file was picked: the browser marks it and shows `preview`; opening it is the caller's call. */
+  onPickFolder?: (path:string) => void;
   onPickFile?: (path: string, repoId: string | null) => void;
   /** The folder row's action: a shell started in that folder. */
   onNewTerminal?: (path: string, repoId: string | null) => void;
@@ -134,7 +136,7 @@ export function ColumnBrowser({
     onColumns?.(1 + trail.length + (picked ? 1 : 0));
   }, [trail.length, picked, onColumns]);
 
-  const pickFolder = (column: number, pick: Pick) => { setPicked(null); setTrail(previous => [...previous.slice(0, column), pick]); };
+  const pickFolder = (column: number, pick: Pick) => { onPickFolder?.(pick.path); setPicked(null); setTrail(previous => [...previous.slice(0, column), pick]); };
   const pickFile = (file: Omit<PickedFile, "kind">) => { setPicked({ kind: "file", ...file }); onPickFile?.(file.path, file.repoId); };
   const pickSession = (id: string) => setPicked({ kind: "session", id });
 

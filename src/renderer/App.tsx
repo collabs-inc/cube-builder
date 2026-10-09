@@ -1,3 +1,4 @@
+import { FolderPickerHost } from "./overlays/FolderPicker";
 import { LOCAL_MACHINE_ID } from "@port/shared/types";
 import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { ErrorBoundary } from "./ErrorBoundary";
@@ -376,6 +377,7 @@ function AppShell() {
 
       <ConfirmDialogHost />
       <PromptDialogHost />
+      <FolderPickerHost />
 
     </div>
   );

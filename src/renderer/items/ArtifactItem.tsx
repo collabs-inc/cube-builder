@@ -57,8 +57,8 @@ export function ArtifactItem({ item, visible, onFocus, bare = false }: { item: O
     if (retryRef.current) clearTimeout(retryRef.current);
     retryRef.current = null;
     const filePath = filePathRef.current;
-    const repoId = item.repoId;
-    if (!filePath || !repoId) return;
+    const repoId = item.repoId ?? item.id;
+    if (!filePath) return;
     const seq = ++loadSeqRef.current;
     services.artifacts
       .artifactUrl(item.machineId, { repoId, file: artifactFileName(filePath), theme })

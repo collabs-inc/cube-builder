@@ -13,10 +13,11 @@
     "dev": "npm run build && npm start",
     "test": "npm run test:node && npm run test:web",
     "typecheck": "tsc --noEmit",
-    "test:node": "node --import tsx --test --test-timeout=30000 test/server/*.test.ts test/worker/*.test.ts",
+    "test:node": "node --import tsx --test --test-timeout=30000 test/server/*.test.ts test/worker/*.test.ts src/server/ported/tree.test.ts src/server/ported/file-downloads.test.ts",
     "test:web": "vitest run",
     "test:browser": "node --import tsx test/browser/run.ts",
-    "check:public": "node scripts/check-public.mjs"
+    "check:public": "node scripts/check-public.mjs",
+    "test:port": "vitest run --config vitest.port.config.ts"
   },
   "dependencies": {
     "@blocknote/core": "0.47.0",
@@ -48,7 +49,9 @@
     "remark-math": "6.0.0",
     "smol-toml": "^1.9.0",
     "ws": "8.21.2",
-    "yaml": "^2.8.3"
+    "yaml": "^2.8.3",
+    "ignore": "7.0.5",
+    "@postlight/parser": "2.2.3"
   },
   "devDependencies": {
     "@tailwindcss/vite": "4.2.0",
@@ -71,6 +74,15 @@
     "dompurify": "3.4.16",
     "uuid": "11.1.1",
     "katex": "$katex",
-    "esbuild": "$esbuild"
+    "esbuild": "$esbuild",
+    "@postlight/parser": {
+      "cheerio": "1.0.0",
+      "moment": "2.31.0",
+      "moment-timezone": {
+        "moment": "2.31.0"
+      }
+    },
+    "moment": "2.31.0",
+    "qs": "6.16.0"
   }
 }

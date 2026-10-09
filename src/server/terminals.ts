@@ -35,13 +35,17 @@ export class Terminals extends EventEmitter {
   async reconcile() {
     const live = await this.worker.list();
     const rows = this.registry.snapshot().items.filter((i): i is TerminalItem => i.type === 'term');
-    const missing = live.filter(s => !rows.some(row => row.sessionId === s.id));
+    const missing = live.filter(s => !rows.some(row => row.sessionId === s.id || row.supersededSessionIds?.includes(s.id)));
     if (!missing.length && !rows.some(row => { const s = live.find(s => s.id === row.sessionId); return row.exited !== (s?.exited ?? true) || row.exitCode !== (s?.exitCode ?? null); })) return;
     await this.registry.mutate(null, draft => {
       for (const session of missing) {
         if (draft.items.some(i => i.type === 'term' && i.sessionId === session.id)) continue;
         const r = session.recovery;
-        draft.items.push({ id: session.id, type: 'term', repoId: r?.repoId ?? null, cwd: session.cwd, title: basename(session.command), createdAt: session.createdAt, updatedAt: session.createdAt, requestId: session.requestId, sessionId: session.id, command: session.command, args: r?.args ?? session.args, harness: r?.harness, launchId: r?.launchId, attentionHooks: r?.attentionHooks, exited: session.exited, exitCode: session.exitCode });
+        const recoveredId=r?.catalogItemId??session.id;
+        const index=draft.items.findIndex(i=>i.id===recoveredId);
+        const previous=draft.items[index];
+        const recovered:TerminalItem={ ...previous, id: recoveredId, supersededSessionIds:r?.supersededSessionIds,agentSessionId:r?.agentSessionId,resumed:r?.resumed,type: 'term', repoId: r?.repoId ?? null, cwd: session.cwd, title: basename(session.command), createdAt: previous?.createdAt??session.createdAt, updatedAt: session.createdAt, requestId: session.requestId, sessionId: session.id, command: session.command, args: r?.args ?? session.args, harness: r?.harness, launchId: r?.launchId, attentionHooks: r?.attentionHooks, exited: session.exited, exitCode: session.exitCode };
+        if(index<0)draft.items.push(recovered);else draft.items[index]=recovered;
       }
       for (const row of draft.items) if (row.type === 'term') { const s = live.find(s => s.id === row.sessionId); row.exited = s?.exited ?? true; row.exitCode = s?.exitCode ?? null; }
     });
@@ -49,14 +53,18 @@ export class Terminals extends EventEmitter {
   }
   create(params: TerminalCreate): Promise<TerminalItem> {
     const requestId = text(params.requestId, 'request ID', 160);
-    const pending = this.launching.get(requestId); if (pending) return pending;
-    const task = this.createNew(params).finally(() => this.launching.delete(requestId));
-    this.launching.set(requestId, task); return task;
+    const key=params.catalogItemId?`item:${params.catalogItemId}`:requestId;
+    const pending = this.launching.get(key); if (pending) return pending;
+    const task = this.createNew(params).finally(() => this.launching.delete(key));
+    this.launching.set(key, task); return task;
   }
   private async createNew(params: TerminalCreate): Promise<TerminalItem> {
     const requestId = text(params.requestId, 'request ID', 160);
     const existing = this.registry.snapshot().items.find((i): i is TerminalItem => i.type === 'term' && i.requestId === requestId);
     if (existing) return existing;
+    const previous=params.catalogItemId?this.item(params.catalogItemId):undefined;
+    if(previous&&!previous.exited)return previous;
+    const supersededSessionIds=previous?[...(previous.supersededSessionIds??[]),previous.sessionId]:undefined;
     const cwd = text(params.cwd, 'working directory');
     const requested = text(params.command ?? params.harness ?? process.env.SHELL ?? '/bin/sh', 'command');
     const command = await resolveCommand(requested, process.env.PATH, cwd);
@@ -66,10 +74,15 @@ export class Terminals extends EventEmitter {
     const launchId = randomUUID(), spool = join(this.registry.stateDir, 'attention');
     await mkdir(spool, { recursive: true, mode: 0o700 });
     const injected = harness ? injectAttentionArgs(harness, command, args, spool, launchId, process.env) : null;
-    const session = await this.worker.spawn({ recovery: { repoId: params.repoId ?? null, harness, launchId, attentionHooks: !!injected, args }, requestId, cwd, command, args: injected?.args ?? args, env: { ...injected?.env, BROWSER: await browserCommand(this.registry.stateDir) }, cols: integer(params.cols ?? 80, 'columns', 1, 1000), rows: integer(params.rows ?? 24, 'rows', 1, 1000) });
+    const session = await this.worker.spawn({ recovery: { catalogItemId:params.catalogItemId,supersededSessionIds,agentSessionId:params.agentSessionId,resumed:params.resumed,repoId: params.repoId ?? null, harness, launchId, attentionHooks: !!injected, args }, requestId, cwd, command, args: injected?.args ?? args, env: { ...injected?.env, BROWSER: await browserCommand(this.registry.stateDir) }, cols: integer(params.cols ?? 80, 'columns', 1, 1000), rows: integer(params.rows ?? 24, 'rows', 1, 1000) });
     const now = new Date().toISOString();
-    const item: TerminalItem = { id: session.id, type: 'term', repoId: params.repoId ?? null, cwd, title: basename(command), createdAt: now, updatedAt: now, requestId, sessionId: session.id, command, args, harness, launchId, attentionHooks: !!injected, attention: harness ? 'idle' : undefined, exited: session.exited, exitCode: session.exitCode };
-    await this.registry.mutate(null, draft => { if (!draft.items.some(i => i.id === item.id)) draft.items.push(item); });
+    const item: TerminalItem = { ...previous, id: previous?.id??session.id, supersededSessionIds,agentSessionId:params.agentSessionId,resumed:params.resumed,type: 'term', repoId: params.repoId ?? null, cwd, title: basename(command), createdAt: previous?.createdAt??now, updatedAt: now, requestId, sessionId: session.id, command, args, harness, launchId, attentionHooks: !!injected, attention: harness ? 'idle' : undefined, exited: session.exited, exitCode: session.exitCode };
+    await this.registry.mutate(null, draft => {
+      const index=draft.items.findIndex(i=>i.id===item.id);
+      if(index>=0&&previous)draft.items[index]=item;
+      else if(index<0)draft.items.push(item);
+    });
+    if(previous)await this.worker.forget(previous.sessionId).catch(error=>{if(!(error instanceof BuilderError)||error.code!=='session-missing')throw error});
     // The child can exit before the registry write completes.
     this.attention.register(item);
     await this.reconcile();

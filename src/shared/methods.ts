@@ -1,7 +1,28 @@
 import type { BuilderSnapshot, TerminalItem, BuilderRepo, BuilderWorktree, FileInfo, FileItem, TextFile, DirectoryListing } from './model.js';
 import type { ReadResult } from './terminal-protocol.js';
-export interface TerminalCreate { requestId: string; cwd: string; command?: string; args?: string[]; cols?: number; rows?: number; repoId?: string | null; harness?: string }
+export interface TerminalCreate { catalogItemId?: string; agentSessionId?: string; resumed?: boolean; requestId: string; cwd: string; command?: string; args?: string[]; cols?: number; rows?: number; repoId?: string | null; harness?: string }
 export interface MethodMap {
+  'terminals.targets': {params:Record<string,never>;result:import('../server/ported/terminal-target.js').TerminalTargetOption[]};
+  'terminals.launch': {params:{requestId:string;target?:string;cwd?:string;repoId?:string;catalogItemId?:string;agentSessionId?:string;resume?:boolean;cols?:number;rows?:number};result:TerminalItem};
+  'downloads.create': {params:{path:string};result:{url:string}};
+  'files.importArticle': {params:{url:string;directory:string};result:{path:string}};
+  'workspaceRepos.create': {params:import('../port-shared/repo-create.js').CreateRepoArgs;result:import('../port-shared/catalog.js').CatalogRepo};
+  'workspaceRepos.owners': {params:Record<string,never>;result:import('../port-shared/repo-create.js').GithubOwnersResult};
+  'workspaceRepos.publish': {params:import('../port-shared/repo-create.js').PublishRepoArgs;result:import('../port-shared/repo-create.js').PublishRepoResult};
+  'workspaceRepos.detach': {params:{id:string;operationId:string};result:import('../port-shared/cubed-protocol.js').DetachResult};
+  'workspaceWorktrees.create': {params:import('./catalog.js').WorktreeCreate;result:{id:string}};
+  'workspaceWorktrees.retry': {params:{id:string};result:null};
+  'workspaceWorktrees.remove': {params:{id:string;force?:boolean};result:null};
+  'workspaceWorktrees.inspect': {params:{id:string};result:import('../server/ported/worktrees.js').WorktreeInspect};
+  'workspaceWorktrees.info': {params:{id:string};result:{hasGithubRemote:boolean;defaultBranch:string|null}};
+  'workspaceWorktrees.branches': {params:{id:string};result:{branches:{name:string;remote:boolean}[]}};
+  'workspaceWorktrees.prs': {params:{id:string};result:{prs:import('../server/ported/github.js').GithubPr[]}};
+  'workspaceWorktrees.issues': {params:{id:string};result:{issues:import('../server/ported/github.js').GithubIssue[]}};
+  'workspaceWorktrees.resolve': {params:{id:string;kind:'pr'|'issue';number:number};result:{kind:'pr';pr:import('../server/ported/github.js').GithubPr}|{kind:'issue';issue:import('../server/ported/github.js').GithubIssue}};
+  'computer.info': {params: Record<string, never>; result:{homeDir:string;cpus:number;cpuModel:string|null;memoryMb:number;storageGb:number|null;storageUsedBytes:number|null}};
+  'files.tree': {params:{path:string};result:import('../port-shared/types.js').TreeNode[]};
+  'files.table': {params:{path:string};result:import('../port-shared/types.js').FolderTableData};
+  'previews.file': {params:{path:string};result:{url:string;expiresAt:number}};
   'catalog.update': { params: { id: string; patch: import('./catalog.js').ItemPatch }; result: import('../port-shared/catalog.js').CatalogItem };
   'catalog.reorder': { params: { scope: import('../port-shared/catalog-order.js').ReorderScope; ids: string[] }; result: {ok:true}|{ok:false;reason:import('../port-shared/catalog-order.js').ReorderRefusal} };
   'agents.list': { params: Record<string, never>; result: { id: string; name: string; available: boolean; command: string | null }[] };
@@ -21,6 +42,7 @@ export interface MethodMap {
   'files.close': { params: { id: string }; result: null };
   'files.rename': { params: { path: string; destination: string; revision: string }; result: FileInfo };
   'files.remove': { params: { path: string; revision: string }; result: null };
+  'files.trash': { params: { path: string; revision: string }; result: {path:string} };
   'files.mkdir': { params: { path: string }; result: FileInfo };
   'files.upload': { params: { directory: string; name: string; data: string }; result: FileInfo };
   'previews.create': { params: { itemId: string }; result: { url: string; expiresAt: number } };

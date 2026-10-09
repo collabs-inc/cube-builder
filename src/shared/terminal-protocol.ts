@@ -1,5 +1,5 @@
 export const WORKER_PROTOCOL = 2;
-export interface RecoveryInfo { repoId: string | null; harness?: string; launchId: string; attentionHooks: boolean; args: string[] }
+export interface RecoveryInfo { catalogItemId?: string; supersededSessionIds?: string[]; agentSessionId?: string; resumed?: boolean; repoId: string | null; harness?: string; launchId: string; attentionHooks: boolean; args: string[] }
 export interface SpawnParams {
   recovery?: RecoveryInfo;
   requestId: string; cwd: string; command: string; args: string[];

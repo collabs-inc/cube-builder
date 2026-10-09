@@ -20,7 +20,7 @@ function defaultDeps(): ArtifactUrlDeps {
     siteUrl: (machineId, site) => services.sites.url(machineId, site),
     openExternal: (url) => services.desktop.openExternal(url),
     writeClipboard: (text) => services.desktop.clipboard.writeText(text),
-    desktop: services.desktop.capabilities.localRepos,
+    desktop: false,
   };
 }
 
@@ -57,12 +57,12 @@ async function lastingUrl(item: OwnedItem, deps: ArtifactUrlDeps): Promise<strin
 
 export async function openArtifactInBrowser(item: OwnedItem, theme: "light" | "dark", deps: ArtifactUrlDeps = defaultDeps()): Promise<void> {
   if (item.type !== "artifact") throw new Error("This artifact is no longer available.");
-  if (isSiteItem(item) || item.machineId === LOCAL_MACHINE_ID) {
+  if (isSiteItem(item) || deps.desktop && item.machineId === LOCAL_MACHINE_ID) {
     deps.openExternal(await lastingUrl(item, deps));
     return;
   }
-  if (!item.repoId || !item.filePath) throw new Error("This artifact is no longer available.");
-  deps.openExternal(await deps.artifactUrl(item.machineId, { repoId: item.repoId, file: artifactFileName(item.filePath), theme }));
+  if (!item.filePath) throw new Error("This artifact is no longer available.");
+  deps.openExternal(await deps.artifactUrl(item.machineId, { repoId: item.repoId ?? item.id, file: artifactFileName(item.filePath), theme }));
 }
 
 export async function copyArtifactUrl(item: OwnedItem, deps: ArtifactUrlDeps = defaultDeps()): Promise<void> {

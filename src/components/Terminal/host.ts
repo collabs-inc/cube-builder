@@ -1,4 +1,4 @@
-export type DataListener = (payload: { sessionId: string; data: Uint8Array; replay?: boolean }) => void;
+export type DataListener = (payload: { sessionId: string; data: Uint8Array; replay?: boolean; seq?: number }) => void;
 /** Browser operations and this application's terminal service; no embedding-host API. */
 export interface TerminalHost {
   getPlatform(): string;

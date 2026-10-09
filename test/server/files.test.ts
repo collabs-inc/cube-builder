@@ -95,3 +95,33 @@ test('an external edit immediately after an atomic save remains observable', asy
     await writeFile(path, 'external'); await changed;
   } finally { watches.close(); await registry.flush(); await rm(root, { recursive: true, force: true }); }
 });
+
+test('previews for tree images do not register catalog rows', async () => {
+  const root = await realpath(await mkdtemp(join(tmpdir(), 'builder-thumb-')));
+  try {
+    const registry = await Registry.open(join(root, 'state'));
+    await writeFile(join(root, 'image.png'), 'image');
+    const previews = new Previews(registry);
+    const result = await previews.forPath(join(root, 'image.png'));
+    assert.match(result.url, /^\/preview\//);
+    assert.equal(registry.snapshot().items.length, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('trash retains files and directory contents under the installation state', async () => {
+  const root=await realpath(await mkdtemp(join(tmpdir(),'builder-trash-')));
+  try {
+    const registry=await Registry.open(join(root,'state')),files=new Files(registry);
+    const folder=join(root,'folder');await files.mkdir(folder);
+    await writeFile(join(folder,'keep.txt'),'recoverable');
+    await files.open(join(folder,'keep.txt'));
+    const before=await files.info(folder);
+    const result=await files.trash({path:folder,revision:before.revision});
+    await assert.rejects(stat(folder),/ENOENT/);
+    assert.equal(await readFile(join(result.path,'keep.txt'),'utf8'),'recoverable');
+    assert.equal(registry.snapshot().items.length,0);
+    const repo=await new Repos(registry).add(root);
+    await assert.rejects(files.trash({path:root,revision:(await files.info(root)).revision}),/repository/i);
+    assert.equal(registry.snapshot().repos[0]?.id,repo.id);
+  } finally {await rm(root,{recursive:true,force:true})}
+});

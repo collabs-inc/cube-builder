@@ -14,7 +14,8 @@
   --app-left: calc(max(var(--app-sidebar-space, 240px), var(--rail-gutter)) + var(--rail-gutter));
   --app-edge-inset: 6px;
   /* Closed: clear the titlebar. Docked: use the shared window-edge inset. */
-  --app-viewport-top: calc((var(--workspace-top-gap, var(--toolbar-height)) + var(--screen-tabs-height)) / 2 + 2 * var(--rail-gutter));
+  /* The standalone workspace has no outer Cube titlebar to clear. */
+  --app-viewport-top: var(--app-edge-inset);
   --app-viewport-inset: var(--app-viewport-top) var(--app-edge-inset) var(--app-edge-inset) var(--app-left);
   /* Visible card edges include both the rail and pane gutters. The screen
      controls use these edges as their origin, including on an empty screen. */
@@ -118,7 +119,7 @@
 .workspace-navigation { position: absolute; inset: var(--app-viewport-top) auto var(--app-edge-inset) var(--app-left); width: var(--workspace-nav-width); box-sizing: border-box; padding-left: var(--studio-sidebar-left-inset); z-index: 10; display: flex; flex-direction: column; container-type: inline-size; }
 .workspace-navigation[data-visible="false"] { visibility: hidden; pointer-events: none; }
 .workspace-navigation-heading { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; height: var(--studio-header); padding: var(--rail-gutter) 10px 0 44px; font-size: 12px; color: var(--muted-foreground); }
-.workspace-navigation .app-sidebar { flex: 1; width: 100%; }
+.workspace-navigation .files-repos .app-sidebar { flex: 1; min-width: 0; width: 100%; }
 .workspace-navigation .sidebar-panel { min-height: 0; height: 100%; }
 .workspace-navigation .sidebar-foot-tools { display: none; }
 .workspace-navigation .repos-sidebar-actions:not(:has(.billing-banner)) { display: none; }

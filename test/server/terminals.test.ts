@@ -78,3 +78,37 @@ test('reconciliation recovers a PTY created just before registry persistence cra
     await terminals.close(row!.id);
   } finally { await worker.stopAll(); terminals.dispose(); worker.disconnect(); await rm(stateDir, { recursive: true, force: true }); }
 });
+
+test('restarting an ended terminal preserves its catalog identity and never adopts its predecessor again', async () => {
+ const stateDir=await mkdtemp(join(tmpdir(),'builder-restart-item-'));
+ const registry=await Registry.open(stateDir),worker=await ensureWorker(stateDir),terminals=new Terminals(registry,worker);
+ try {
+  const first=await terminals.create({requestId:'initial',cwd:stateDir,command:'/bin/sh',args:['-c','exit 0']});
+  const deadline=Date.now()+3000;
+  while(!(registry.snapshot().items[0] as any)?.exited&&Date.now()<deadline)await new Promise(r=>setTimeout(r,20));
+  const second=await terminals.create({requestId:'restart',catalogItemId:first.id,cwd:stateDir,command:'/bin/sh',args:[]});
+  assert.equal(second.id,first.id);assert.notEqual(second.sessionId,first.sessionId);
+  await terminals.reconcile();
+  assert.equal(registry.snapshot().items.length,1);
+  assert.equal((registry.snapshot().items[0] as any).sessionId,second.sessionId);
+  const repeated=await terminals.create({requestId:'other-client',catalogItemId:first.id,cwd:stateDir,command:'/bin/sh'});
+  assert.equal(repeated.sessionId,second.sessionId);
+  assert.equal((await worker.list()).filter(s=>!s.exited).length,1);
+ } finally {await worker.stopAll();terminals.dispose();await registry.flush();worker.disconnect();await rm(stateDir,{recursive:true,force:true,maxRetries:5,retryDelay:50})}
+});
+
+test('crash recovery of a replacement preserves the item order, title and creation time', async()=>{
+ const stateDir=await mkdtemp(join(tmpdir(),'builder-replacement-'));
+ const registry=await Registry.open(stateDir),worker=await ensureWorker(stateDir),terminals=new Terminals(registry,worker);
+ try {
+  const first=await terminals.create({requestId:'old',cwd:stateDir,command:'/bin/sh',args:['-c','exit 0']});
+  await terminals.create({requestId:'neighbor',cwd:stateDir,command:'/bin/sh'});
+  await registry.mutate(null,d=>{d.items[0]!.userTitle='Keep my title'});
+  const replacement=await worker.spawn({requestId:'replacement',cwd:stateDir,command:'/bin/sh',args:[],cols:80,rows:24,recovery:{catalogItemId:first.id,supersededSessionIds:[first.sessionId],repoId:null,launchId:"recovered",attentionHooks:false,args:[]}});
+  await terminals.reconcile();
+  const row=registry.snapshot().items[0]!;
+  assert.equal(row.id,first.id);assert.equal(row.createdAt,first.createdAt);assert.equal(row.userTitle,'Keep my title');
+  assert.equal(row.type==='term'&&row.sessionId,replacement.id);
+  await terminals.reconcile();assert.equal(registry.snapshot().items.length,2);
+ } finally {await worker.stopAll();terminals.dispose();await registry.flush();worker.disconnect();await rm(stateDir,{recursive:true,force:true,maxRetries:5,retryDelay:50})}
+});

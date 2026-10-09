@@ -1713,5 +1713,130 @@
     "file": "src/renderer/services/browser-shortcuts.ts",
     "source": "src/windows/web/shim/desktop.ts",
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/tree.ts",
+    "source": "src/main/cubed/tree.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/filter.ts",
+    "source": "src/main/cubed/filter.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/scoped-path.ts",
+    "source": "src/main/cubed/scoped-path.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/exec.ts",
+    "source": "src/main/cubed/exec.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github.ts",
+    "source": "src/main/cubed/github.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github-auth.ts",
+    "source": "src/main/cubed/github-auth.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/repo-publish.ts",
+    "source": "src/main/cubed/repo-publish.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktrees.ts",
+    "source": "src/main/cubed/worktrees.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/managed-paths.ts",
+    "source": "src/main/cubed/managed-paths.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/tree.test.ts",
+    "source": "src/main/cubed/tree.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github.test.ts",
+    "source": "src/main/cubed/github.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github-auth.test.ts",
+    "source": "src/main/cubed/github-auth.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/repo-publish.test.ts",
+    "source": "src/main/cubed/repo-publish.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktrees.test.ts",
+    "source": "src/main/cubed/worktrees.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/file-patterns.ts",
+    "source": "packages/shared/src/file-patterns.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/binary-sample.ts",
+    "source": "packages/shared/src/binary-sample.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/clones.ts",
+    "source": "src/main/cubed/clones.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/file-downloads.ts",
+    "source": "src/main/cubed/file-downloads.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/file-downloads.test.ts",
+    "source": "src/main/cubed/file-downloads.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/import-service.ts",
+    "source": "src/main/import-service.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/import-service.test.ts",
+    "source": "src/main/import-service.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/postlight-parser.d.ts",
+    "source": "src/main/postlight-parser.d.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/remote-target.ts",
+    "source": "packages/router/src/remote-target.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/harness.ts",
+    "source": "packages/router/src/harness.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/terminal-target.ts",
+    "source": "src/main/terminal-target.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
   }
 ]

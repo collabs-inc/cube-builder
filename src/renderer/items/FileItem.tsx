@@ -23,7 +23,7 @@ import { isImageFile } from "@port/shared/image";
 import { isBrowserPreviewImage } from "@port/shared/browser-image";
 import { parseCloudPath } from "@port/shared/path-utils";
 import { isPdfFile } from "@port/shared/pdf";
-import { toCubeFileUrl } from "@port/shared/cube-file-url";
+import { fileDraft } from "../services/drafts";
 import { extractCoverImageUrl } from "@port/shared/extract-cover-image";
 import { ImageView } from "@builder/components/ImageView/ImageView";
 import { LoadingPulse } from "@builder/components/LoadingPulse";
@@ -95,6 +95,15 @@ export interface FileItemProps {
 export function FileItem({ item, hidePathHeader = false, visible = true, onFocus }: FileItemProps) {
   const filePath = item.filePath ?? null;
   const [fileContent, setFileContent] = useState("");
+  const [draftConflict, setDraftConflict] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState<string | undefined>();
+  const [reloadRevision, setReloadRevision] = useState(0);
+  useEffect(() => {
+    let disposed=false;
+    setPreviewUrl(undefined);
+    if(filePath && isPdfFile(filePath)) void services.files.previewUrl(filePath).then(url=>{if(!disposed)setPreviewUrl(url)}).catch(error=>{if(!disposed)setFileError(String(error))});
+    return ()=>{disposed=true};
+  },[filePath]);
   const lastWrittenContentRef = useRef<string | null>(null);
   const [loadedPath, setLoadedPath] = useState<string | null>(null);
   const [fileStats, setFileStats] = useState<{
@@ -145,14 +154,19 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
       const currentPath = filePathRef.current;
       if (!currentPath || !fsChangeTouchesPath(events, currentPath)) return;
 
-      Promise.all([services.files.readFile(currentPath), services.files.getFileStats(currentPath)])
-        .then(([content, stats]) => {
-          fileMtimeRef.current = stats.mtime;
-          if (lastWrittenContentRef.current !== null && content === lastWrittenContentRef.current) {
-            return;
+      services.files.readDocument(currentPath)
+        .then(({content, stats}) => {
+          if (filePathRef.current !== currentPath) return;
+          const draft=fileDraft(currentPath);
+          if (draft.read(content,stats.revision ?? stats.mtime)) {
+            fileMtimeRef.current = draft.revision;
+            // Keep the content and stats from one disk revision together.
+            // Updating only stats after our save recreates ViewerItem with
+            // old text, which the original editor treats as an external edit.
+            setFileContent(content);
+            setFileStats(stats);
           }
-          setFileContent(content);
-          setFileStats(stats);
+          setDraftConflict(draft.conflict);
         })
         .catch((err) => {
           console.error("[file-item] failed to re-read file:", err);
@@ -167,23 +181,12 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
       const currentPath = filePathRef.current;
       if (!currentPath || isImageFile(currentPath) || isPdfFile(currentPath)) return;
 
-      services.files
-        .getFileStats(currentPath)
-        .then((stats) => {
-          if (fileMtimeRef.current && stats.mtime !== fileMtimeRef.current) {
-            services.files
-              .readFile(currentPath)
-              .then((content) => {
-                fileMtimeRef.current = stats.mtime;
-                setFileContent(content);
-                setFileStats(stats);
-              })
-              .catch((err) => {
-                console.error("[file-item] failed to re-read file on focus:", err);
-              });
-          }
-        })
-        .catch(() => {});
+      void services.files.readDocument(currentPath).then(({content,stats})=>{
+        if(filePathRef.current!==currentPath)return;
+        const draft=fileDraft(currentPath);
+        if(draft.read(content,stats.revision ?? stats.mtime)){fileMtimeRef.current=draft.revision;setFileContent(content);setFileStats(stats)}
+        setDraftConflict(draft.conflict);
+      }).catch(error=>console.error('[file-item] refresh failed',error));
     };
 
     window.addEventListener("focus", onFocus);
@@ -216,7 +219,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
       return;
     }
 
-    if (!pathChanged && loadedPath === filePath && !fileError) return;
+    if (!pathChanged && loadedPath === filePath && !fileError && reloadRevision === 0) return;
     if (!pathChanged && !visible) return;
 
     const path = filePath;
@@ -239,18 +242,21 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
       return;
     }
 
-    Promise.all([services.files.readFile(path), services.files.getFileStats(path)])
-      .then(([content, stats]) => {
+    services.files.readDocument(path)
+      .then(({content, stats}) => {
         if (
           (ENABLE_STALE_LOAD_GUARD && latestLoadTokenRef.current !== loadToken) ||
           (ENABLE_STALE_LOAD_GUARD && filePathRef.current !== path)
         ) {
           return;
         }
-        setFileContent(content);
+        const draft=fileDraft(path);
+        draft.read(content,stats.revision ?? stats.mtime);
+        setFileContent(draft.value ?? content);
+        setDraftConflict(draft.conflict);
         setLoadedPath(path);
         setFileStats(stats);
-        fileMtimeRef.current = stats.mtime;
+        fileMtimeRef.current = fileDraft(path).revision;
         setFileError(null);
       })
       .catch((err) => {
@@ -262,7 +268,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
         }
         setFileError(String(err));
       });
-  }, [filePath, visible, admissionRevision]);
+  }, [filePath, visible, admissionRevision, reloadRevision]);
 
   // Reset scroll to the top whenever a different file is opened. Keyed on
   // loadedPath so in-place reloads (fs change, focus) that only refresh
@@ -278,10 +284,20 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
 
   const [coverImageFailed, setCoverImageFailed] = useState(false);
 
-  const coverImageUrl = useMemo(() => {
+  const coverImageReference = useMemo(() => {
     if (!viewerItem || !loadedPath || !isMarkdownFile(loadedPath)) return null;
     return extractCoverImageUrl(viewerItem.text ?? "", viewerItem.frontmatter, loadedPath);
   }, [viewerItem, loadedPath]);
+  const [coverImageUrl,setCoverImageUrl] = useState<string|null>(null);
+  useEffect(()=>{
+    let active=true;
+    setCoverImageUrl(null);
+    if(coverImageReference?.startsWith('cube-file:')) {
+      const url=new URL(coverImageReference);
+      void services.files.previewUrl(decodeURIComponent(url.pathname)).then(value=>{if(active)setCoverImageUrl(value)}).catch(()=>{if(active)setCoverImageFailed(true)});
+    } else setCoverImageUrl(coverImageReference);
+    return ()=>{active=false};
+  },[coverImageReference]);
 
   useEffect(() => {
     setCoverImageFailed(false);
@@ -289,37 +305,33 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
 
   const hasCoverImage = !!coverImageUrl && !coverImageFailed;
 
-  const saveViewerText = useCallback(
-    async (text: string) => {
-      if (!loadedPath || !viewerItem) return;
-      if (filePathRef.current !== loadedPath) return;
-      const content = serializeViewerItem(viewerItem, text);
-      lastWrittenContentRef.current = content;
-      const result = await services.files.writeFile(
-        loadedPath,
-        content,
-        fileMtimeRef.current ?? undefined,
-      );
-      if (result.ok) fileMtimeRef.current = result.mtime;
-      return result;
-    },
-    [loadedPath, viewerItem],
-  );
-
-  const saveCodeContent = useCallback(
-    async (text: string) => {
-      if (!loadedPath) return;
-      lastWrittenContentRef.current = text;
-      const result = await services.files.writeFile(
-        loadedPath,
-        text,
-        fileMtimeRef.current ?? undefined,
-      );
-      if (result.ok) fileMtimeRef.current = result.mtime;
-      return result;
-    },
-    [loadedPath],
-  );
+  const saveContent = useCallback(async (path:string, content:string) => {
+    const draft=fileDraft(path);
+    if(draft.value===null)draft.edit(content);
+    lastWrittenContentRef.current=content;
+    try {
+      const ok=await draft.save(content,async revision=>{
+        const result=await services.files.writeFile(path,content,revision??undefined);
+        if(!result.ok)throw Object.assign(new Error("File changed on disk"),{code:'file-changed'});
+        return result.revision??result.mtime;
+      });
+      fileMtimeRef.current=draft.revision;
+      setDraftConflict(draft.conflict);
+      return {ok,mtime:draft.revision??'',conflict:draft.conflict};
+    } catch(error) {
+      setDraftConflict(draft.conflict);
+      if(draft.conflict)return {ok:false,mtime:draft.revision??'',conflict:true};
+      throw error;
+    }
+  },[]);
+  const saveViewerText = useCallback(async(text:string)=>{
+    if(!loadedPath||!viewerItem||filePathRef.current!==loadedPath)return;
+    return saveContent(loadedPath,serializeViewerItem(viewerItem,text));
+  },[loadedPath,viewerItem,saveContent]);
+  const saveCodeContent = useCallback(async(text:string)=>{
+    if(!loadedPath||filePathRef.current!==loadedPath)return;
+    return saveContent(loadedPath,text);
+  },[loadedPath,saveContent]);
 
   // Ordering race: `renameFile`'s response and the fs watcher's own
   // file-renamed broadcast (state/file-events.ts, subscribed once at
@@ -409,6 +421,11 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
             />
           </div>
         )}
+        {draftConflict && loadedPath && <div role="alert" className="file-conflict">
+          This file changed on disk. Your draft is preserved.
+          <button onClick={()=>{void services.desktop.clipboard.writeText(fileDraft(loadedPath).value??'')}}>Copy draft</button>
+          <button onClick={()=>{fileDraft(loadedPath).discard();setDraftConflict(false);setLoadedPath(null);setReloadRevision(value=>value+1)}}>Reload from disk</button>
+        </div>}
         {displayState.kind === "error" && (
           <div className="empty-state" style={{ color: "#ef4444" }}>
             {displayState.message}
@@ -420,6 +437,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
             <LazyItemDetailView
               item={viewerItem}
               onTextChange={saveViewerText}
+              onDraftChange={text=>{if(loadedPath)fileDraft(loadedPath).edit(serializeViewerItem(viewerItem,text))}}
               onTitleChange={handleRename}
               theme={theme}
               editingDisabled={editingDisabled}
@@ -432,6 +450,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
               filePath={displayedPath}
               content={fileContent}
               onContentChange={saveCodeContent}
+              onDraftChange={text=>{if(loadedPath)fileDraft(loadedPath).edit(text)}}
               theme={theme}
               editingDisabled={editingDisabled}
             />
@@ -443,7 +462,7 @@ export function FileItem({ item, hidePathHeader = false, visible = true, onFocus
         {displayState.kind === "pdf" && displayedPath && (
           <iframe
             ref={pdfRef}
-            src={toCubeFileUrl(displayedPath)}
+            src={previewUrl}
             sandbox="allow-same-origin"
             style={{ width: "100%", height: "100%", border: "none" }}
             title={displayedPath}

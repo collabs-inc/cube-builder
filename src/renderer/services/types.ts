@@ -142,7 +142,7 @@ export interface PtyReadMetaResult {
   agentSessionId?: string;
 }
 
-export type PtyDataPayload = { sessionId: string; data: Uint8Array; replay?: boolean };
+export type PtyDataPayload = { sessionId: string; data: Uint8Array; replay?: boolean; seq?: number };
 export type PtyExitPayload = { sessionId: string; exitCode: number };
 export type PtyStatusPayload = { sessionId: string; foreground: string };
 
@@ -205,11 +205,13 @@ export interface DirEntry {
 }
 
 export interface FileStats {
+  revision?: string;
   ctime: string;
   mtime: string;
 }
 
 export interface WriteResult {
+  revision?: string;
   ok: boolean;
   mtime: string;
   conflict?: boolean;
@@ -222,6 +224,8 @@ export interface ImageFullResult {
 }
 
 export interface FilesService {
+  readDocument(path: string): Promise<{content:string;stats:FileStats}>;
+  previewUrl(path: string): Promise<string>;
   /** Saves a file as-is, or a folder as a tar.gz archive. */
   downloadFile(path: string): Promise<void>;
   listDownloads(): Promise<import("@port/shared/file-download").FileDownloadState[]>;

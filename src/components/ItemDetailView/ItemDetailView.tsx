@@ -16,6 +16,7 @@ import { SourceList } from "@builder/components/SourceList";
 import { Editor } from "@builder/components/Editor";
 
 interface ItemDetailViewProps {
+	onDraftChange?: (text: string) => void;
 	item: ViewerItem;
 	onTextChange: (text: string) => Promise<{ ok: boolean; mtime: string; conflict?: boolean } | void>;
 	onTitleChange: (title: string) => void;
@@ -70,6 +71,7 @@ function getItemTypeClass(type: string): string {
 export function ItemDetailView({
 	item,
 	onTextChange,
+	onDraftChange,
 	onTitleChange,
 	theme,
 	editingDisabled = false,
@@ -254,6 +256,7 @@ export function ItemDetailView({
 						<Editor
 							currentItem={item}
 							onTextChange={onTextChange}
+							onDraftChange={onDraftChange}
 							theme={theme}
 							editingDisabled={editingDisabled || !item.isEditable}
 						/>

@@ -1001,9 +1001,10 @@ function TerminalTab({
 			sessionId: string;
 			data: Uint8Array;
 			replay?: boolean;
+			seq?: number;
 		}) => {
 			if (payload.sessionId !== sessionId) return;
-			seqCursor += byteLengthOf(payload.data);
+			seqCursor = payload.seq ?? seqCursor + byteLengthOf(payload.data);
 			onSeqAdvance?.(seqCursor);
 			dataBuffer.push(payload.replay ? { replay: true, data: payload.data } : payload.data);
 			if (flushTimer === undefined) {

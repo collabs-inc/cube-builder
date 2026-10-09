@@ -10,6 +10,14 @@ export class FileDraft {
   read(content: string, revision: string): boolean {
     if (this.pending) return false;
     if (this.value !== null) {
+      // A reload may lose the write reply after the server committed it.
+      // Matching bytes acknowledge that save without discarding newer edits.
+      if (this.value === content) {
+        this.value = null;
+        this.revision = revision;
+        this.conflict = false;
+        return true;
+      }
       if (this.revision !== revision && this.value !== content) this.conflict = true;
       return false;
     }

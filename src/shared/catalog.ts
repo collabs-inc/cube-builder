@@ -1,3 +1,4 @@
+export interface WorktreeCreate { parentId:string;name:string;source:import('../port-shared/catalog.js').WorktreeSource;baseBranch?:string }
 export interface ItemPatch { userTitle?: string; agentTitle?: string; cwd?: string; filePath?: string; agentSessionId?: string }
 import type { CatalogDocument, CatalogItem, CatalogRepo } from '../port-shared/catalog.js';
 import type { BuilderSnapshot } from './model.js';
@@ -16,7 +17,7 @@ export function projectCatalog(snapshot: BuilderSnapshot): CatalogDocument {
    repos.push({id:tree.id,root:tree.root,name:tree.name,managed:repo.managed ?? false,
     createdAt:tree.createdAt ?? repo.createdAt ?? new Date(0).toISOString(),
     head:{branch:tree.branch,sha:tree.sha ?? ''},
-    worktreeOf:{repoId:repo.id,createdOnBranch:tree.createdOnBranch ?? tree.branch ?? '',source:tree.source ?? {from:'branch'}}});
+    worktreeOf:{repoId:repo.id,createdOnBranch:tree.createdOnBranch ?? tree.branch ?? '',source:tree.source ?? {from:'branch'},baseBranch:tree.baseBranch,creation:tree.creation}});
   }
  }
  const items: CatalogItem[] = snapshot.items.map(item => {
