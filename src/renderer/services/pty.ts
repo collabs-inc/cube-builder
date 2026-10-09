@@ -27,7 +27,7 @@ export function createPtyService(connection:BuilderConnection,create:(options:Pt
    while(s.pending&&s.callbacks.size){
     s.pending=false;
     await serial(s,async()=>{
-     const result=await connection.api.call('terminals.read',{id:row(id).id,since:s.cursor,maxBytes:4*1024*1024});
+     const result=await connection.api.call('terminals.read',{id:row(id).id,since:s.cursor,maxBytes:1024*1024});
      if(!s.callbacks.size)return;
      const bytes=decode(result.data);
      const data=result.reset?new TextEncoder().encode('\x1bc'+result.modes+new TextDecoder().decode(bytes)):bytes;

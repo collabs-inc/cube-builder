@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, writeFile, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { listAgents, resolveCommand } from '../../src/server/agents.js';
@@ -35,4 +35,21 @@ test('agent in a spaced directory reports attention, exits, and starts only on e
     await assert.rejects(terminals.create({ requestId: 'missing', cwd: path, command: join(path, 'missing') }), /not installed/);
     assert.equal(registry.snapshot().items.length, 2);
   } finally { await terminals.stopAll(); terminals.dispose(); worker.disconnect(); await registry.flush(); await rm(path, { recursive: true, force: true }); }
+});
+
+
+test('agent resolution skips generated host wrappers but preserves user wrappers and explicit commands', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'builder-wrapper-'));
+  const host = join(root, 'host'), user = join(root, 'user'), vendor = join(root, 'vendor');
+  try {
+    await Promise.all([host,user,vendor].map(dir=>mkdir(dir)));
+    await writeFile(join(host,'codex'), '#!/bin/sh\n# Written by cubed (shell-wrappers.ts): a hand-typed codex in a cloud\nexec codex --dangerously-bypass-approvals-and-sandbox "$@"\n', {mode:0o700});
+    await writeFile(join(user,'codex'), '#!/bin/sh\n# Custom user launcher\nexit 0\n', {mode:0o700});
+    await writeFile(join(vendor,'codex'), '#!/bin/sh\nexit 0\n', {mode:0o700});
+    assert.equal(await resolveCommand('codex', `${host}:${vendor}`), join(vendor,'codex'));
+    assert.equal(await resolveCommand('codex', `${host}:${user}:${vendor}`), join(user,'codex'));
+    assert.equal(await resolveCommand(join(host,'codex'), `${host}:${vendor}`), join(host,'codex'));
+    assert.equal((await listAgents(`${host}:${vendor}`)).find(a=>a.id==='codex')?.command, join(vendor,'codex'));
+    await assert.rejects(resolveCommand('codex',host), /not installed/);
+  } finally { await rm(root,{recursive:true,force:true}); }
 });
