@@ -19,9 +19,14 @@ test('file mutations preserve existing bytes and reject stale destructive action
   try {
     const folder = join(root, 'files'); await files.mkdir(folder);
     const uploaded = await files.upload({ directory: folder, name: 'upload.txt', data: Buffer.from('original').toString('base64') });
-    await assert.rejects(files.upload({ directory: folder, name: 'upload.txt', data: 'eA==' }), /exist/);
+    const duplicate = await files.upload({ directory: folder, name: 'upload.txt', data: 'eA==' });
+    assert.equal(duplicate.name, 'upload 2.txt');
+    assert.equal(await readFile(uploaded.path, 'utf8'), 'original');
+    await rm(duplicate.path);
     await assert.rejects(files.upload({ directory: folder, name: '../escape', data: 'eA==' }), /name/);
-    await assert.rejects(files.upload({ directory: folder, name: 'huge', data: Buffer.alloc(8 * 1024 * 1024 + 1).toString('base64') }), /8 MiB/);
+    const larger = await files.upload({ directory: folder, name: 'larger', data: Buffer.alloc(9 * 1024 * 1024).toString('base64') });
+    assert.equal(larger.size, 9 * 1024 * 1024);
+    await rm(larger.path);
     await writeFile(uploaded.path, 'external change');
     await assert.rejects(files.remove({ path: uploaded.path, revision: uploaded.revision }), /changed/);
     assert.equal(await readFile(uploaded.path, 'utf8'), 'external change');
@@ -124,4 +129,17 @@ test('trash retains files and directory contents under the installation state', 
     await assert.rejects(files.trash({path:root,revision:(await files.info(root)).revision}),/repository/i);
     assert.equal(registry.snapshot().repos[0]?.id,repo.id);
   } finally {await rm(root,{recursive:true,force:true})}
+});
+
+test('rename keeps the original collision suffix and preserves existing files', async () => {
+ const root=await mkdtemp(join(tmpdir(),'builder-rename-'));
+ try {
+  const files=new Files(await Registry.open(join(root,'state')));
+  const source=join(root,'draft.md'), target=join(root,'note.md');
+  await writeFile(source,'draft'); await writeFile(target,'existing');
+  const result=await files.rename({path:source,destination:target,revision:(await files.info(source)).revision});
+  assert.equal(result.name,'note 2.md');
+  assert.equal(await readFile(target,'utf8'),'existing');
+  assert.equal(await readFile(result.path,'utf8'),'draft');
+ } finally {await rm(root,{recursive:true,force:true})}
 });

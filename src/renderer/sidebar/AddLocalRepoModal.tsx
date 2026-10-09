@@ -61,7 +61,7 @@ export default function AddLocalRepoModal({ open, onClose }: Props) {
       }
     >
       <p className="add-repo-note">
-        A repo on this Mac — pick a folder. Its files and terminals stay on this machine.
+        Pick a repository folder on this machine. Its files and terminals stay on this machine.
       </p>
     </Dialog>
   );

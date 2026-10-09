@@ -27,7 +27,7 @@ export async function readBody(req: IncomingMessage): Promise<unknown> {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 12 * 1024 * 1024) throw new BuilderError('too-large', 'Request exceeds 12 MiB');
+    if (size > 360 * 1024 * 1024) throw new BuilderError('too-large', 'Request exceeds 360 MiB');
     chunks.push(Buffer.from(chunk));
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
