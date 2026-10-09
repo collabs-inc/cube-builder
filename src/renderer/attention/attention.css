@@ -1,0 +1,49 @@
+/*
+ * The agent-attention dot, one treatment on every surface. Same geometry as
+ * the sidebar's `.status-dot` so the two read as one status language.
+ *
+ * blocked — amber, steady: a request, and it is not going anywhere until
+ *           someone answers it.
+ * done    — accent, steady: a result nobody has looked at.
+ * running — accent, pulsing: informational, and quiet under reduced motion.
+ */
+.attention-dot {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+}
+
+.attention-dot[data-state="blocked"] { background: var(--status-waiting, rgb(205, 133, 12)); }
+.attention-dot[data-state="done"] { background: var(--accent-selection); }
+.attention-dot[data-state="running"] {
+  background: var(--accent-selection);
+  animation: attention-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes attention-pulse {
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .attention-dot[data-state="running"] { animation: none; opacity: 0.7; }
+}
+
+/* Badges, out of the flow: neither may move anything beside it.
+   The sidebar glyph is 14px centred in its 16px box, so the dot's centre
+   lands on the glyph's top-right corner. The screen capsule's dot hangs
+   off the capsule's own corner, clear of the tile grid inset inside it,
+   so it reads as the screen's and not a tile's. */
+.tile-attention,
+.rail-pane-attention {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+}
+
+.view-switcher-attention {
+  position: absolute;
+  top: -3px;
+  right: -3px;
+}

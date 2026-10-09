@@ -1,0 +1,12 @@
+.app-sidebar-resize {
+  position: absolute;
+  inset: 8px -3px 8px auto;
+  width: 7px;
+  z-index: 3;
+  cursor: ew-resize;
+  touch-action: none;
+  -webkit-app-region: no-drag;
+}
+.app-sidebar-resize::after { content: ""; position: absolute; inset: 0 3px; border-radius: 1px; background: transparent; }
+.app-sidebar-resize:focus-visible::after { background: var(--accent-selection); }
+.app-sidebar-resize:focus-visible { outline: none; }

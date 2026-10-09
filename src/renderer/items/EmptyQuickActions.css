@@ -1,0 +1,20 @@
+.empty-quick-actions { pointer-events: auto; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; width: min(540px, calc(100% - 40px)); }
+.empty-create-persona { pointer-events: auto; padding: 10px 18px; border: 1px solid var(--border); border-radius: 10px; background: var(--background); color: var(--foreground); font: inherit; cursor: pointer; }
+.empty-create-persona:hover:not(:disabled) { background: var(--muted-background); }
+.empty-create-persona:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: 2px; }
+.empty-create-persona:disabled { opacity: .5; cursor: default; }
+.empty-quick-action { display: flex; flex-direction: column; align-items: flex-start; gap: 12px; min-width: 0; padding: 20px 16px; border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent); border-radius: 14px; background: rgb(255 255 255 / 65%); color: var(--foreground); font: inherit; text-align: left; cursor: pointer; transition: background var(--motion-fast) ease; }
+.empty-quick-action:hover { background: rgb(255 255 255 / 82%); }
+.empty-quick-action:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: 2px; }
+.empty-quick-action:disabled { opacity: .5; cursor: default; }
+.empty-quick-action > small { font-size: 11px; color: var(--muted-foreground); }
+@container empty-actions (max-width: 600px) {
+  .empty-quick-actions { grid-template-columns: 1fr; max-width: 280px; }
+  .empty-quick-action { gap: 6px; padding: 12px 16px; }
+}
+.empty-actions-anchor { position: relative; width: 100%; display: flex; justify-content: center; container: empty-actions / inline-size; }
+.empty-actions-anchor > .app-empty-state-mark { position: absolute; bottom: calc(100% + 28px); }
+.empty-actions-anchor > .app-empty-state-copy { position: absolute; top: calc(100% + 14px); }
+
+.dark .empty-quick-action { background: color-mix(in srgb, var(--foreground) 3%, transparent); }
+.dark .empty-quick-action:hover { background: color-mix(in srgb, var(--foreground) 7%, transparent); }

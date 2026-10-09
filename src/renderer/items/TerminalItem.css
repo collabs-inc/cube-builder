@@ -1,0 +1,273 @@
+/* Ported from the old terminal-tile guest's styles/App.css — the
+   loading/exited states shown before a session id is known or after a
+   fresh-session create fails outright (see TerminalItem.tsx's doc comment
+   for when each applies). */
+.item-terminal-exited,
+.item-terminal-loading {
+  gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+/* "Session ended" is two words, but a missing-harness message is a full
+   sentence and a terminal pane can be narrow — keep it off both edges and
+   let it wrap. */
+.item-terminal-exited {
+  max-width: 42ch;
+  margin-inline: auto;
+  padding-inline: 16px;
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* Wraps a mounted TerminalTab so item-terminal-ended-banner below can
+   overlay it — an exited session (reconnect's `exited: true`) still shows
+   its final rendered output, unlike item-terminal-exited above.
+
+   A column flow, not a bare positioning context. The open-URL consent
+   banner is a real row ABOVE the terminal rather than a sheet on top of
+   it: as an overlay it covered the terminal's first row (24px of
+   .xterm-screen, measured), which is exactly where the program that
+   raised it had just written the line explaining itself. Every other
+   overlay in this file — session-ended, drop hint, transfer scrim — is
+   absolutely positioned and so stays out of this flow, deliberately:
+   each one is transient chrome ABOUT the terminal, while the consent
+   banner is a prompt the user has to act on. */
+.item-terminal-live {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The terminal (or its Suspense fallback) takes whatever the banner row
+   leaves. `min-height: 0` is the load-bearing half: a flex item's
+   automatic minimum size is its content, and xterm's content is tall, so
+   without this the terminal refuses to shrink and the banner pushes it
+   off the bottom instead of sharing the box. TerminalTab's own
+   ResizeObserver re-fits cols/rows whenever this box changes, so the
+   banner arriving or leaving reflows the grid rather than covering it. */
+.item-terminal-live > .terminal-tab,
+.item-terminal-live > .item-terminal-loading {
+  flex: 1;
+  min-height: 0;
+}
+
+/* "Session closed" banner over a terminal whose session has exited — see
+   TerminalItem.tsx's exitedInfo state. Anchored to the bottom edge rather
+   than centered, so it never covers the final output it's reporting on. */
+.item-terminal-ended-banner {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--muted-background) 92%, transparent);
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* Consent banner for an open-URL request from the pty (the cloud
+   cube-open shim, typically a CLI auth flow). The first row of
+   .item-terminal-live, above the terminal — not over it. The URL is
+   never auto-opened; the Open click here is the consent step.
+
+   Accent-tinted and OPAQUE, both corrections of the same failure. It
+   used to be --muted-background at 92% alpha with --muted-foreground
+   text: grey on grey, with live terminal output showing through it, so
+   it read as an artifact of the output rather than as a question being
+   asked. `cursor: default` matters for the same reason — the bar
+   inherited `auto`, which over its own text paints the I-beam that
+   .xterm paints, so hovering the prompt looked identical to hovering
+   the terminal underneath and said "inert text, nothing to click". */
+.item-terminal-open-url-banner {
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 6px 12px;
+  background: color-mix(in srgb, var(--accent-selection) 12%, var(--background));
+  border-bottom: 1px solid color-mix(in srgb, var(--accent-selection) 45%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent-selection);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: default;
+}
+
+.item-terminal-open-url-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.item-terminal-open-url-open,
+.item-terminal-open-url-dismiss {
+  font-size: 12px;
+  padding: 2px 10px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+/* Same specificity as the shared rule above; later in the file, so the
+   emphasis wins without an element or descendant selector (which the
+   cascade audit rightly flags).
+
+   --accent-selection, NOT --accent. They sound interchangeable and are
+   not: App.css declares --accent as zinc-100/zinc-800, a hover tint, so
+   this button painted rgb(244,244,245) on a rgb(244,244,245) bar with a
+   transparent border — the primary action was a zero-contrast rectangle,
+   while Dismiss kept the shared bordered treatment and became the only
+   thing on the bar that looked clickable. --accent-selection is the
+   app's actual accent (the same blue that marks the active pane and the
+   focused sidebar row), and --background on it measures 4.87:1 in light
+   and 7.33:1 in dark. */
+.item-terminal-open-url-open {
+  background: var(--accent-selection);
+  color: var(--background);
+  border-color: transparent;
+  font-weight: 500;
+}
+
+/* Files dropped onto a terminal whose pty is on another machine: what is
+   in flight, and what did not make it. This started as a top banner and
+   was missed entirely in use — so it now takes the middle of the tile
+   and dims the terminal behind it. `inset: 0` spans the whole of
+   .item-terminal-live, which now includes the open-url banner's row, so
+   this still covers that banner rather than sitting beside it — the same
+   intent the old z-index ordering had, for the same reason: while it is
+   up, it is the thing to look at. */
+.item-terminal-transfer-scrim {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  z-index: 2;
+}
+
+.item-terminal-transfer-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+  padding: 16px 20px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  box-shadow: 0 8px 24px rgb(0 0 0 / 24%);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  text-align: center;
+}
+
+/* Same construction as GateModal's gate-spinner — a ring with one side
+   cut away — so the two read as the same product. */
+.item-terminal-transfer-spinner {
+  width: 18px;
+  height: 18px;
+  flex: none;
+  border-radius: 50%;
+  border: 2px solid var(--muted-foreground);
+  border-right-color: transparent;
+  animation: item-terminal-transfer-spin 900ms linear infinite;
+}
+
+@keyframes item-terminal-transfer-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .item-terminal-transfer-spinner {
+    animation: none;
+  }
+}
+
+.item-terminal-transfer-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+}
+
+.item-terminal-transfer-count {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+/* One line per file: the point of a failure message is which files the
+   user still has to do something about. */
+.item-terminal-transfer-error {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.item-terminal-transfer-dismiss {
+  margin-top: 4px;
+  font-size: 12px;
+  padding: 4px 14px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+  cursor: pointer;
+}
+
+/* What dropping a dragged file onto THIS terminal would do. Only the
+   terminal under the pointer draws one — a single window-wide overlay
+   could promise only one outcome for four surfaces that do different
+   things (see drag-drop.ts's dropHintText).
+
+   pointer-events: none is not cosmetic. TerminalTab's own container
+   handler is what receives the drop; an overlay that took the event
+   instead would break exactly the gesture it is advertising. */
+.item-terminal-drop-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  pointer-events: none;
+  /* Dimmed and ringed, and scoped to this one pane. That scoping is the
+     whole point: the same treatment across the entire workspace says
+     nothing about where the file is going, while on a single pane it
+     says exactly which one will take it. */
+  background: color-mix(in srgb, var(--background) 55%, transparent);
+  border: 2px dashed var(--accent, var(--foreground));
+  border-radius: 4px;
+  z-index: 2;
+}
+
+.item-terminal-drop-hint-label {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 8px 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+}

@@ -1,0 +1,627 @@
+/* Table container and layout */
+.table-container {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	width: 100%;
+	padding-top: 2px;
+	position: relative;
+}
+
+.table-action-bar {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+.search-input-wrapper {
+	position: relative;
+	flex: 1;
+	min-width: 0;
+}
+
+.search-input {
+	width: 100%;
+	margin-bottom: 0;
+	padding: 6px 8px;
+	font-size: 0.8rem;
+	font-weight: 400;
+	border: 1px solid var(--border);
+	border-radius: 4px;
+	color: var(--foreground);
+	background: transparent;
+	transition: border-color 0.2s, background-color 0.2s;
+	height: auto;
+}
+
+.search-clear {
+	position: absolute;
+	right: 4px;
+	top: 50%;
+	transform: translateY(-50%);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border: none;
+	border-radius: 3px;
+	background: none;
+	color: var(--muted-foreground);
+	font-size: 14px;
+	line-height: 1;
+	cursor: pointer;
+	opacity: 0.5;
+}
+
+.search-clear:hover {
+	opacity: 1;
+}
+
+.search-input:focus {
+	outline: none;
+	border-color: var(--foreground);
+}
+
+.search-input::placeholder {
+	color: var(--muted-foreground);
+	opacity: 0.6;
+}
+
+.search-shortcut-kbd {
+	position: absolute;
+	right: 8px;
+	top: 50%;
+	transform: translateY(-50%);
+	background: color-mix(in srgb, var(--foreground) 8%, transparent);
+	border: 1px solid color-mix(in srgb, var(--foreground) 6%, transparent);
+	border-radius: 3px;
+	padding: 1px 5px;
+	font-size: 0.7rem;
+	font-family: var(--font-mono);
+	color: color-mix(in srgb, var(--foreground) 40%, transparent);
+	pointer-events: none;
+}
+
+.table-wrapper {
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+}
+
+.table-body-scroll {
+	flex: 1;
+	overflow-y: auto;
+	min-height: 0;
+	padding-bottom: 8px;
+}
+
+.table-search-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 0;
+	margin-bottom: 12px;
+	flex-shrink: 0;
+}
+
+.table-search-leading {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+}
+
+/* Row action buttons */
+.row-action-buttons {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	height: 100%;
+	margin-right: 6px;
+}
+
+.row-timestamp {
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	font-weight: 400;
+	color: var(--muted-foreground);
+	opacity: 0.5;
+	white-space: nowrap;
+	transition: opacity 0.2s;
+	margin-left: 8px;
+}
+
+/* Delete button */
+.row-delete-button {
+	background: transparent;
+	border: none;
+	color: var(--color-text-secondary);
+	cursor: pointer;
+	padding: 4px 2px;
+	border-radius: 4px;
+	display: flex;
+	align-items: center;
+	transition: background 0.2s, color 0.2s, opacity 0.2s;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.row-delete-button svg {
+	opacity: 0;
+	transition: opacity 0.2s;
+}
+
+.row-delete-button:hover {
+	color: var(--foreground);
+}
+
+.row-delete-button:hover svg {
+	opacity: 1;
+}
+
+.row-delete-button.confirm {
+	background: transparent;
+	color: var(--destructive, #ff2b2b);
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.row-delete-button.confirm:hover {
+	background: transparent;
+	color: var(--destructive, #ff2b2b);
+}
+
+.row-delete-button.confirm svg,
+.row-delete-button.confirm:hover svg {
+	opacity: 1;
+}
+
+/* Item content */
+.item-icon {
+	font-size: 0.8rem;
+	display: flex;
+	align-items: center;
+}
+
+/* Add button */
+.add-button {
+	line-height: 1;
+	height: 22px;
+	min-width: 22px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: default;
+	background-color: transparent;
+	color: var(--color-text-secondary);
+	border: none;
+	border-radius: 3px;
+	opacity: 0.6;
+	transition: opacity 0.2s, color 0.2s, background-color 0.2s;
+	padding: 0;
+	margin-left: 8px;
+}
+
+.add-button:hover {
+	color: var(--foreground);
+	opacity: 1;
+}
+
+.add-button:active {
+	transform: scale(0.95);
+}
+
+.add-button svg {
+	display: block;
+	width: 16px;
+	height: 16px;
+}
+
+.create-action-buttons {
+	display: flex;
+	gap: 4px;
+	margin-left: 8px;
+}
+
+.create-action-buttons .add-button {
+	margin-left: 0;
+}
+
+.add-button.action-button .icon-hover {
+	display: none;
+}
+
+.add-button.action-button .icon-default {
+	display: block;
+}
+
+.add-button.action-button:hover .icon-hover {
+	display: block;
+}
+
+.add-button.action-button:hover .icon-default {
+	display: none;
+}
+
+/* Sort toggle */
+.sort-toggle-button {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	font-weight: 500;
+	color: var(--muted-foreground);
+	background: transparent;
+	border: none;
+	padding: 4px 6px;
+	cursor: pointer;
+	transition: color 0.15s;
+}
+
+.sort-toggle-button:hover {
+	color: var(--foreground);
+}
+
+.sort-toggle-button:active {
+	color: var(--accent-foreground);
+}
+
+/* View toggle (tree / feed) */
+.nav-view-toggle {
+	display: flex;
+	align-items: center;
+	gap: 0;
+	padding: 0;
+	flex-shrink: 0;
+	width: 44px;
+	overflow: hidden;
+	opacity: 1;
+	transition: width 0.2s ease, opacity 0.15s ease;
+}
+
+.nav-view-toggle.hidden {
+	width: 0;
+	opacity: 0;
+	pointer-events: none;
+}
+
+.nav-view-toggle-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px;
+	height: 20px;
+	background: transparent;
+	border: none;
+	border-radius: 4px;
+	color: var(--muted-foreground);
+	cursor: pointer;
+	transition: color 0.15s, background-color 0.15s;
+	opacity: 0.5;
+}
+
+.nav-view-toggle-button:hover {
+	color: var(--foreground);
+	opacity: 0.8;
+}
+
+.nav-view-toggle-button.active {
+	color: var(--foreground);
+	opacity: 1;
+	cursor: default;
+}
+
+/* List view date separators */
+.list-date-separator {
+	font-family: var(--font-mono);
+	font-size: 0.7rem;
+	font-weight: 600;
+	text-transform: uppercase;
+	letter-spacing: 0px;
+	color: color-mix(in srgb, var(--muted-foreground) 60%, transparent);
+	padding: 10px 8px 4px;
+}
+
+/* Collection tree view */
+
+.collection-tree-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	cursor: default;
+	padding: 2px 0;
+	position: relative;
+}
+
+.collection-folder-row {
+	color: var(--muted-foreground);
+	padding-top: 2px;
+	padding-bottom: 2px;
+	transition: color 0.2s;
+}
+
+.collection-folder-row:hover {
+	color: var(--foreground);
+}
+
+.collection-folder-row.drop-target {
+	background-color: var(--color-active);
+	outline: 1px dashed var(--color-primary);
+	outline-offset: -1px;
+}
+
+.collection-tree-caret {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 12px;
+	flex-shrink: 0;
+	opacity: 0.5;
+}
+
+.collection-tree-icon {
+	display: flex;
+	align-items: center;
+	flex-shrink: 0;
+	opacity: 0.7;
+}
+
+.collection-tree-name {
+	font-family: var(--font-sans);
+	font-size: 0.8rem;
+	font-weight: 500;
+	letter-spacing: 0px;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+}
+
+.collection-tree-count {
+	font-family: var(--font-sans);
+	font-size: 0.65rem;
+	font-weight: 400;
+	letter-spacing: 0px;
+	color: var(--foreground, #e0e0e0);
+	background: var(--muted-foreground-15, rgba(128, 128, 128, 0.15));
+	margin-left: 6px;
+	padding: 0px 5px;
+	border-radius: 8px;
+	line-height: 1.4;
+}
+
+.folder-action-button {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	background: transparent;
+	border: none;
+	color: var(--muted-foreground);
+	cursor: pointer;
+	padding: 0;
+	border-radius: 3px;
+	margin-right: 0;
+	opacity: 0;
+	pointer-events: none;
+	transition: opacity 0.15s, color 0.15s;
+}
+
+.folder-action-button:first-of-type {
+	margin-left: auto;
+}
+
+.folder-action-button:last-of-type {
+	margin-right: 6px;
+}
+
+.collection-folder-row:hover .folder-action-button {
+	opacity: 0.6;
+	pointer-events: auto;
+}
+
+.folder-action-button:hover {
+	opacity: 1 !important;
+	color: var(--foreground);
+}
+
+.folder-group {
+	position: relative;
+}
+
+.folder-group::after {
+	content: '';
+	position: absolute;
+	left: var(--guide-left);
+	top: var(--guide-top);
+	bottom: calc(var(--guide-top) / 2);
+	width: 1px;
+	background: var(--foreground);
+	opacity: 0.1;
+	pointer-events: none;
+	z-index: var(--guide-z);
+}
+
+.collection-item-row {
+	border-right: 3px solid transparent;
+	font-size: 0.8rem;
+	color: color-mix(in srgb, var(--foreground) 80%, transparent);
+}
+
+.collection-item-row.isFocused {
+	color: var(--foreground);
+}
+
+.collection-item-row:hover {
+	background-color: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.collection-item-row .item-text {
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	min-width: 0;
+	flex: 1;
+	font-family: var(--font-sans);
+	font-weight: 400;
+}
+
+.collection-item-row .item-text-empty {
+	opacity: 0.3;
+}
+
+.collection-item-row.isFocused {
+	background-color: var(--color-active);
+	border-right-color: var(--color-primary);
+}
+
+
+.collection-item-row.isMultiSelected {
+	background-color: var(--color-active);
+}
+
+.collection-item-row.is-dragging {
+	opacity: 0.4;
+}
+
+.collection-item-row .row-action-buttons {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-right: 6px;
+	margin-left: auto;
+	flex-shrink: 0;
+}
+
+.collection-item-row .row-delete-button {
+	opacity: 0;
+	pointer-events: none;
+}
+
+.collection-item-row:hover .row-delete-button {
+	opacity: 1;
+	pointer-events: auto;
+}
+
+.collection-item-row:hover .row-delete-button svg {
+	opacity: 1;
+}
+
+/* Workspace rows */
+
+.workspace-group {
+	position: relative;
+	margin-bottom: 8px;
+}
+
+.workspace-group.collapsed {
+	margin-bottom: 0;
+}
+
+.workspace-folder-row {
+	padding-top: 5px;
+	padding-bottom: 5px;
+	user-select: none;
+}
+
+.workspace-folder-row:hover {
+	background: var(--color-active);
+}
+
+.workspace-folder-row.dimmed {
+	opacity: 0.4;
+}
+
+.workspace-label {
+	display: flex;
+	align-items: baseline;
+	min-width: 0;
+	overflow: hidden;
+}
+
+.workspace-parent {
+	font-family: var(--font-sans);
+	font-size: 0.85rem;
+	font-weight: 400;
+	color: var(--muted-foreground);
+	opacity: 0.8;
+	white-space: nowrap;
+	flex-shrink: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.workspace-name {
+	font-family: var(--font-sans);
+	font-size: 0.85rem;
+	font-weight: 500;
+	color: var(--foreground);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+/* Search result file rows: parent dir shrinks, filename stays visible */
+.search-result-label {
+	display: flex;
+	align-items: baseline;
+	min-width: 0;
+	overflow: hidden;
+	flex: 1;
+}
+
+.search-result-parent {
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	font-weight: 400;
+	color: var(--muted-foreground);
+	opacity: 0.8;
+	white-space: nowrap;
+	flex-shrink: 1;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.search-result-name {
+	font-family: var(--font-sans);
+	font-size: 0.8rem;
+	font-weight: 400;
+	color: var(--foreground);
+	white-space: nowrap;
+	flex-shrink: 0;
+}
+
+
+.search-no-matches {
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	color: var(--muted-foreground);
+	opacity: 0.5;
+	padding: 4px 4px 4px 18px;
+}
+
+/* Its sibling for a listing that FAILED — same row, destructive colour, and
+   no dimming: this one is the whole message, not a footnote to a list. */
+.tree-root-error {
+	font-family: var(--font-sans);
+	font-size: 0.75rem;
+	color: var(--destructive, #ef4444);
+	padding: 4px 4px 4px 18px;
+}
+
+/* Inline rename input */
+.inline-rename-input {
+	font-family: var(--font-sans);
+	font-size: 0.8rem;
+	font-weight: 400;
+	background: var(--background);
+	color: var(--foreground);
+	border: 1px solid var(--color-primary);
+	border-radius: 2px;
+	padding: 0 4px;
+	outline: none;
+	min-width: 0;
+	flex: 1;
+	height: 1.4em;
+}

@@ -1,3 +1,4 @@
+import { Catalog } from './catalog.js';
 import { listAgents } from './agents.js';
 import { Registry } from './registry.js';
 import { Terminals } from './terminals.js';
@@ -8,7 +9,10 @@ import { Files } from './files.js';
 import { Previews } from './previews.js';
 type Handlers = { [K in keyof MethodMap]: (params: MethodMap[K]['params']) => MethodMap[K]['result'] | Promise<MethodMap[K]['result']> };
 export function createMethods(registry: Registry, terminals: Terminals, repos: Repos, files: Files, previews: Previews) {
+  const catalog = new Catalog(registry);
   const handlers: Handlers = {
+    'catalog.update': p => catalog.update(p.id, p.patch),
+    'catalog.reorder': p => catalog.reorder(p.scope, p.ids),
     snapshot: () => registry.snapshot(),
     'agents.list': () => listAgents(),
     'repos.add': p => repos.add(p.path),

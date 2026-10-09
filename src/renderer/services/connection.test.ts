@@ -1,0 +1,21 @@
+import { test, expect } from 'vitest';
+import { BuilderConnection } from './connection';
+import type { BuilderEvent } from '../../shared/events';
+import type { BuilderSnapshot } from '../../shared/model';
+import type { BuilderServices } from '../../web/services/types';
+const snapshot=(epoch:string,revision:number):BuilderSnapshot=>({epoch,revision,repos:[],items:[],capabilities:{platform:'linux',home:'/home/test'}});
+test('subscribes before seeding and retains newer events over delayed seed',async()=>{
+ let deliver!:(event:BuilderEvent)=>void;
+ let resolve!:(value:BuilderSnapshot)=>void;
+ let unsubscribed=false;
+ const api={subscribe(cb:any){deliver=cb;return ()=>{unsubscribed=true}},call(){expect(deliver).toBeTypeOf('function');return new Promise(r=>{resolve=r})}} as BuilderServices;
+ const connection=new BuilderConnection(api);
+ const ready=connection.start();
+ deliver({type:'snapshot',snapshot:snapshot('new',4)});
+ resolve(snapshot('old',1));
+ await ready;
+ expect(connection.snapshot.epoch).toBe('new');
+ deliver({type:'snapshot',snapshot:snapshot('new',3)});
+ expect(connection.snapshot.revision).toBe(4);
+ connection.dispose();expect(unsubscribed).toBe(true);
+});

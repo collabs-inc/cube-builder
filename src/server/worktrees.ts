@@ -11,7 +11,7 @@ export async function listWorktrees(root: string): Promise<BuilderWorktree[]> {
     const path = fields.find(f => f.startsWith('worktree '))?.slice(9);
     if (!path) continue;
     const branch = fields.find(f => f.startsWith('branch '))?.slice(7).replace(/^refs\/heads\//, '') ?? null;
-    result.push({ id: createHash('sha256').update(resolve(path)).digest('hex').slice(0, 20), root: path, name: basename(path), branch, main: result.length === 0 });
+    result.push({ id: createHash('sha256').update(resolve(path)).digest('hex').slice(0, 20), root: path, name: basename(path), branch, sha: fields.find(f => f.startsWith('HEAD '))?.slice(5, 12), main: result.length === 0 });
   }
   return result;
 }

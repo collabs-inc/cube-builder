@@ -1,0 +1,43 @@
+/*
+ * Prompt dialog — content only. The shell comes from the Dialog primitive;
+ * see Dialog.css. Message and detail match ConfirmDialog's.
+ */
+.prompt-dialog-message {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.prompt-dialog-detail {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--muted-foreground);
+}
+
+.prompt-dialog-label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.prompt-dialog-label-text {
+  color: var(--muted-foreground);
+  font-size: 11px;
+}
+
+.prompt-dialog-input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 6px 8px;
+  border: 1px solid var(--input);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font: inherit;
+}
+
+.prompt-dialog-input:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: -1px;
+}

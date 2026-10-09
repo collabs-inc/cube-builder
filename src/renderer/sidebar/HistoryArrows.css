@@ -1,0 +1,23 @@
+/* Two icon buttons on the sidebar toggle's register (26px, rounded,
+   muted ink, hover ground), dimmed when there is nowhere to go. */
+.history-arrows {
+  display: inline-flex;
+  gap: 2px;
+  -webkit-app-region: no-drag;
+}
+
+.history-arrow {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+}
+.history-arrow:hover:not(:disabled) { background: var(--focus-bg); color: var(--foreground); }
+.history-arrow:disabled { opacity: 0.35; cursor: default; }
+.history-arrow:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: -2px; }

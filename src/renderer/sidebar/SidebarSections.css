@@ -1,0 +1,71 @@
+/* The Add Repo row sits above the machine tree and borrows the tree's
+   row geometry outright (`--sb-row-height`, `--nav-inset`, `--focus-bg`
+   from ReposSidebar.css) so the two read as one panel. It carries its own
+   spacing from the project cards below. */
+.sidebar-add-repo-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: var(--sb-gap-group) 0 0;
+}
+
+.sidebar-section-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: var(--sb-row-height);
+  padding: 2px var(--nav-inset);
+  border: 0;
+  /* The tree's inset, rounded target (`--radius-control`, shared by
+     .repo-row, .checkout-row and .tile-entry in ReposSidebar.css). */
+  border-radius: var(--radius-control);
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  /* The item rank (500): these are destinations, like items, not headings
+     like repos. Constant across states — hover is a ground, never a weight. */
+  font-weight: 500;
+  color: var(--sb-item-ink);
+  cursor: pointer;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+.sidebar-section-row:hover:enabled { background: var(--focus-bg); }
+.sidebar-section-row:disabled { opacity: 0.5; cursor: default; }
+.sidebar-add-repo {
+  padding: 6px 8px;
+  border: 1px dotted color-mix(in srgb, var(--foreground) 20%, transparent);
+}
+.sidebar-section-row .row-icon { color: var(--sb-item-ink); }
+
+/* Same focus ring as the tree's rows (see the shared rule in ReposSidebar.css). */
+.sidebar-section-row:focus-visible {
+  outline: 2px solid var(--accent-selection);
+  outline-offset: -2px;
+}
+
+/* Temporary repo section: retain existing navigation until its redesign. */
+.sidebar-repos-heading { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 16px var(--nav-inset) 0; color: var(--muted-foreground); font-size: 12px; }
+
+.studio-repos-heading { padding-top: 12px; padding-bottom: 4px; margin-bottom: 8px; border-bottom: 1px solid var(--border); font-size: 14px; font-weight: 500; }
+.studio-repo-view-controls { display: flex; align-items: center; gap: 3px; }
+.studio-repo-view-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--sb-muted);
+  cursor: pointer;
+}
+.studio-repo-view-toggle[aria-pressed="true"] { background: var(--focus-bg); color: var(--sb-item-ink); }
+.studio-repo-view-toggle[aria-pressed="false"] { opacity: .3; }
+.studio-repo-view-toggle[aria-pressed="false"]:hover { opacity: .6; }
+.studio-repo-view-toggle:hover { background: var(--focus-bg); color: var(--foreground); }
+.studio-repo-view-toggle:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: -2px; }

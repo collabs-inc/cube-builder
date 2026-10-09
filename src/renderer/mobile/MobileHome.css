@@ -1,0 +1,124 @@
+/* The list-first home screen. Fills .app-main (App.css gives .app-main
+   position:relative and full height); the rail sits behind at
+   display:none while this shows (Rail.tsx adds rail-home-hidden). */
+.mobile-home {
+  position: absolute;
+  inset: 0;
+  z-index: 20; /* above the rail's zoomed pane (z-index 10) */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  /* No row retune: the phone list keeps the desktop panel's rhythm
+     (--sb-row-height 24px and the 6/12/18 gaps, ReposSidebar.css). The
+     first touch cut ran rows at 36px, then 32px, and both read as
+     air rather than as a list (2026-09-02). The promoted controls below
+     are sized to the row instead of the row to them. */
+  -webkit-tap-highlight-color: transparent;
+  /* Safe-area: this host is absolutely positioned, so .app-main-narrow's
+     own env() padding (web.css) doesn't reach it — it pads itself.
+     Harmless 0 outside notched/standalone contexts. */
+  padding-top: env(safe-area-inset-top, 0px);
+}
+
+.mobile-home-hidden {
+  display: none;
+}
+
+.mobile-home-list {
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+/* Touch reachability. The drawer's proven recipe (Sidebar.css's own
+   "Touch reachability" block), copied rather than reinvented: position:
+   static returns the hover-hidden item ✕ to the flow (it is absolutely
+   positioned while hidden, and :hover never fires on touch), opacity
+   forces it visible, and the box is the row's own height, so a control
+   never sets the row taller than the desktop's. Three rules on purpose,
+   same split as the drawer: a SESSION row gets exactly one promoted control
+   (its ✕; an artifact row has none), a CHECKOUT row its actions, a REPO row its New worktree — and
+   the machine header its New repo. */
+.mobile-home .row-action-close,
+.mobile-home .checkout-row .row-action,
+.mobile-home .repo-row .row-action,
+.mobile-home .machine-header .row-action {
+  position: static;
+  opacity: 1;
+  width: var(--sb-row-height);
+  height: var(--sb-row-height);
+}
+
+/* An in-flow control the height of the row leaves no room for the rows'
+   own 2px vertical padding; zeroing it is what keeps a phone row at the
+   desktop's 24px rather than 28. */
+.mobile-home .tile-entry,
+.mobile-home .checkout-row,
+.mobile-home .repo-row {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
+/* iOS applies :hover to whatever a finger last touched and keeps it
+   there, so a scroll gesture left a random row highlighted. Hover is a
+   pointer vocabulary; the touch list has none. */
+.mobile-home .tile-entry:hover,
+.mobile-home .checkout-row:hover,
+.mobile-home .repo-row:hover,
+.mobile-home .new-agent-row:hover,
+.mobile-home .sidebar-footer:hover {
+  background: transparent;
+}
+
+/* A checkout row's steady-state detail text gives up the right edge to
+   its two always-on actions — the drawer made the same trade, for the
+   same reason: two targets are most of a phone's gutter, permanently,
+   and the name is what has to survive. An item row keeps its detail (the
+   live command, "node" or "hermes"), exactly as the desktop shows it: it
+   is the row's one liveness signal now that the phone carries no status
+   dot, and the ✕ is a single target. Class-scoped override, intentional
+   (CLAUDE.md's cascade rule). */
+.mobile-home .checkout-row .row-detail {
+  display: none;
+}
+
+/* ── Backing glass ──
+   The desktop sidebar sits on its own near-opaque glass
+   (rgba(--sidebar-bg-rgb, --sidebar-opacity), Sidebar.css); this host
+   sits inside .app-main, whose canvas glass (0.68 dark / 0.75 light) is
+   tuned for terminals with their own ground, not for a list of type
+   over the raw Prism gradient. Half of the sidebar's tint on top of the
+   canvas layer composites to ~0.84 dark — legible, and still lighter
+   than the desktop panel, which is the ask (2026-09-02). */
+.mobile-home {
+  background: rgba(var(--sidebar-bg-rgb), 0.5);
+}
+
+/* The chrome band ReposSidebar mounts at the top-right corner
+   (.repos-sidebar-actions, ReposSidebar.css) reserves 32px of padding for
+   the desktop sidebar toggle and floats at z-index 101 over the machine
+   header — which, on a phone, is exactly where the header's New repo
+   action sits. Empty, the band still swallowed the tap. It stays for the
+   grace-period BillingBanner it carries, but passes pointer events
+   through; the banner alone opts back in. */
+.mobile-home .repos-sidebar-actions {
+  pointer-events: none;
+  padding-right: var(--nav-inset);
+}
+
+.mobile-home .billing-banner {
+  pointer-events: auto;
+}
+
+
+/* The 22px header band grows to the row height so its promoted New repo
+   control sits inside it rather than overhanging the panel's top edge
+   (where .mobile-home's overflow: hidden clips it against the notch
+   inset). */
+.mobile-home .machine-header {
+  height: var(--sb-row-height);
+}

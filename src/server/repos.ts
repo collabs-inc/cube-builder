@@ -24,7 +24,7 @@ export class Repos {
     const root = await realpath(absolutePath(path));
     if (!(await stat(root)).isDirectory()) throw new BuilderError('invalid-directory', 'Choose a directory');
     const existing = this.registry.snapshot().repos.find(r => r.root === root); if (existing) return existing;
-    const repo: BuilderRepo = { id: randomUUID(), root, name: basename(root), worktrees: await listWorktrees(root) };
+    const repo: BuilderRepo = { id: randomUUID(), root, name: basename(root), createdAt: new Date().toISOString(), managed: false, worktrees: await listWorktrees(root) };
     const next = await this.registry.mutate(null, draft => { if (!draft.repos.some(r => r.root === root)) draft.repos.push(repo); });
     return next.repos.find(r => r.root === root)!;
   }

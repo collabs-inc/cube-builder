@@ -1,0 +1,152 @@
+/* Miller columns on the sidebar's register: each column is a list of the
+   tree's own rows (24px, inset, rounded hover ground, item ink), separated
+   by the tree's structure line, scrolling horizontally as the trail grows. */
+.column-browser {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  min-height: 240px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  border: 1px solid color-mix(in srgb, var(--foreground) 10%, transparent);
+  /* Concentric with the rows inside: their radius plus the column's inset,
+     so the panel's corner and a hovered row's corner share one centre. */
+  border-radius: calc(var(--radius-control) + 4px);
+  background: rgba(var(--sidebar-bg-rgb), var(--sidebar-opacity));
+}
+
+.column-browser-column {
+  flex: 0 0 220px;
+  display: flex;
+  flex-direction: column;
+  padding: var(--sb-gap-group) 4px;
+  overflow-y: auto;
+  border-right: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+
+.column-browser-column:last-child { border-right: 0; }
+
+.column-browser-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  min-height: var(--sb-row-height);
+  padding: 2px var(--nav-inset);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--sb-item-ink);
+  text-align: left;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background var(--motion-fast) ease;
+}
+
+.column-browser-row:hover { background: var(--focus-bg); }
+/* Finder's reading of a trail: the pick in the CURRENT column — the last
+   one, the one the next column or the preview opens from — takes the
+   accent; the picks behind it, which only record how you got here, keep
+   the quiet ground. */
+.column-browser-row[aria-selected="true"],
+.column-browser-row[aria-selected="true"]:hover { background: var(--sb-selected-bg); }
+
+.column-browser-column:not(:has(+ .column-browser-column)) .column-browser-row[aria-selected="true"],
+.column-browser-column:not(:has(+ .column-browser-column)) .column-browser-row[aria-selected="true"]:hover {
+  background: var(--accent-selection);
+  color: rgb(255, 255, 255);
+}
+
+.column-browser-column:not(:has(+ .column-browser-column)) .column-browser-row[aria-selected="true"] .column-browser-icon,
+.column-browser-column:not(:has(+ .column-browser-column)) .column-browser-row[aria-selected="true"] .column-browser-caret,
+.column-browser-column:not(:has(+ .column-browser-column)) .column-browser-row[aria-selected="true"] .column-browser-action {
+  color: rgb(255, 255, 255);
+}
+.column-browser-row:focus-visible {
+  outline: 2px solid var(--accent-selection);
+  outline-offset: -2px;
+}
+
+.column-browser-icon {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  color: var(--sb-structure);
+}
+
+.column-browser-name {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.column-browser-caret {
+  display: flex;
+  align-items: center;
+  color: var(--sb-muted);
+}
+
+/* The folder row's action — a shell started there — shows on hover or
+   focus only, at the row's end before the caret. */
+.column-browser-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 0;
+  border-radius: 4px;
+  background: none;
+  color: var(--sb-structure);
+  opacity: 0;
+  cursor: pointer;
+}
+.column-browser-row:hover .column-browser-action,
+.column-browser-row:focus-within .column-browser-action,
+.column-browser-action:focus-visible { opacity: 1; }
+.column-browser-action:hover { background: var(--focus-bg); color: var(--foreground); }
+
+/* The preview takes the width the trail leaves; a long trail still scrolls. */
+.column-browser-preview {
+  flex: 1 1 320px;
+  min-width: 320px;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The sidebar's own hues travel with the glyphs: an agent row keeps its
+   harness colour here as it does in the tree. */
+.column-browser-icon.agent-claude { color: var(--agent-claude); }
+.column-browser-icon.agent-codex { color: var(--agent-codex); }
+.column-browser-icon.agent-opencode { color: var(--agent-opencode); }
+
+/* A group label inside a column, on the sidebar's section-label register:
+   small, muted, a fold you can click. Only drawn when a folder holds both
+   sessions and files. */
+.column-browser-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  width: 100%;
+  min-height: var(--sb-row-height);
+  margin-top: var(--sb-gap-group);
+  padding: 2px var(--nav-inset);
+  border: 0;
+  border-radius: var(--radius-control);
+  background: none;
+  color: var(--sb-muted);
+  text-align: left;
+  font: inherit;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.column-browser-group:first-child { margin-top: 0; }
+.column-browser-group:hover { color: var(--foreground); }
+.column-browser-group:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: -2px; }
+.column-browser-group-caret { display: flex; align-items: center; width: 10px; }

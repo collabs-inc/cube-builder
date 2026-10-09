@@ -1,0 +1,87 @@
+/* The mini sidebar: indentation and spacing carry the hierarchy; nothing
+   draws a line. Row actions, hover and selection come from ReposSidebar.css
+   (.repo-row, .tile-entry), which this only adjusts. */
+/* Every repo, the first included, sits one section gap below what precedes
+   it: the Add Repo row, or the repo above. */
+.mini-repo { margin-top: var(--sb-gap-section); }
+
+.mini-repo-row > .row-name { flex: 0 1 auto; }
+.mini-repo-spacer { flex: 1; min-width: 0; }
+
+/* A 2px breath between terminals, and between the repo and its first. */
+.mini-repo-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+
+/* The indent is outside the row, so a terminal's selection and hover fill
+   start at its indent rather than at the repo's edge. */
+.mini-repo-items > .tile-entry {
+  margin-left: 12px;
+  padding-left: var(--nav-inset);
+}
+
+/* The pill itself is .branch-pill (ReposSidebar.css); here it only takes
+   the row's trailing end and yields width to the title. */
+.tile-worktree-label {
+  margin-left: auto;
+  max-width: 45%;
+}
+
+.tile-worktree-label.detached .branch-pill-name {
+  font-style: italic;
+}
+
+/* The worktree toggle, beside the name: shown on hover or focus, and kept
+   out (filled) while the view is on, so the row says which view it is in
+   and the way back is always in reach. It keeps its slot when hidden, so
+   nothing after it moves on hover. */
+.mini-worktree-toggle {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 20px;
+  height: 20px;
+  margin-left: 2px;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--muted-foreground);
+  cursor: pointer;
+  opacity: 0;
+}
+.mini-repo-row:is(:hover, :focus-visible, :has(:focus-visible)) > .mini-worktree-toggle,
+.mini-worktree-toggle[aria-pressed="true"] { opacity: 1; }
+.mini-worktree-toggle:hover { color: var(--foreground); background: var(--focus-bg); }
+.mini-worktree-toggle[aria-pressed="true"] { color: var(--foreground); background: var(--focus-bg); }
+.mini-worktree-toggle:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: -2px; }
+
+/* The nested view keeps the flat list's one 12px step per level: a
+   worktree row one step in from its repo, its terminals one more, each
+   fill starting at its own indent, with the same 2px breath between rows.
+   (Main's checkout rows indent 16px and their items 30px on a rail this
+   sidebar does not draw.) */
+.mini-worktree-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+.mini-worktree-rail > .checkout-group { padding-top: 0; }
+.mini-worktree-rail .checkout-row {
+  margin-left: 12px;
+  padding-left: var(--nav-inset);
+}
+.mini-worktree-rail .checkout-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding-top: 2px;
+}
+.mini-worktree-rail .checkout-items > .tile-entry {
+  margin-left: 24px;
+  padding-left: var(--nav-inset);
+}

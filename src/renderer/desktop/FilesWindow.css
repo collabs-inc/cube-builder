@@ -1,0 +1,90 @@
+/* The Files app's shape is the Settings window's: a rail on the muted
+   ground down the left, full height, the content beside it. The panel's
+   app buttons and controls float over both (PanelFrame.css), so each clears
+   them on its own. */
+.files-window {
+  display: flex;
+  height: 100%;
+  min-height: 0;
+}
+
+.files-body {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding-top: 56px;
+}
+
+.files-body > .browse-files { flex: 1; min-height: 0; }
+
+/* Inside the panel the browser is the content, not a panel within it:
+   no outline, no corner, the panel's own ground. Its columns take the
+   panel's column width, so the body opens showing exactly one; the trail
+   scrolls sideways as columns are added (ColumnBrowser.css). */
+.files-body .column-browser {
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  min-height: 0;
+}
+
+.files-body .column-browser-column {
+  flex-basis: var(--panel-column-width, 280px);
+}
+
+/* The preview is one more column, and it appears only once there is
+   something to show: with nothing picked, the body ends at the last
+   folder column instead of holding an empty third one. */
+.files-body .column-browser-preview {
+  flex: 0 0 auto;
+  min-width: 360px;
+}
+
+.files-body .column-browser-preview:has(> .column-browser-preview-empty) {
+  display: none;
+}
+
+.files-list { height: 100%; }
+
+/* -- Repos: the sidebar as one column, a folder column's shape, and the
+   only column this category ever has — nothing beside it. Its chrome
+   for living beside the rail — the fixed width, the titlebar clearance —
+   has no place here. The history
+   arrows and the account footer go too: the arrows sit in the band, the
+   account and the gear live in Settings. The machine pages are chosen
+   from the sidebar's own foot (SidebarPager.css), which stays in flow. -- */
+
+.files-repos {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+}
+
+.files-repos .app-sidebar {
+  flex: 0 0 var(--panel-column-width, 280px);
+  min-width: 0;
+  max-width: none;
+  padding-top: 0;
+  border-right: 0;
+  background: transparent;
+}
+
+.files-repos .history-arrows,
+.files-repos .sidebar-footer {
+  display: none;
+}
+
+.files-repos .repos-sidebar-actions {
+  position: static;
+  height: auto;
+  padding: 6px var(--nav-inset) 4px;
+}
+
+/* The machine's header names what the switch already chose and repeats
+   the mark's dot; it earns its row only while it carries a message or
+   the update action. Its New repo action is a row of the sections strip. */
+.files-repos .machine-header:not(:has(.row-detail, [aria-label="Update machine"])) {
+  display: none;
+}

@@ -19,6 +19,9 @@
       ],
       "@builder/components/*": [
         "./src/components/*"
+      ],
+      "@port/shared/*": [
+        "./src/port-shared/*"
       ]
     }
   },

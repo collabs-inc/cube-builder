@@ -1,0 +1,146 @@
+/*
+ * The dialog primitive's one stylesheet (#58). Replaces the per-dialog
+ * shells that preceded it, which each picked their own width, padding,
+ * radius, actions-row gap and button metrics.
+ *
+ * Selectors here are single-class on purpose. `.dialog button { … }` would
+ * outrank a component's own class rule for the same property and is
+ * exactly the regression `bun run e2e:audit-cascade` exists to catch.
+ */
+
+.dialog-overlay {
+  position: fixed;
+  inset: 0;
+  /* Dim without filtering either layer: CSS blur over terminal canvases
+     and native vibrancy can leave compositor trails and patchy tiles. */
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+/* `alert` clears Settings (9500) and onboarding (9700), including the
+   plan chooser opened from setup. */
+.dialog-overlay-base {
+  z-index: 1100;
+}
+
+.dialog-overlay-alert {
+  z-index: 9800;
+}
+
+.dialog {
+  box-sizing: border-box;
+  background: var(--background);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-dialog);
+  box-shadow: var(--shadow-dialog);
+  padding: 24px;
+  animation: surface-enter var(--motion-surface) var(--ease-smooth);
+  cursor: default;
+}
+
+.dialog:focus-visible {
+  outline: none;
+}
+
+/* One width scale. `calc(100vw - 96px)` keeps every rung usable at the
+   narrow breakpoint without a media query per dialog. */
+.dialog-sm {
+  width: min(400px, calc(100vw - 96px));
+}
+
+.dialog-md {
+  width: min(520px, calc(100vw - 96px));
+}
+
+.dialog-lg {
+  width: min(640px, calc(100vw - 96px));
+}
+
+.dialog-title {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.dialog-body {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 20px;
+}
+
+.dialog-button {
+  font: inherit;
+  font-size: 13px;
+  padding: 8px 16px;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background var(--motion-fast) ease, transform var(--motion-fast) var(--ease-smooth);
+}
+
+.dialog-button:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dialog-button:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+.dialog-button-secondary {
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: var(--foreground);
+}
+
+.dialog-button-secondary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--foreground) 14%, transparent);
+}
+
+.dialog-button-primary {
+  background: var(--foreground);
+  color: var(--background);
+}
+
+.dialog-button-primary:hover:not(:disabled) {
+  background: color-mix(in srgb, var(--foreground) 85%, var(--background));
+}
+
+.dialog-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dialog-button:focus-visible {
+  outline: 2px solid var(--ring, var(--foreground));
+  outline-offset: 2px;
+}
+
+/* Narrow: the 96px gutters were sized against a desktop window; on a
+   phone they leave a 294px dialog. Full width inside the overlay's own
+   16px padding instead. */
+@media (max-width: 519px) { /* keep in step with NARROW_MAX_WIDTH_PX (useIsNarrow.ts) */
+  .dialog-sm,
+  .dialog-md,
+  .dialog-lg {
+    width: 100%;
+  }
+}
+
+/* Full-page flows opt out of the framed dialog sizes. Keep this after the
+ * narrow layout rules so loading this stylesheet later cannot shrink them. */
+.dialog-overlay-full { padding: 0; }
+.dialog-full { width: 100%; max-width: none; height: 100dvh; margin: 0; padding: 0; overflow: auto; border: 0; border-radius: 0; box-shadow: none; animation: none; }
