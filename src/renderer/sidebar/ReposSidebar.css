@@ -1,0 +1,1625 @@
+/*
+ * The repos sidebar: a machine's repos, their checkouts, and the items
+ * living in each.
+ *
+ * ── The three ranks ──
+ *
+ *   THIS MAC                       section header — outside the tree
+ *   cube-computer                repo     · 13px sans 500
+ *   ├─ main                        checkout · 12px MONO 400
+ *   │  ├─ ✳ Fly machines migra…    item     · 12px sans 500
+ *   │  └─ ✳ Stripe price update    item
+ *   └─ feat/dev-build-points…      checkout
+ *      └─ ✳ Explore GUI library…   item
+ *
+ * Rank is carried by size, typeface and indent — and weight runs the other
+ * way on purpose. Weight now marks WHICH ROWS ARE ENDPOINTS rather than how
+ * deep a row sits: the repo and the item are both 500, and the checkout
+ * between them is 400. Read down a column it makes no staircase at all,
+ * which is the point — depth is already carried by size, typeface, indent
+ * and the rail, and having weight repeat it was redundant even when it ran
+ * the right way.
+ *
+ * Before this, structure ran 600/500/400 down to the items, which put the
+ * panel's boldest text on the rows you never click and its lightest on the
+ * ones you always do. Inverting it to 400/400/600 fixed the direction but
+ * overcorrected: 600 beside 12px of muted mono reads as shouting, and a
+ * panel of twenty shouting rows is a panel with no emphasis in it. 500 is
+ * the same statement at conversational volume — items still win, and they
+ * win on INK, which is the axis with real range here (full `--foreground`
+ * against `--sb-structure`) rather than on a weight step the font barely
+ * renders.
+ *
+ * Weight is one of four axes pushing the same way. Ink is the strongest of
+ * them and runs on four levels: the item rank at `--sb-item-ink` (pure
+ * white in dark, and the theme's darkest value in light), the repo rank at
+ * `--sb-repo-ink` under it, the checkout rank at `--sb-structure` under
+ * that, and captions — details, hidden rows — at `--sb-muted` at the
+ * bottom. The repo and checkout ranks shared `--sb-structure` until a repo
+ * proved unreadable against the checkouts directly beneath it; see
+ * `--sb-repo-ink` for why the split runs upward rather than pushing the
+ * checkouts down toward the captions. The machine headers are NOT on
+ * this ladder: they sit at full `--foreground`, above every rank in the
+ * tree, because a header held below the rows it heads reads as a caption
+ * belonging to the row under it. See `.machine-header`. The other
+ * two axes: every ICON takes the exact ink of the text beside it — a glyph
+ * set below its own label reads as a rendering fault, not as a rank — with
+ * hue the one thing an icon varies (the agent axis), at full strength in
+ * every rank including hidden, because it is identity rather than status —
+ * and
+ * vertical space runs the other way from rank, so an item is the roomiest
+ * row in the panel and a checkout the tightest.
+ *
+ * Below all three sits `--sb-hidden`, for a row with no pane on screen.
+ * An agent glyph fades to the same alpha rather than dropping its hue,
+ * which is why that alpha is its own token.
+ *
+ * The checkouts are set in the mono face on purpose: a branch name, a PR
+ * number and a sha are identifiers, and giving the middle rank its own voice
+ * is what lets the eye separate three levels in a 250px panel without three
+ * indent steps to spend.
+ *
+ * ── Where the indents went ──
+ *
+ * The machine leaving the tree paid for the checkout rank entering it, so
+ * the depth is unchanged at two steps. The checkouts of one repo share a
+ * left RAIL rather than an indent step: they sit at one x, so their names
+ * read as a column instead of a staircase.
+ *
+ * Both depths draw that rail the same way — a line down the parent's icon
+ * column plus a tick into each child — so the panel reads as one tree
+ * rather than as two lists that happen to be nested. See "How a rail draws
+ * its children" further down for why there are no elbow pseudo-elements in
+ * it. Every part is a pseudo-element rather than a border on a padded
+ * container, so the rows underneath keep their full-bleed hover and
+ * selection.
+ *
+ * ── Color carries one axis ──
+ *
+ * Which agent a terminal is running, plus the artifact globe's light blue
+ * (see row-icons.tsx). Repos, checkouts and other file items are monochrome. The selection accent is
+ * the one other chromatic thing, and it is a different hue on purpose.
+ */
+
+:root {
+  --focus-bg: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --status-open: rgb(34, 160, 90);
+  --status-connecting: rgb(190, 140, 30);
+  /* An agent waiting on YOU. Amber because it is a request, not a failure:
+     `--destructive` would say something broke, and nothing has. */
+  --status-waiting: rgb(205, 133, 12);
+
+  /*
+   * Sidebar-local muted text. `--muted-foreground` computes to about 4.26:1
+   * against this panel's ground — under WCAG's 4.5 — and this panel sets it
+   * at 11px, where the shortfall is most felt. Mixed rather than hardcoded
+   * so it inverts with the theme on its own.
+   */
+  --sb-muted: color-mix(in srgb, var(--foreground) 68%, transparent);
+
+  /*
+   * The item rank's ink — its title and its icon. Light mode is exactly
+   * `--foreground`, because there it is already the darkest value the theme
+   * has and there is nowhere further to go.
+   *
+   * Dark mode overrides it to pure white, one step past `--foreground`'s
+   * 220. Deliberately a token of its own rather than a change to
+   * `--foreground` itself: every structural value in this panel is a
+   * `color-mix` off that token, so raising it would drag `--sb-structure`
+   * from 6.12:1 to 8.03:1 and the structural glyphs from 3.72 to 4.68 —
+   * brightening the scaffolding by exactly the amount meant to be spent on
+   * the items. The item rank wins on ink; that only stays true if the ink
+   * it wins with is its own.
+   *
+   * Not a legibility fix — 220 on this ground is already 13.66:1, nearly
+   * double WCAG AAA. It is an emphasis one.
+   */
+  --sb-item-ink: var(--foreground);
+  /*
+   * The structural ranks — repo and checkout. Two tokens rather than one,
+   * because `--sb-muted` and this are two different jobs: `--sb-muted` is
+   * "quieter than the thing it belongs to" (an item's detail, a hidden
+   * row, the machine headers), `--sb-structure` is "a rank of its own,
+   * under the items".
+   *
+   * It sits BETWEEN those two, which is the whole spec: 8.36:1 over the
+   * light ground and 9.41:1 over the dark, against `--sb-muted`'s 5.30 /
+   * 6.77 below it and the item rank's 14.30 / 18.73 above. A repo or a
+   * worktree is a real destination — you click it, it selects — so reading
+   * it should not cost the effort a caption does.
+   *
+   * It was 64%, chosen as the WCAG floor: 4.68:1 light, with the next step
+   * down a failure. That was the right way to answer "how quiet can this
+   * get", but quiet was the wrong target. The separation the panel needs is
+   * between structure and ITEMS, and there is more of it available above
+   * 64% than below, because the item rank has its own brighter ink to move
+   * away from (`--sb-item-ink`). Backing structure toward the floor only
+   * pushed it down into the captions instead.
+   */
+  --sb-structure: color-mix(in srgb, var(--foreground) 82%, transparent);
+
+  /*
+   * The repo rank, split back out of `--sb-structure`. Both structural
+   * ranks shared one ink on the theory that the repo is separated from its
+   * checkouts by face (sans against mono) and size (13 against 12). In the
+   * panel those two axes turn out to be the quiet ones: the faces differ
+   * most on characters a repo name rarely contains, and a 1px size step is
+   * invisible without the two rows adjacent to compare. So a repo read as
+   * one more row of the group it heads.
+   *
+   * 12.20:1 over the light ground and 11.65:1 over the dark, between
+   * `--sb-structure`'s 8.77 / 9.41 below and the item rank's 15.34 / 18.73
+   * above. Staying under the item rank is the constraint that matters:
+   * the panel's strongest ink belongs on the rows you click, and a repo
+   * heading that outshone its own items would restore exactly the
+   * inversion the ladder above was built to remove.
+   */
+  --sb-repo-ink: color-mix(in srgb, var(--foreground) 92%, transparent);
+
+  /*
+   * Mounted but in no column — the hidden rank, and the only rank below the
+   * captions. Weight carries part of the separation (these rows drop to 400
+   * while every live item sits at 500); the rest is here.
+   *
+   * 4.68:1 over the light ground — back above WCAG 1.4.3's 4.5:1 floor for
+   * 12px text, having spent a while at 52% (3.29:1) below it.
+   *
+   * What changed is not the taste, it is how many rows land here. This was
+   * scoped to "you mounted it and then hid it", a deliberate minority
+   * state, and going under the floor for a handful of rows was a trade
+   * worth arguing. It now means "not on screen", which on a freshly
+   * attached machine is EVERY row — the panel lists the whole catalog,
+   * including sessions other clients opened. A rank that is most of the
+   * panel is body text and does not get to sit under the floor.
+   *
+   * Dark keeps its own alpha rather than sharing one. The same percentage
+   * over a near-black ground lands much brighter, so a single value would
+   * make the rank look like two different states depending on the theme;
+   * 54% dark reads at 4.72:1 against light's 4.68:1.
+   */
+  --sb-hidden-alpha: 64%;
+  --sb-hidden-title-alpha: 45%;
+  --sb-hidden: color-mix(in srgb, var(--foreground) var(--sb-hidden-alpha), transparent);
+
+  /*
+   * Selection. `--accent-selection` is declared in App.css, not here: the
+   * canvas spends it too (`.rail-pane-active`), so a focused row and the
+   * border of the pane it opens are one color by construction rather than
+   * by two files agreeing. Only the tint derived from it is panel-local.
+   */
+  --sb-selected-bg: color-mix(in srgb, var(--accent-selection) 10%, transparent);
+
+  /*
+   * The machine header's ground — and the one ground in this panel that is
+   * not an interactive state.
+   *
+   * Every other ground here is `--foreground` at a few percent: hover 6,
+   * focused item the accent at 10. The header keeps a
+   * different treatment — a band at 6% reads as a hovered row, and a section label
+   * that looks permanently hovered is worse than one that is too quiet.
+   *
+   * So the header runs the other way instead of a different distance.
+   * Direction is unclaimed in a way that alpha is not: sliding the band to
+   * 14% would still be the same mark, just more of it, and the eye reads
+   * "strongly hovered" long before it reads "different kind of thing".
+   *
+   * Which way "the other way" points is per-theme, and it is not decorative
+   * — `--focus-bg` mixes toward `--foreground`, so hover LIGHTENS the dark
+   * panel and DARKENS the light one. The header has to invert with it or
+   * the collision simply moves to the other theme. Hence a raw overlay per
+   * theme rather than one `color-mix` off `--foreground`: the whole point
+   * is to not be a mix of `--foreground`.
+   *
+   * Light: the panel is rgb(240,240,240) at 90% opacity, so there is very
+   * little headroom toward white and this reads as a lift rather than a
+   * slab. That is the correct strength — it only has to be distinguishable
+   * from a hover that goes the opposite direction, not loud.
+   */
+  /* 2026-09-09: the band is gone. Against a sidebar that now shares the
+     workspace's own glass, the lifted strip read as a slab cut across the
+     panel rather than as a section boundary; the bold label and the machine
+     mark carry the rank on their own. The rationale above is kept for the
+     record of what the band was for. Both themes are flat. */
+  --sb-header-ground: transparent;
+
+  /*
+   * Structure lines: the tree's rails and the ticks off them.
+   *
+   * Raised from 14%, which was set when the rail was a single unbroken
+   * line down one column and the eye could complete it from almost
+   * nothing. It is a drawn tree now — segments that stop, and 5-7px ticks
+   * that have to resolve as deliberate marks rather than as artefacts —
+   * and short strokes need considerably more ink than long ones to read as
+   * the same weight.
+   *
+   * Deliberately still well under `--sb-structure` (82%), the ink on the
+   * repo and checkout rows this echoes. A 1px line running unbroken down
+   * the panel reads louder than text at the same value, because text is
+   * mostly counter and gap while a rule is solid — matching the number
+   * would not match the appearance. Push it further here if it still reads
+   * too quiet; it is one value and nothing else derives from it.
+   */
+  --sb-rail: color-mix(in srgb, var(--foreground) 20%, transparent);
+
+  /*
+   * ── The vertical scale ──
+   *
+   * One row height for every rank inside the tree, and a gap ladder for the
+   * space between groups. The split is the whole idea: HEIGHT is rhythm,
+   * GAPS are structure. Before this the two were tangled — no row declared
+   * a height at all, so each one ended up as tall as whatever its tallest
+   * child happened to be (almost always the 18px `.row-action`, a button
+   * invisible at rest), which made the panel's rhythm a side effect of a
+   * control you cannot see. Repo 24, checkout 22, item 26, New agent 23,
+   * and a checkout that had not finished building silently shrank to 20
+   * because its action buttons had not rendered yet.
+   *
+   * Uniform, not graded. A 2-4px difference is not read as hierarchy, it is
+   * read as sloppiness — to carry rank a size step has to be obvious, and
+   * an obvious one here would cost more vertical space than the panel has.
+   * Rank is already carried by five other things (size, weight, ink,
+   * typeface, indent) plus the rail. What varies instead is the space
+   * BETWEEN groups, which is the signal that was missing entirely.
+   */
+  --sb-row-height: 24px;
+
+  /*
+   * Each gap is proportional to how far up the tree you travel between two
+   * adjacent rows, which is the one rule that makes a tree legible without
+   * drawing it. Sibling items: no travel, no gap. One checkout block to the
+   * next: up one level. Repo to repo: up two. Machine to machine: up three.
+   *
+   * A group carries its leading gap ALWAYS, including when it is the first
+   * child — with one exception, the first machine header, whose own rule
+   * says why. That is the second half of the rule and it is not obvious: the
+   * first version fired the gaps only between siblings (`.a + .a`), which
+   * is defensible — a parent should sit tight to its first child — but it
+   * splits every rank into two visual classes. The first repo under a
+   * machine header had 0 above it while its own siblings had 16, so it
+   * stopped looking like one of them and started looking like part of the
+   * header. Attachment survives anyway, because it is expressed by the gap
+   * shrinking with depth (16 under a machine, 8 under a repo, 0 under a
+   * worktree) rather than by the first child being a special case.
+   *
+   * These are `padding-top`, not `margin-top`, and that is load-bearing: a
+   * leading margin on a first child collapses through its parent's top
+   * edge, so the gap would land outside the element that owns it and stop
+   * being predictable the moment a wrapper gains a border or a background.
+   *
+   * Ratios matter more than absolutes here — the eye reads proportion — so
+   * these are the smallest values that still step cleanly. Doubling them
+   * would read no better and cost a third of the panel's vertical budget.
+   *
+   * The ladder is 1:2:3 and must stay that way when it is resized. It came
+   * down from 8/16/24 by a quarter rather than by the thirty percent
+   * asked for, because a third lands on 5.6/11.2/16.8: rounding those to
+   * whole pixels bends the ratio, and the ratio is the part doing the work.
+   * The next clean step down is 4/8/12, below which the group gap stops
+   * separating anything.
+   */
+  /*
+   * How far a tick stops short of the icon it points at. The ticks used to
+   * land exactly on the child's content edge, which put a 1px line in
+   * contact with the glyph — at 13px the two merge and the tick reads as
+   * part of the icon rather than as something arriving at it.
+   *
+   * The two ticks are therefore different lengths, which is not an
+   * oversight: the panel's indent steps are not equal (repo→checkout is
+   * 16px, checkout→item is 14px), so holding the GAP constant is what
+   * makes them look alike. The gap is the thing the eye reads; the stroke
+   * length is what is left over.
+   */
+  --sb-tick-gap: 3px;
+
+  --sb-gap-group: 6px;
+  --sb-gap-section: 12px;
+  --sb-gap-machine: 18px;
+
+  /*
+   * The branch pill's outline. It used to be reasoned against the rail —
+   * "well above the rail's 14%", because a straight line is completed by
+   * the eye from almost nothing while a small closed rectangle has to
+   * resolve its corners. The rail has since gone to 40% for its own
+   * reasons (it draws short ticks now, not one long line), so the two no
+   * longer sit in that order and neither one should be read as setting
+   * the other. This value stands on its own: 20% was measurably too faint
+   * — 1.49:1 over the light ground, where a hairline just goes soft — and
+   * 36% lands near 2.2:1 light and 2.8:1 dark.
+   *
+   * The ceiling is the text it encloses: the checkout name sits at 4.68:1,
+   * and a border that approaches its own label starts competing with it.
+   * Between "resolves as a rectangle" and "quieter than the name" there is
+   * roughly one usable step, and this is it.
+   */
+  --sb-pill-border: color-mix(in srgb, var(--foreground) 16%, transparent);
+
+  /*
+   * Agent identity. The one axis color is spent on, so each has to be
+   * legible at 14px against both grounds — mid-tone hues, not pastels.
+   */
+  --agent-claude: rgb(199, 106, 61);
+  /* OpenAI's mark is monochrome; it wears the ink, not a hue. */
+  --agent-codex: var(--foreground);
+  --agent-opencode: rgb(96, 154, 118);
+  /* The artifact globe: tinted only so it cannot pass for the eye icon. */
+  --item-artifact: rgb(52, 140, 208);
+}
+
+.dark {
+  /* The one place the panel goes past `--foreground`. Worth knowing the
+     cost: pure white on a near-black ground blooms — it smears for readers
+     with astigmatism and haloes on OLED, which is why theme foregrounds
+     usually stop around 220 in the first place. If these titles read fuzzy
+     rather than crisp, that is what it is, and rgb(240, 240, 240) keeps
+     most of the step without it. */
+  --sb-item-ink: rgb(237, 239, 245);
+  --item-artifact: rgb(118, 182, 238);
+  /* See --sb-hidden above: matched by APPEARANCE across themes, not by
+     alpha. 64% over this ground would be 6.12:1, far stronger than the
+     4.68:1 the same number gives in light. */
+  --sb-hidden-alpha: 54%;
+  --sb-hidden-title-alpha: var(--sb-hidden-alpha);
+  /* See --sb-header-ground above. Hover lightens this panel, so the header
+     recesses. Deeper in alpha than the light theme's lift because there is
+     far more headroom below rgb(18,18,18) than there is above rgb(240). */
+  --sb-header-ground: transparent;
+  --status-open: rgb(72, 210, 130);
+  --status-connecting: rgb(224, 174, 60);
+  --status-waiting: rgb(245, 176, 32);
+  --agent-claude: rgb(226, 141, 96);
+  --agent-codex: var(--foreground);
+  --agent-opencode: rgb(126, 190, 148);
+}
+
+.repos-list {
+  /* The 8px rounded-row inset replaces part of the old 12px content
+     padding, preserving the original width available to names. */
+  --nav-inset: 4px;
+  display: flex;
+  flex-direction: column;
+  padding: 2px 8px 16px;
+  /* Flexes instead of filling the panel outright, so SidebarFooter (#57)
+     gets a row at the bottom and the list scrolls within what is left.
+     `min-height: 0` is what actually lets it shrink — without it the
+     content's height wins and the footer is pushed out of view. */
+  flex: 1 1 auto;
+  min-height: 0;
+  font-family: var(--font-sans);
+  font-size: 12px;
+  color: var(--foreground);
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Fade only content that has actually scrolled above the viewport.
+     At the top, the machine header keeps its full background and ink. */
+  mask-image: linear-gradient(to bottom, rgb(0 0 0 / var(--repos-top-opacity, 1)), #000 8px, #000 calc(100% - 14px), transparent);
+  user-select: none;
+}
+
+.nav-sidebar .table-body-scroll {
+  mask-image: linear-gradient(to bottom, transparent, #000 8px, #000 calc(100% - 14px), transparent);
+}
+
+.sidebar-machine-pages {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.sidebar-machine-pages > .machine-section {
+  flex: 0 0 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  /* Use the theme's narrow custom scrollbar, with a real layout gutter. */
+  scrollbar-width: auto;
+  scrollbar-color: auto;
+  padding-inline-end: 2px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scroll-snap-align: start;
+}
+
+.sidebar-machine-pages > .machine-section::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+.sidebar-machine-pages > .machine-section:hover::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+}
+
+.sidebar-machine-pages > .machine-section::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Studio keeps its controls above each machine's independently scrolling tree. */
+.repos-list-fixed-header { overflow: hidden; mask-image: none; }
+.repos-list-fixed-header .sidebar-machine-pages > .machine-section:has(> .repos-body-scroll) {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+.repos-list-fixed-header .sidebar-add-repo-row,
+.repos-list-fixed-header .sidebar-repos-heading { flex: none; }
+.repos-body-scroll {
+  flex: 1 1 0;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior-y: contain;
+}
+
+.sidebar-machine-pages > .machine-section + .machine-section .machine-header {
+  margin-top: 0;
+}
+
+.machine-section-cloud:has(> .cloud-machine-offer) { display: flex; flex-direction: column; min-height: 100%; }
+.sidebar-machine-stack:has(> .machine-section-cloud > .cloud-machine-offer) { flex: 1; min-height: 0; }
+
+/*
+ * Window-chrome actions (update pill, settings, new repo). Absolutely
+ * positioned against .app-sidebar (Sidebar.css gives it `position:
+ * relative`) so they land inside the titlebar strip that .app-sidebar's
+ * padding-top reserves — an abs-positioned box is laid out against the
+ * padding box, so `top: 0` is the window's top edge, to the right of the
+ * traffic lights. z-index clears #titlebar (100) so the drag region doesn't
+ * eat the clicks.
+ */
+.repos-sidebar-actions {
+  position: absolute;
+  top: 0;
+  right: 0;
+  height: var(--toolbar-height);
+  z-index: 101;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  /* The toggle sits beside the traffic lights now, so the band's right end
+     is the arrows' and the machine switch's own. */
+  padding-right: var(--nav-inset);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  -webkit-app-region: no-drag;
+}
+
+/* ── Row actions ──
+ *
+ * Small icon buttons at the right end of a row. Never `display: none`,
+ * whatever their visibility: that made every one of them mouse-only, and
+ * they stay in the tab order instead so a row action is reachable from the
+ * keyboard.
+ *
+ * Repo and checkout actions appear on their own row's hover or keyboard
+ * focus. Hidden actions leave their space available to the row title.
+ * Item rows handle their single close action separately below.
+ */
+.row-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  border: none;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--sb-muted);
+  cursor: pointer;
+  flex: none;
+  opacity: 1;
+  transition: opacity var(--motion-fast) ease, background var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+/* Scope to the row, not its section: hovering a child must not reveal
+   the parent repo's actions. Keep invisible actions keyboard-reachable.
+   Keyboard focus (:focus-visible) keeps them out, a mouse click does not:
+   :focus-within held them visible after every click until focus moved. */
+/* Hiding is instant, showing fades: a hidden action also leaves the flow
+   (absolute, so the title gets the width), and position cannot animate —
+   fading out over that jump drew every action stacked at the row's end.
+   The transition that runs is the destination state's, so only the shown
+   rule below carries the opacity fade. */
+:is(.repo-row, .checkout-row) > .row-action { position: absolute; right: var(--nav-inset); opacity: 0; pointer-events: none; transition-property: background, color; }
+:is(.repo-row, .checkout-row):is(:hover, :focus-visible, :has(:focus-visible)) > .row-action { position: static; opacity: 1; pointer-events: auto; }
+
+/* Recovery must remain reachable before hover, with space beside the error. */
+:is(.repo-row, .checkout-row) > .row-action.retry-removal {
+  position: static;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/*
+ * An item row's single action gets out of the layout entirely until it is
+ * wanted, so the title runs to the panel's edge and ellipsizes there
+ * instead of against a reserved 18px box it cannot see.
+ *
+ * Taken out of flow rather than collapsed to `width: 0`, which does not
+ * work here: `.tile-entry` is a flex row with `gap: 7px`, and a zero-width
+ * flex child still earns its gap — the title would give up 7px to nothing.
+ * Absolute positioning surrenders both.
+ *
+ * The cost is the one the previous arrangement was written to avoid: the
+ * right edge now reflows when the pointer crosses an item row. That trade
+ * is only correct at THIS rank, where the row is essentially one long
+ * title and the reserved box was the difference between reading a session
+ * name and reading its first two thirds. The structural rows keep their
+ * boxes reserved and keep holding still.
+ */
+.tile-entry .row-action {
+  position: absolute;
+  right: var(--nav-inset);
+  opacity: 0;
+}
+
+/* Back into the flow whenever it is actually on screen — hover, keyboard
+   focus, or a close already in flight — so it pushes the title rather than
+   covering its last few characters. */
+.tile-entry:hover .row-action,
+.tile-entry.closing .row-action,
+.row-action:focus-visible {
+  position: static;
+  opacity: 1;
+}
+
+.row-action:hover {
+  background: var(--focus-bg);
+  color: var(--foreground);
+}
+
+.row-action:disabled {
+  cursor: default;
+  pointer-events: none;
+}
+
+/* A close in flight shows its spinner without waiting for hover: the row is
+   parked until the daemon confirms the session ended, and an invisible
+   pending state just reads as a dead click. */
+.tile-entry.closing .row-action {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.tile-closing-spinner {
+  animation: tile-closing-spin 0.8s linear infinite;
+}
+
+@keyframes tile-closing-spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tile-closing-spinner { animation: none; }
+}
+
+/* ── Shared row anatomy ──
+   icon · name · detail · actions · dot. Every rank lays out the same way and
+   differs in type, indent and which of the slots it fills. */
+
+.row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Its label's value, not a dimmer one. A glyph set below the text beside
+     it reads as a rendering fault rather than as a rank — the eye takes two
+     marks on one baseline as one object, and one object does not have two
+     ink levels. Every icon in this panel now matches the text it sits with;
+     the only thing that may differ is HUE, which is the agent axis. */
+  color: var(--sb-structure);
+}
+
+.row-name {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* The right gutter. One rule for every rank, because the contract is the
+   same everywhere: this is for news (an error, a transient message) or for
+   the one identifier the row's name does not already carry. Never for a
+   value that is the same on every row — a column of identical text is not
+   information, it is just the right edge spent. */
+.row-detail {
+  flex-shrink: 1;
+  min-width: 0;
+  max-width: 45%;
+  font-size: 11px;
+  color: var(--sb-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.row-detail.error { color: var(--destructive); }
+
+/* ── Machine header ──
+   A section label, not a row: no hover, no pointer, out of the tree's
+   indent. Uppercase and tracked out so it cannot be mistaken for content.
+
+   It carries a ground (`--sb-header-ground`) and full `--foreground`, and
+   the two are one idea. Typography alone had already been spent here —
+   small, uppercase, tracked — and it was not enough, because two other
+   things were working against it. The header was the PALEST ink in the
+   panel while every rank beneath it was louder, so the eye landed on a repo
+   row first and read the header as that row's caption; and it shares an
+   x-origin with `.repo-row` (both flush at `--nav-inset`), so "out of the
+   tree's indent" was true of the indent but invisible on screen. Muting was
+   a fourth redundant signal on an axis that already had three, and it was
+   the one costing legibility.
+
+   The ground is what makes it stop being text at all, which is the part
+   type could never do. */
+
+.machine-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--nav-inset);
+  /* No vertical margin here; the two zeroes have separate reasons.
+
+     Below: the first `.repo-section` under this header brings its own
+     `--sb-gap-section`, and stacking a header margin on top of it would
+     make the header-to-first-repo gap the one boundary in the panel that is
+     the sum of two rules.
+
+     Above: this is the panel's one exception to "a group carries its
+     leading gap always, including as a first child" (see `--sb-gap-group`).
+     That rule earns its keep between siblings, where a first child without
+     the gap stops looking like one of them. The FIRST machine header has no
+     siblings above it — only the titlebar strip, which is already air — so
+     the gap was not separating it from anything, just pushing the panel's
+     topmost element down for no reason a reader could see. Every LATER
+     header still takes `--sb-gap-machine` from the sibling rule below,
+     which is the case the rule was written for. */
+  margin: 0;
+  height: 22px;
+  background: var(--sb-header-ground);
+  /* Span the list's 8px side insets as a section divider. Keep the
+     contents aligned with repository rows below it. */
+  margin-inline: -8px;
+  width: calc(100% + 16px);
+  padding-inline: calc(var(--nav-inset) + 8px);
+  border-radius: 0;
+  cursor: default;
+  /*
+   * The type is unchanged from before the ground arrived. Shrinking it and
+   * bolding it (9.5/700/.08em was the version tried) was a step too far in
+   * both directions at once: the ground had already taken the header out of
+   * the list, so the smaller size bought no separation that was still
+   * missing, and the extra weight at that size started closing the
+   * uppercase counters faster than the tracking could reopen them.
+   *
+   * What the ground DID pay for is the ink below — full `--foreground`
+   * rather than `--sb-muted`. That is the change worth keeping.
+   */
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0px;
+  text-transform: none;
+  color: var(--foreground);
+}
+
+/* Air between the machines, and only between them: the first section starts
+   under the titlebar strip, which is already air, so a top margin there
+   would read as a gap rather than as separation.
+
+   An adjacent-sibling rule rather than `:first-child` on purpose — the
+   modals render as siblings inside .repos-list, so an open dialog would
+   knock a `:first-child` selector off and shift the whole panel's spacing
+   while it was up. */
+/* The gap rides the element that STARTS the group, never the one that ends
+   it. Written this way throughout: a group then carries its own leading
+   space, an empty group cannot collapse oddly, and two rules can never both
+   fire at one boundary and double the gap. */
+.machine-section + .machine-section .machine-header {
+  margin-top: var(--sb-gap-machine);
+}
+
+/* Both marks draw into a 13px box of their own (PrismMark takes the same
+   `size` phosphor does, and lands on the same optical scale — see its own
+   note), so this declares that box rather than correcting for two different
+   ones, and the two section labels start on one x.
+
+   The 6px flex gap is pulled back a pixel: that gap was set for the
+   header's other pairing, name-to-dot, where the two things are separate
+   facts about the machine. An icon and the label it marks are one thing,
+   and reading as one thing is the whole reason the mark is in front of the
+   words. */
+.machine-header-icon {
+  width: 13px;
+  height: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-right: -1px;
+}
+
+.machine-header-icon svg { display: block; }
+
+.machine-header-name {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+}
+
+/* The header's name takes only the width it needs so the dot sits beside it
+   rather than at the far edge — at this rank the dot annotates the machine,
+   it does not head a column. Everything after it is pushed right. */
+.machine-header .status-dot { margin-right: auto; }
+
+.machine-header .row-detail {
+  text-transform: none;
+  letter-spacing: 0px;
+}
+
+/* ── Repo ──
+   Rank 1. A label for the checkouts below it, so it carries no status dot
+   and no steady-state detail: a repo is not a connection, its checkouts
+   are. */
+
+/* Up two levels from the previous row (an item, to its checkout, to its
+   repo), so twice the gap between checkout blocks — and on every repo, not
+   only the ones with a repo above them. */
+.repo-section { padding-top: var(--sb-gap-section); }
+
+.files-repos .repo-section {
+  margin-top: 10px;
+  padding: 0;
+  border: 0;
+  border-radius: 8px;
+}
+
+.repo-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--sb-row-height);
+  padding: 2px var(--nav-inset);
+  cursor: pointer;
+  font-size: 12px;
+  /* 600, one step above the 500 the item rank carries and two above its own
+     checkouts' 400. This rank used to sit at 500 with the argument that a
+     repo is separated from an item by ink alone — true, and it left nothing
+     separating a repo from the CHECKOUTS directly beneath it except a
+     weight step the font barely renders at 13px. The two rows a reader
+     actually compares are the repo and the checkout under it, so that is
+     the pair the separation has to serve.
+     Heaviest text in the tree, which is safe only because it is also not
+     the brightest: items keep the ink. See `--sb-repo-ink`. */
+  font-weight: 600;
+  /* Was -0.01em. Negative tracking packs a name into a denser, darker mass,
+     which is the opposite of what a heading held at `--sb-structure` wants
+     — the weight does that job now, deliberately and in one place. */
+  letter-spacing: 0px;
+  color: var(--sb-repo-ink);
+  transition: background 80ms ease;
+}
+
+/* `.row-icon` is pinned panel-wide to `--sb-structure`, on the rule that a
+   glyph takes the ink of the text beside it — a mark set below its own
+   label reads as a rendering fault, not as a rank. Raising the repo's label
+   without its icon would be exactly that fault, so the override travels
+   with the rank rather than the rule being weakened. */
+.repo-row .row-icon { color: var(--sb-repo-ink); }
+
+.repo-row:hover { background: var(--focus-bg); }
+
+/* ── Checkout ──
+   Rank 2, and the rank that does things. Mono, because these names are
+   identifiers. The rail is a pseudo-element so the rows keep full-bleed
+   backgrounds; `left` puts it midway under the repo row's icon, which is
+   what visually ties the group to its heading. */
+
+/* One worktree: its checkout row plus the items living in it. The block is
+   what the gap separates, so the gap goes here rather than on the rows.
+   Nothing separated these before — a repo's worktrees ran together as one
+   unbroken column, and the only thing telling you a checkout row was not
+   another item of the worktree above it was 14px of indent. Proximity beats
+   indent every time; it is read before you read anything.
+
+   Deliberately no gap INSIDE the block, between the checkout row and its
+   items: the rail already draws that grouping, and space there would make
+   the block's own top edge ambiguous. Space and the rail say one thing. */
+.checkout-group {
+  position: relative;
+  padding-top: var(--sb-gap-group);
+}
+
+/* Groups a repo's checkouts, and carries the outer rail — the repo's own,
+   spanning its checkouts exactly as `.checkout-items::before` spans a
+   checkout's items.
+
+   This wrapper existed with no rule attached to it at all, left behind from
+   an earlier arrangement. The note here used to argue AGAINST drawing this
+   line, on the grounds that the repo row heading the group plus the space
+   around the section already carried the grouping. That is true as far as
+   it goes, and it stops going once a repo has several worktrees: the space
+   between checkout blocks is `--sb-gap-section` and the space between repos
+   is only one step more, so at a glance the panel gives you two similar
+   gaps and asks you to remember which is which. A line does not have to be
+   remembered.
+
+   Same width, same token, same construction as the inner rail — the two
+   marks say the same thing at two depths, and making the outer one fainter
+   or dashed to "rank" them would introduce a second visual grammar to
+   express what the indent already expresses. */
+.checkout-rail {
+  position: relative;
+}
+
+/*
+ * ── How a rail draws its children ──
+ *
+ * Both depths use the same two marks, and the pair is what makes the tree
+ * legible rather than either one alone:
+ *
+ *   1. a THROUGH-LINE down the parent's icon column, stopping at the last
+ *      child's centre — not at the bottom of the group;
+ *   2. a TICK out of that line at each child's own centre, reaching to
+ *      where the child's icon begins.
+ *
+ * Stopping the line at the last centre is the whole trick, and it is why
+ * there are no elbow pseudo-elements here: a line that ends exactly where
+ * the last tick leaves it IS the `└`, and every tick above it reads as `├`
+ * because the line continues past. Drawing corners explicitly would need a
+ * second pseudo-element on every row for a result the eye cannot tell apart.
+ *
+ * Every offset is a fraction of `--sb-row-height` rather than a literal,
+ * so the ticks stay centred if the row scale is ever retuned. That works
+ * because Preflight makes every row border-box (see FileTreeHost.css's note),
+ * so a row's height IS `--sb-row-height` and its centre is exactly half.
+ */
+
+/* The outer rail: one segment per checkout, so it can stop inside the LAST
+   checkout rather than at the bottom of its items. A container-level line
+   cannot do that — the last group's height is its row plus however many
+   terminals are running in it, and the line has to end at the row. */
+.checkout-group::before {
+  content: "";
+  position: absolute;
+  /* Under the middle of the REPO row's icon, one indent step out from the
+     inner rail. `.repo-row` starts its content at `--nav-inset` and the
+     icon is 13px wide, so its centre is +6.5 — rounded down to land the
+     1px line on a whole pixel, exactly as the inner rail rounds 22.5 to
+     22. */
+  left: calc(var(--nav-inset) + 6px);
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--sb-rail);
+}
+
+/* The last checkout ends the line at its own row. `--sb-gap-group` is this
+   group's own leading padding, which the line still has to cross to reach
+   the row underneath it. */
+.checkout-group:last-child::before {
+  bottom: auto;
+  height: calc(var(--sb-gap-group) + var(--sb-row-height) / 2);
+}
+
+/* The tick into a checkout row: from the outer rail to where the row's own
+   icon starts (`--nav-inset` + 16px, the checkout indent). */
+.checkout-row::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--nav-inset) + 6px);
+  top: 50%;
+  /* 10px of clear space between this rail and the checkout indent, less
+     the gap that keeps the stroke off the icon. */
+  width: calc(10px - var(--sb-tick-gap));
+  height: 1px;
+  background: var(--sb-rail);
+}
+
+.checkout-items {
+  position: relative;
+}
+
+/* Indentation carries the hierarchy without connector pipes. */
+.checkout-group::before,
+.checkout-row::after,
+.checkout-items::before,
+.checkout-items > .tile-entry::after,
+.checkout-items > .new-agent-row::after {
+  display: none;
+}
+
+/* The rail hangs off a CHECKOUT, spanning the items living in it, rather
+   than off the repo spanning its checkouts. It ties each terminal to the
+   working copy it is running in, which is the relationship you need while
+   reading the panel — "which of these directories is this agent in" — where
+   the repo-level grouping was already carried by the repo row heading it
+   and the space around the section.
+ 
+   A pseudo-element rather than a border on a padded container, so the rows
+   underneath keep their full-bleed hover and selection; `left` lands it
+   under the middle of the checkout row's own icon, which is what visually
+   ties the group to its heading. */
+.checkout-items::before {
+  content: "";
+  position: absolute;
+  left: calc(var(--nav-inset) + 22px);
+  top: 1px;
+  /* Ends at the LAST item's centre, where its tick leaves. A container-level
+     line works at this depth (unlike the outer rail) because every child
+     here is a plain row of exactly `--sb-row-height` — `.tile-entry` and
+     `.new-agent-row` share that box deliberately. */
+  bottom: calc(var(--sb-row-height) / 2);
+  width: 1px;
+  background: var(--sb-rail);
+}
+
+/* The tick into an item row: from the inner rail to where the item's own
+   icon starts (`--nav-inset` + 30px, the item indent). `.new-agent-row`
+   takes it too — it stands in for the row that would be there, so it hangs
+   off the rail like one. */
+.checkout-items > .tile-entry::after,
+.checkout-items > .new-agent-row::after {
+  content: "";
+  position: absolute;
+  left: calc(var(--nav-inset) + 22px);
+  top: 50%;
+  /* 8px to the item indent here, not 10 — see `--sb-tick-gap`. */
+  width: calc(8px - var(--sb-tick-gap));
+  height: 1px;
+  background: var(--sb-rail);
+}
+
+.checkout-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-height: var(--sb-row-height);
+  padding: 2px var(--nav-inset) 2px calc(var(--nav-inset) + 16px);
+  /* Its own containing block, so `::after`'s tick is placed against THIS
+     row's box and lands on its centre whatever the row's height. Without
+     it the tick resolves against `.checkout-group` and slides down as the
+     group grows terminals. */
+  position: relative;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--sb-structure);
+  transition: background 80ms ease;
+}
+
+/* The checkout you are in comes back to full strength. It is the one
+   structural row that is also a destination, so it is the one that earns
+   the ink. */
+
+/* Name and branch are two different kinds of string and they get two
+   different treatments. The name is prose — what a worktree is FOR, often
+   typed by a person — so it is set in the sans face like every other name
+   in the panel. The branch is an identifier, so it keeps the mono face and
+   takes a pill, which is what stops a row reading as one run-on phrase
+   ("Fix OAuth retry fix-oauth-retry").
+
+   A row whose name would only repeat its branch renders the pill alone
+   (checkoutName returns null), so the pill is the one part always here. */
+.checkout-label {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow: hidden;
+}
+
+.checkout-name {
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* The label owns the spare row width; keep the repo name sized to its
+   text so its branch sits beside it, just like a worktree's branch. */
+.checkout-label > .row-name {
+  flex: 0 1 auto;
+}
+
+/* Never shrinks below half the label: a long worktree name must not squeeze
+   the branch out of existence, and a long branch must not squeeze the name.
+   Whichever is longer truncates first.
+
+   The branch mark lives INSIDE the pill rather than at the row's leading
+   edge. There it labels the value it belongs to — the pill reads as one
+   object, "ref: main" — instead of sitting on the far side of the name
+   where it competed with the row's own identity for the same slot. It also
+   frees the leading slot to say what KIND of checkout the row is, which is
+   the thing that slot was always better at. */
+.branch-pill {
+  flex: 0 1 auto;
+  max-width: 55%;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  /* An outline, not a fill — and the reason is the glass.
+     
+     This was a 5% tint of `--foreground` (8% before that). A fill that
+     faint is not composited against the panel's color, it is composited
+     against the panel's TRANSLUCENCY: `--sidebar-opacity` is 0.9 in light
+     and dark, so a tenth of whatever is behind the window shows through
+     every pill. The shape held or dissolved depending on the user's
+     desktop, which is not a property a UI element gets to have. Raising
+     the alpha would only have made the unreliable thing louder.
+
+     A 1px stroke has no such problem: it is one hairline at a fixed value
+     rather than a large area at a low one, so it reads the same over any
+     backdrop. It also suits what the pill IS — a chip, a bounded token
+     around an identifier — better than a tint ever did.
+
+     The geometry holds the old 16px box exactly: 14px of line plus 1px of
+     border top and bottom, and 4px of padding plus 1px of border either
+     side, so nothing on the row reflows. */
+  padding: 0 4px;
+  border: 1px solid var(--sb-pill-border);
+  border-radius: var(--radius-control);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  line-height: 14px;
+  color: var(--sb-structure);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* The mark holds its size; the name is what gives way. A pill truncated to
+   an ellipsis with no glyph would stop reading as a ref at all. */
+.branch-pill svg {
+  flex: none;
+}
+
+.branch-pill-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* A detached checkout's pill holds a sha, not a branch. The glyph already
+   swapped to a commit mark (row-icons.tsx); the italic is what carries it
+   at a glance, before anyone reads either. */
+.checkout-row.detached .branch-pill-name {
+  font-style: italic;
+}
+
+.checkout-row:hover { background: var(--focus-bg); }
+
+/* The working directory targeted by Cmd/Ctrl+N, independent of tile focus. */
+.repo-row.active-checkout,
+.checkout-row.active-checkout {
+  background: color-mix(in srgb, var(--foreground) 9%, transparent);
+}
+
+.repo-row.active-checkout:hover,
+.checkout-row.active-checkout:hover {
+  background: color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+/* With no secondary worktree, the repo itself is the checkout and its
+   items move up one level with the same rail geometry. */
+.single-checkout > .checkout-items::before,
+.single-checkout > .checkout-items > .tile-entry::after,
+.single-checkout > .checkout-items > .new-agent-row::after {
+  left: calc(var(--nav-inset) + 6px);
+}
+.single-checkout > .checkout-items > .tile-entry,
+.single-checkout > .checkout-items > .new-agent-row {
+  padding-left: calc(var(--nav-inset) + 14px);
+}
+
+
+
+/* ── Item ──
+   Rank 3. Back to the sans face, one step in from its checkout — and the
+   rank that wins on ink: full `--foreground` at 500, against two structural
+   ranks held to `--sb-structure`.
+
+   That inversion is the point. A file tree dims its folder names for the
+   same reason: they are scaffolding, and the items are what you actually
+   open. Depth stays legible without either axis helping — size, typeface,
+   indent and the rail already separate the three — so a panel that spent
+   its ink AND its weight on structure was emphasising the rows you never
+   click at the expense of the rows it exists to get you to. */
+
+.tile-entry {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: var(--sb-row-height);
+  padding: 2px var(--nav-inset) 2px calc(var(--nav-inset) + 30px);
+  cursor: pointer;
+  position: relative;
+  transition: background 80ms ease;
+}
+
+.tile-entry:hover { background: var(--focus-bg); }
+
+/* The focused item: the strongest state in the panel, and the only one that
+   gets the accent. It used to be `--focus-bg` — the exact value a hovered
+   repo row also used, so the thing you were looking at and the thing your
+   pointer happened to be over were pixel-identical. */
+.tile-entry.focused {
+  background: var(--sb-selected-bg);
+}
+
+/* Hidden titles are fainter in light mode; icons retain their own ink. */
+.hidden-item .tile-title {
+  color: color-mix(in srgb, var(--foreground) var(--sb-hidden-title-alpha), transparent);
+}
+
+/* Glyphs with no hue of their own — a plain shell, a note, a PDF. An
+   agent's mark keeps its hue and is faded instead; see the hue rules
+   further down, written one class deeper so they outrank this. */
+.hidden-item .tile-icon { color: var(--sb-hidden); }
+
+/* A site whose server is down: dimmed by color only, never by weight. */
+.tile-entry.stopped .tile-title,
+.tile-entry.stopped .tile-icon {
+  color: var(--sb-hidden);
+}
+
+.machine-sites {
+  display: flex;
+  flex-direction: column;
+}
+
+
+/* The empty-checkout row. Sits on the rail at the item indent and keeps an
+   item's geometry, because that is what it stands in for — the row that
+   would be there.
+
+   It sits between the two ranks rather than joining either. Full item
+   strength was tried and is wrong: at item weight and item ink the row is
+   indistinguishable from a terminal that already exists, and this one does
+   not exist yet — an invitation that looks exactly like a destination is a
+   lie about what is on the machine. Structural strength was also wrong,
+   for the opposite reason: it made the only actionable thing in an empty
+   checkout as quiet as the scaffolding, so the checkout read as a dead end.
+
+   `--sb-muted` at 400 is the seam. It is a step brighter than the repo and
+   checkout rows around it — those are `--sb-structure` — without reaching
+   the ink or the weight the real items hold. Its glyph stays structural. */
+.new-agent-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  width: 100%;
+  /* The same box as `.tile-entry` — it stands in for the row that would be
+     here, and it had no `.row-action` to inflate it to match. */
+  min-height: var(--sb-row-height);
+  padding: 2px var(--nav-inset) 2px calc(var(--nav-inset) + 30px);
+  border: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 400;
+  color: var(--sb-muted);
+  text-align: left;
+  cursor: pointer;
+  transition: background 80ms ease, color 80ms ease;
+}
+
+.new-agent-row:hover {
+  background: var(--focus-bg);
+  color: var(--foreground);
+}
+
+/* Inset, rounded targets keep the tree legible without full-width bands.
+   Indents and branch connectors stay inside the same row coordinates. */
+.repo-row,
+.checkout-row,
+.tile-entry,
+.new-agent-row {
+  border-radius: var(--radius-control);
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+
+.row-action:focus-visible,
+.repo-row:focus-visible,
+.checkout-row:focus-visible,
+.tile-entry:focus-visible,
+.new-agent-row:focus-visible {
+  outline: 2px solid var(--accent-selection);
+  outline-offset: -2px;
+}
+
+/* The 16px box every item's icon occupies, so the label starts on the same
+   x as the titles in a checkout that does have items. */
+.new-agent-row-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  flex: none;
+  /* Matches `.new-agent-row`'s own text, not the structural ranks. */
+  color: inherit;
+}
+
+.tile-icon {
+  position: relative;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Full ink, like the title it sits beside — the same token, so the pair
+     never drifts apart. A harness terminal overrides this inline with its
+     agent hue (row-icons.tsx); this is the answer for everything that has
+     no hue of its own — a plain shell, a note, a PDF. */
+  color: var(--sb-item-ink);
+}
+
+.tile-icon svg { display: block; }
+
+/* Agent identity — the one axis an icon is allowed to vary from its label
+   (see the file header), and the one thing that survives every rank.
+   Notably it survives `.hidden-item`, which for a while it did not: the
+   hue is identity, not status, and an off-screen Claude session is still a
+   Claude session. Suppressing it also failed at exactly the wrong moment —
+   every row on a freshly attached machine is off-screen, so the panel that
+   most needed telling apart at a glance was the one that arrived grey.
+   Ink still carries the rank; the title beside each of these is dimmed.
+
+   Written `.tile-entry .tile-icon.agent-*` (0,3,0) so they outrank
+   `.hidden-item .tile-icon` (0,2,0) explicitly. Equal specificity decided
+   by source order would work today and break the first time either rule
+   moves. */
+.tile-entry .tile-icon.agent-claude { color: var(--agent-claude); }
+.tile-entry .tile-icon.agent-codex { color: var(--agent-codex); }
+.tile-entry .tile-icon.agent-opencode { color: var(--agent-opencode); }
+.tile-entry .tile-icon.item-artifact { color: var(--item-artifact); }
+
+/* Off-screen: the hue is FADED, not replaced. It goes to the same alpha
+   the title beside it takes (`--sb-hidden-alpha`, one number feeding both,
+   so the glyph and its label can never drift apart), which keeps the mark
+   answering "which agent" while the rank still reads at a glance.
+   Suppressing the hue outright was wrong — it is identity, not status —
+   and so was leaving it at full strength, which put the panel's most
+   saturated pixels on its quietest rows. */
+.tile-entry.hidden-item .tile-icon.agent-claude {
+  color: color-mix(in srgb, var(--agent-claude) var(--sb-hidden-alpha), transparent);
+}
+
+.tile-entry.hidden-item .tile-icon.agent-codex {
+  color: color-mix(in srgb, var(--agent-codex) var(--sb-hidden-alpha), transparent);
+}
+
+.tile-entry.hidden-item .tile-icon.agent-opencode {
+  color: color-mix(in srgb, var(--agent-opencode) var(--sb-hidden-alpha), transparent);
+}
+
+.tile-entry.hidden-item .tile-icon.item-artifact {
+  color: color-mix(in srgb, var(--item-artifact) var(--sb-hidden-alpha), transparent);
+}
+
+/* One line, ellipsis, in EVERY state — including focused.
+ *
+ * The focused row used to unclamp to two lines. The argument for it was
+ * real: these are agent-written sentences, and the words that tell two of
+ * them apart are often the last ones, so a truncated line can hide exactly
+ * what the row exists to carry. It still cost more than it bought. Row
+ * height became a function of selection, so moving the selection reflowed
+ * every row below it — and since the title also changes while an agent is
+ * working, a focused row could grow and shrink on its own, shoving the list
+ * under the pointer mid-click. A list that moves when you look at it is
+ * worse than a list you have to hover to read in full.
+ *
+ * The full title is still reachable: it is the pane header in the canvas,
+ * at full width, for the one item this would have spent the second line on.
+ */
+.tile-title {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--sb-item-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+}
+
+.tile-detail {
+  flex-shrink: 0;
+  max-width: 40%;
+  margin-left: 6px;
+  font-size: 11px;
+  color: var(--sb-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.tile-rename-input {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--background);
+  color: inherit;
+  border: 1px solid var(--accent-selection);
+  border-radius: 4px;
+  padding: 0 4px;
+  outline: none;
+  min-width: 0;
+  flex: 1;
+  height: 1.5em;
+}
+
+/* ── Status ──
+   The dot is unconditional on a machine header and conditional everywhere
+   else (see CheckoutRow): a column of identical green dots down every row
+   spends the right edge on a value that never varies. */
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--muted-foreground);
+  opacity: 0.4;
+}
+
+.status-dot.status-open { background: var(--status-open); opacity: 1; }
+
+.status-dot.status-connecting {
+  background: var(--status-connecting);
+  opacity: 1;
+  animation: status-pulse 1.2s ease-in-out infinite;
+}
+
+.status-dot.status-error { background: var(--destructive); opacity: 1; }
+
+/* Steady, not pulsing: a pulse reads as "in transit" (see status-connecting),
+   and a conversation waiting for an approval is not going anywhere until
+   someone answers it. */
+.status-dot.status-waiting { background: var(--status-waiting); opacity: 1; }
+
+@keyframes status-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.35; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-dot.status-connecting { animation: none; }
+}
+
+/* ── Empty states ──
+   Aligned to the rank they stand in for — a machine's empty line sits where
+   its repos would, so it reads as part of the section rather than as loose
+   text under it. */
+
+.tile-empty {
+  padding: 4px var(--nav-inset);
+  color: var(--sb-muted);
+  font-size: 11px;
+}
+
+.tile-empty-actionable { cursor: pointer; }
+.tile-empty-actionable:hover { color: var(--foreground); }
+
+/* A machine's empty state is its add button: a full-width dashed pill on
+   the repo rank, the label centred, the local one's shortcut in a chip at
+   its side. Dashed because it stands in for a row that does not exist yet. */
+.machine-empty { padding: 10px var(--nav-inset) 10px; }
+
+.machine-add-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 7px 10px;
+  border: 1px solid var(--surface-edge);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--surface-raised) 65%, transparent);
+  color: var(--sb-muted);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+  transition:
+    color 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+.machine-add-button:hover {
+  color: var(--foreground);
+  border-color: color-mix(in srgb, var(--foreground) 45%, transparent);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+.machine-add-button:focus-visible {
+  outline: 2px solid var(--ring, var(--foreground));
+  outline-offset: 2px;
+}
+
+.machine-add-kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0px;
+  background: color-mix(in srgb, var(--foreground) 8%, transparent);
+  color: color-mix(in srgb, var(--foreground) 55%, transparent);
+}
+
+/* The trailing Unscoped group: items on the machine that belong to no
+   repo. Headed like a machine section, because that is what it is —
+   a bucket, not a repo — and given the repo rank's indent for its rows. */
+.unscoped-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 var(--nav-inset);
+  /* A machine-level boundary, and modelled on `.machine-header` — but its
+     rows are `.tile-entry` directly, with no `.repo-section` to bring a
+     leading gap, so this one keeps a bottom margin of its own. */
+  margin: var(--sb-gap-machine) 0 4px;
+  height: 20px;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0px;
+  text-transform: uppercase;
+  color: var(--sb-muted);
+}
+
+/* Only the legacy flat list sits flush left. Directory children use the
+   same .mini-repo-items indentation as repository children. */
+.unscoped-group > [data-sortable-container="unscoped"] > .tile-entry {
+  padding-left: var(--nav-inset);
+}
+
+/* Directory groups share repo rows and mini-repo spacing/indentation.
+   Only their full path label differs: italic, at the same 12px/600 rank. */
+.unscoped-directory-heading .row-name { font-style: italic; }
+
+/* ── New Repo modal ──
+ *
+ * Content only. The shell — width, padding, radius, title, actions row and
+ * button metrics — comes from the Dialog primitive (#58); see Dialog.css.
+ * `.add-repo-overlay` / `.add-repo-modal` survive as identity hooks
+ * for the tests. This dialog used to set its own `max-width: 240px`, the
+ * narrowest in the app and the one holding a scrolling repo list.
+ */
+
+.add-repo-note {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.add-repo-label {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.add-repo-error {
+  font-size: 12px;
+  color: var(--destructive);
+  margin: 0;
+}
+
+/* External-file drop target — mirrors the tree view's folder-row
+   affordance (TreeView.css .collection-folder-row.drop-target), so the
+   two sidebar modes advertise the same gesture the same way. */
+.checkout-row.drop-target,
+.primary-checkout.drop-target {
+	background-color: var(--color-active);
+	outline: 1px dashed var(--color-primary);
+	outline-offset: -1px;
+}
+
+/* Narrow: the add-repo dialogs open the keyboard, and on iOS the keyboard
+   overlays the layout viewport without resizing it — a vertically centred
+   dialog lands its search field and buttons under the keys. Anchored to
+   the top instead (same treatment as NewWorktreeModal.css). */
+@media (max-width: 519px) { /* keep in step with NARROW_MAX_WIDTH_PX (useIsNarrow.ts) */
+  .dialog-overlay.add-repo-overlay {
+    align-items: flex-start;
+    padding-top: max(48px, 8vh);
+  }
+}
+
+.row-action.retry-removal {
+  width: auto;
+  padding: 0 4px;
+}
+
+/* ── Disclosure ──
+   The chevron on a row that can hold children (spec §2.2, §2.6). It takes
+   the row ICON's place while the row is hovered or focused: absolutely
+   positioned over the icon box, invisible at rest, and the icon itself
+   hides while the chevron shows. So it adds no slot — labels, and the
+   rails and ticks that are placed under icons, keep their geometry. A row
+   with no children never swaps. State is rotation only: weight and ink
+   stay put. */
+.has-disclosure {
+  position: relative;
+}
+
+.disclosure-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 14px;
+  height: 14px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-control);
+  background: transparent;
+  color: var(--sb-muted);
+  cursor: pointer;
+}
+
+.has-disclosure > .disclosure-toggle {
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+:is(.machine-header, .repo-row, .checkout-row):is(:hover, :focus-visible, :has(:focus-visible)) .has-disclosure > .disclosure-toggle {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+:is(.machine-header, .repo-row, .checkout-row):is(:hover, :focus-visible, :has(:focus-visible)) .has-disclosure > :not(.disclosure-toggle) {
+  visibility: hidden;
+}
+
+.disclosure-toggle:hover {
+  background: var(--focus-bg);
+  color: var(--foreground);
+}
+
+/* The Unscoped header has no icon, so its chevron follows the label and
+   keeps its space at rest. */
+.unscoped-header .disclosure-toggle {
+  visibility: hidden;
+}
+
+.unscoped-header:is(:hover, :focus-visible, :has(:focus-visible)) .disclosure-toggle {
+  visibility: visible;
+}
+
+.disclosure-caret {
+  transition: transform 120ms ease-out;
+}
+
+.disclosure-toggle[aria-expanded="true"] .disclosure-caret {
+  transform: rotate(90deg);
+}
+
+/* Shown at rest on a collapsed row, so a collapse stays discoverable
+   without hovering. */
+.disclosure-count {
+  flex-shrink: 0;
+  color: var(--sb-muted);
+  font-size: 10.5px;
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .disclosure-caret { transition: none; }
+}
+
+/* Reorder (spec §2.6). Rows keep native vertical panning until the touch
+   sensor's hold activates. */
+.tile-entry,
+.repo-row,
+.checkout-row {
+  touch-action: pan-y;
+}

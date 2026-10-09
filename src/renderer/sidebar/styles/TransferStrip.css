@@ -1,0 +1,25 @@
+/* Drop status strip, shared by both sidebar view modes (see
+   TransferStrip.tsx for what each state means). Pinned to the sidebar's
+   bottom edge — a scrim centered over a 240px column would cover the rows
+   the user is aiming at. */
+.nav-transfer-strip {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	padding: 8px 12px;
+	font-size: 12px;
+	background: var(--card);
+	border-top: 1px solid var(--border);
+}
+.nav-transfer-file-name {
+	font-weight: 600;
+}
+.nav-transfer-errors {
+	flex: 1;
+	min-width: 0;
+	overflow-wrap: break-word;
+}
+.nav-transfer-dismiss {
+	flex-shrink: 0;
+	cursor: pointer;
+}

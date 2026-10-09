@@ -1,4 +1,11 @@
-import { readFile, writeFile, readdir, realpath, stat, lstat, rename, rm, mkdir, open } from 'node:fs/promises';
+import { fsMove } from './ported/local-files.js';
+import { MAX_TRANSFER_BYTES } from '../port-shared/cubed-protocol.js';
+import { suffixedName } from './ported/import-name.js';
+import { readTree } from './ported/tree.js';
+import { DEFAULT_IGNORE_PATTERNS } from '../port-shared/file-patterns.js';
+import { splitFrontmatter } from '../shared/viewer-item.js';
+import type { TreeNode, FolderTableData } from '../port-shared/types.js';
+import { readFile, writeFile, readdir, realpath, stat, lstat, rename, rm, mkdir, open, cp } from 'node:fs/promises';
 import { basename, dirname, extname, join } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { Registry } from './registry.js';
@@ -18,6 +25,21 @@ export function fileType(path: string): FileItem['type'] {
 export class Files {
   private writes = new Map<string, Promise<unknown>>();
   constructor(private registry: Registry) {}
+  async tree(value: string): Promise<TreeNode[]> {
+    const root = await realpath(absolutePath(value));
+    const result = await readTree({root,depth:2,maxEntries:10000,patterns:DEFAULT_IGNORE_PATTERNS,detectBinary:true,countFiles:true});
+    const absolute = (nodes: TreeNode[]): TreeNode[] => nodes.map(node => ({...node,path:join(root,node.path),...(node.children ? {children:absolute(node.children)} : {})}));
+    return absolute(result.nodes);
+  }
+  async table(value: string): Promise<FolderTableData> {
+    const listing=await this.list(value), files: FolderTableData['files']=[];
+    for(const entry of listing.entries) {
+      if(entry.directory||!['.md','.markdown'].includes(extname(entry.path).toLowerCase()))continue;
+      const text=await this.read(entry.path);
+      files.push({path:entry.path,filename:entry.name,frontmatter:splitFrontmatter(text.content).attributes as Record<string,unknown>,mtime:new Date(entry.modified).toISOString(),ctime:new Date(entry.modified).toISOString()});
+    }
+    return {folderPath:listing.path,files,columns:[...new Set(files.flatMap(file=>Object.keys(file.frontmatter)))]};
+  }
   async info(value: string) {
     const path = absolutePath(value); const s = await lstat(path);
     return { path, name: basename(path), directory: s.isDirectory(), symlink: s.isSymbolicLink(), size: s.size, modified: s.mtimeMs, revision: digest(`${s.dev}:${s.ino}:${s.size}:${s.mtimeMs}:${s.ctimeMs}`) };
@@ -34,7 +56,7 @@ export class Files {
     const path = await realpath(absolutePath(value));
     const s = await stat(path); if (!s.isFile() || s.size > MAX_TEXT) throw new BuilderError('not-text', 'Open a text file smaller than 4 MiB');
     const bytes = await readFile(path); if (bytes.includes(0)) throw new BuilderError('not-text', 'This file contains binary data');
-    return { path, content: bytes.toString('utf8'), revision: digest(bytes) };
+    return { path, content: bytes.toString('utf8'), revision: digest(bytes), modified: s.mtimeMs };
   }
   async write(params: { path: string; content: string; revision: string | null }) {
     const path = absolutePath(params.path);
@@ -71,13 +93,41 @@ export class Files {
   }
   async close(id: string) { await this.registry.mutate(null, draft => { draft.items = draft.items.filter(i => i.id !== id || i.type === 'term'); }); }
   async rename(params: { path: string; destination: string; revision: string }) {
-    const path = absolutePath(params.path), destination = absolutePath(params.destination);
+    const path = absolutePath(params.path);
+    let destination = absolutePath(params.destination);
     if ((await this.info(path)).revision !== params.revision) throw new BuilderError('file-changed', 'File changed before rename');
     if (this.registry.snapshot().repos.some(r => r.root === path || r.worktrees.some(w => w.root === path))) throw new BuilderError('repo-root', 'Move repository roots outside Builder, then register their new location');
-    try { await lstat(destination); throw new BuilderError('already-exists', 'Destination already exists'); } catch (error) { if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error; }
-    await rename(path, destination);
+    // Original rename/move suffix behavior, including extensionless files.
+    if (basename(path) === basename(destination)) destination = await fsMove(path, dirname(destination));
+    else {
+      const requested = basename(destination), directory = dirname(destination);
+      for (let n=1; ; n++) {
+        destination = join(directory, n === 1 ? requested : suffixedName(requested,n));
+        try { await lstat(destination); }
+        catch (error) { if ((error as NodeJS.ErrnoException).code === 'ENOENT') break; throw error; }
+        if (n >= 1000) throw new BuilderError('already-exists','No free rename destination');
+      }
+      await rename(path,destination);
+    }
     await this.registry.mutate(null, draft => { for (const item of draft.items) if (item.type !== 'term' && isWithin(path, item.filePath)) { item.filePath = destination + item.filePath.slice(path.length); item.title = basename(item.filePath); item.cwd = dirname(item.filePath); item.type = fileType(item.filePath); } });
     return this.info(destination);
+  }
+  /** Port of CubedFiles.trash: keep recoverable bytes in this app's own state. */
+  async trash(params: { path: string; revision: string }) {
+    const path = absolutePath(params.path), info = await this.info(path);
+    if (info.revision !== params.revision) throw new BuilderError('file-changed', 'File changed before moving to trash');
+    if (isWithin(path, this.registry.stateDir) || this.registry.snapshot().repos.some(r => isWithin(path, r.root) || r.worktrees.some(w => isWithin(path, w.root)))) throw new BuilderError('repo-root', 'Detach repository roots before moving them to trash');
+    const trash = join(this.registry.stateDir, 'trash');
+    await mkdir(trash, {recursive:true});
+    const destination = join(trash, `${Date.now()}-${randomUUID()}-${basename(path)}`);
+    try { await rename(path, destination); }
+    catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EXDEV') throw error;
+      await cp(path, destination, {recursive:true, errorOnExist:true, force:false});
+      await rm(path, {recursive:true});
+    }
+    await this.registry.mutate(null, draft => { draft.items = draft.items.filter(i => i.type === 'term' || !isWithin(path, i.filePath)); });
+    return {path:destination};
   }
   async remove(params: { path: string; revision: string }) {
     const path = absolutePath(params.path); const info = await this.info(path);
@@ -89,10 +139,21 @@ export class Files {
   async upload(params: { directory: string; name: string; data: string }) {
     const directory = await realpath(absolutePath(params.directory));
     if (typeof params.name !== 'string' || !params.name || basename(params.name) !== params.name || params.name === '.' || params.name === '..' || params.name.includes('\\') || params.name.includes('\0')) throw new BuilderError('invalid-name', 'Invalid upload name');
-    const bytes = decodeBase64(params.data, 8 * 1024 * 1024, 'Upload');
-    const path = join(directory, params.name); const fd = await open(path, 'wx', 0o600);
-    try { await fd.writeFile(bytes); } finally { await fd.close(); }
-    return this.info(path);
+    const bytes = decodeBase64(params.data, MAX_TRANSFER_BYTES, 'Upload');
+    // Port of the original import loop: exclusive creation is authoritative,
+    // so even concurrent uploads cannot overwrite each other.
+    for (let n = 1; n <= 1000; n++) {
+      const name = n === 1 ? params.name : suffixedName(params.name, n);
+      const path = join(directory, name);
+      let fd;
+      try { fd = await open(path, 'wx', 0o600); }
+      catch (error) { if ((error as NodeJS.ErrnoException).code === 'EEXIST') continue; throw error; }
+      try { await fd.writeFile(bytes); }
+      catch (error) { await rm(path, {force:true}); throw error; }
+      finally { await fd.close(); }
+      return this.info(path);
+    }
+    throw new BuilderError('already-exists', `No free name for ${params.name} after 1000 tries`);
   }
   async mkdir(value: string) { const path = absolutePath(value); await mkdir(path); return this.info(path); }
 }

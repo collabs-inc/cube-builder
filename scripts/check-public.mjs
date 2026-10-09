@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync, existsSync } from 'node:fs';
+import { hasHostDependency } from './public-source.mjs';
 const files = [...new Set(execFileSync('git', ['ls-files', '--cached', '--others', '--exclude-standard', '-z'], { encoding: 'utf8' }).split('\0').filter(Boolean))];
 const manifest = JSON.parse(readFileSync('scripts/extraction-manifest.json', 'utf8'));
 const recorded = new Set();
@@ -17,7 +18,7 @@ for (const file of files) {
   if (/-----BEGIN (?:RSA |EC |OPENSSH )?PRIVATE KEY-----|\bgh[pousr]_[A-Za-z0-9]{30,}|\bAKIA[A-Z0-9]{16}\b/.test(content)) failures.push(`${file}: possible credential`);
   if (/\/workspace\/home\/|\/Users\/[A-Za-z0-9_-]+\//.test(content)) failures.push(`${file}: machine-specific path`);
   if (file.startsWith('src/')) {
-    if (/@cube\/|window\.api\b|process\.env\.(?:CUBE_|CUBED_)|(?:ptyd|cubed)\.sock/.test(content)) failures.push(`${file}: host interface dependency`);
+    if (/\.[cm]?[jt]sx?$/.test(file) && hasHostDependency(content,file)) failures.push(`${file}: host interface dependency`);
     if (/\/\/ Adapted from|\/\* Adapted from/.test(content) && !recorded.has(file)) failures.push(`${file}: unrecorded adaptation`);
   }
 }

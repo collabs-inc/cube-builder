@@ -1,0 +1,11 @@
+/* A PaneNotice laid over an artifact or site's own frame, in place of it. */
+.rail-pane-veil.pane-notice-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+}
+
+/* Keep loading content below the pane's outer focus-ring layer. */
+.rail-pane-chromeless:has(.artifact-loading) .rail-pane-surface {
+  isolation: isolate;
+}

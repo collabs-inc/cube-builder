@@ -1,0 +1,245 @@
+/*
+ * The file tree host's own styles. Everything here was the sidebar's own and
+ * moved with the markup it dresses (FileTreeHost.tsx), so the rules live
+ * with the component that renders them rather than with whichever surface
+ * happens to embed it. These blocks were already TOP-LEVEL in that stylesheet
+ * — no `.nav-sidebar` prefix — which is why they need no rewriting to apply
+ * inside a workspace pane as well as inside the sidebar.
+ *
+ * What deliberately did NOT come along is `.nav-sidebar`'s
+ * `user-select: none !important` reset and its `:focus { outline: none }`.
+ * Rescoping either as `.file-tree-host *` / `.file-tree-host :focus` is the
+ * exact shape `bun run e2e:audit-cascade` exists to catch, so it stays out
+ * until a run of that audit says otherwise. Inside the sidebar the host is a
+ * descendant of `.nav-sidebar` and still inherits both.
+ *
+ * --nav-inset is on `:root` (Sidebar.css), so it reaches a pane too;
+ * --color-text-secondary was declared on `.nav-sidebar` and TreeView.css
+ * reads it, so it is redeclared here.
+ */
+.file-tree-host {
+	--color-text-secondary: color-mix(in srgb, var(--muted-foreground) 75%, var(--foreground) 25%);
+
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	font-family: var(--font-sans);
+	font-size: 15px;
+	font-weight: 400;
+	font-synthesis: none;
+	text-rendering: optimizeLegibility;
+	-webkit-font-smoothing: antialiased;
+	-moz-osx-font-smoothing: grayscale;
+	color: var(--foreground);
+	line-height: 1.5;
+}
+
+.workspace-content {
+	/* No horizontal padding (#98): rows carry the inset themselves via
+	   --tree-inset below, so their hover paints edge to edge like
+	   .nav-scope-header and .machine-header. */
+	padding: 6px 0 0;
+	--tree-inset: var(--nav-inset);
+	display: flex;
+	flex-direction: column;
+	flex: 1;
+	min-height: 0;
+	position: relative;
+}
+
+/* The search row spans the host beneath whatever header the embedder drew;
+   the input inside is the flexing child (TreeView.css's
+   .search-input-wrapper), so full row = full-width field with the view/sort
+   controls at the trailing edge — their redesign is #98's deliberately
+   deferred step 3. */
+.nav-search-row {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	flex: none;
+	padding: 4px var(--nav-inset) 4px;
+}
+
+.nav-search-row .table-search-row {
+	margin-bottom: 0;
+	flex: 1 1 auto;
+	min-width: 0;
+}
+
+/* Same 18px box as .row-action, but always visible: these are panel
+   controls, not per-row actions, so they don't wait for hover. Their own
+   hover stacks a second --focus-bg over the row's, the sidebar's usual
+   two-level emphasis. */
+.nav-scope-action {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	flex: none;
+	padding: 0;
+	border: none;
+	border-radius: var(--radius-control);
+	background: transparent;
+	color: var(--muted-foreground);
+	cursor: pointer;
+}
+
+.nav-scope-action:hover {
+	background: var(--focus-bg);
+	color: var(--foreground);
+}
+
+/* The sort control carries two glyphs (mode + chevron), so it flexes wider
+   than the square actions while keeping their height and hover. */
+.nav-scope-action-menu {
+	width: auto;
+	gap: 2px;
+	padding: 0 3px;
+}
+
+/* Create Item Modal */
+.create-item-modal-overlay {
+	position: fixed;
+	inset: 0;
+	/* Plain dim — see .add-repo-overlay for why no blur. */
+	background: rgba(0, 0, 0, 0.45);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 1100;
+	padding: 32px;
+}
+
+.create-item-modal-content {
+	background: var(--background);
+	color: var(--foreground);
+	width: 100%;
+	max-width: 420px;
+	border-radius: 18px;
+	border: 1px solid var(--border);
+	box-shadow: 0 24px 48px rgba(15, 18, 26, 0.16);
+	overflow: hidden;
+	padding: 28px;
+	display: flex;
+	flex-direction: column;
+	gap: 22px;
+}
+
+.create-item-modal-header {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.create-item-modal-title {
+	font-size: 15px;
+	font-weight: 500;
+	margin: 0;
+}
+
+/* `--destructive` needs no inline fallback here: @cube/theme declares it
+   in both themes, and every other error string in the app (.row-detail.error,
+   .add-repo-error) already relies on that. */
+.create-item-modal-error {
+	font-size: 12px;
+	color: var(--destructive);
+	margin: -10px 0 12px;
+}
+
+.create-item-modal-form {
+	display: flex;
+	flex-direction: column;
+}
+
+.create-item-form-group {
+	margin-bottom: 18px;
+}
+
+.create-item-modal-text-input {
+	width: 100%;
+	padding: 12px 14px;
+	border: 1px solid var(--border);
+	border-radius: 10px;
+	background: var(--background);
+	color: var(--foreground);
+	font: inherit;
+	transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.create-item-modal-text-input:focus {
+	outline: none;
+	border-color: var(--foreground);
+	box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+}
+
+.create-item-modal-actions {
+	display: flex;
+	gap: 10px;
+	justify-content: flex-end;
+}
+
+.create-item-modal-button {
+	padding: 9px 18px;
+	border-radius: 9px;
+	border: 1px solid transparent;
+	font: inherit;
+	cursor: pointer;
+	font-weight: 500;
+	transition: background 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.create-item-modal-button-secondary {
+	background: transparent;
+	color: var(--color-text-secondary);
+	border-color: var(--border);
+}
+
+.create-item-modal-button-secondary:hover {
+	background: var(--color-hover);
+	color: var(--foreground);
+}
+
+.create-item-modal-button-primary {
+	background: var(--foreground);
+	color: var(--background);
+	border: none;
+	box-shadow: 0 2px 4px rgba(59, 130, 246, 0.2);
+}
+
+.create-item-modal-button-primary:hover {
+	background: var(--foreground);
+	opacity: 0.9;
+	box-shadow: 0 4px 8px rgba(59, 130, 246, 0.3);
+}
+
+.create-item-modal-button-primary:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+	box-shadow: none;
+	transform: none;
+}
+
+.nav-tree-status {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	padding: 12px 14px;
+	font-size: 12px;
+	color: var(--muted-foreground);
+}
+
+.nav-tree-status-error {
+	color: var(--destructive, #ef4444);
+}
+
+@media (prefers-color-scheme: dark) {
+	.create-item-modal-content {
+		box-shadow: 0 26px 52px rgba(0, 0, 0, 0.46);
+	}
+
+	.create-item-modal-button-secondary {
+		border-color: rgba(255, 255, 255, 0.08);
+	}
+}

@@ -1,0 +1,59 @@
+/*
+ * Ported from shell.css's #panel-nav rules. The frame is all Sidebar.tsx
+ * renders now: the navigator's panel owns the width and the open/closed
+ * state, so the toggle, the resize handle, the off-canvas drawer and its
+ * backdrop are gone along with the rules that dressed them.
+ */
+:root {
+  --panel-nav-min: 100;
+  --panel-nav-max: 1000;
+  /* Horizontal inset every row in both sidebar panels lines up on. */
+  --nav-inset: 12px;
+}
+
+.app-sidebar {
+  /* Dense navigation uses tighter corners than the workspace cards. */
+  --radius-control: 4px;
+  display: flex;
+  flex-direction: column;
+  /* Positioning context for .repos-sidebar-actions, which sits in the
+     titlebar strip the padding-top below reserves (ReposSidebar.css). */
+  position: relative;
+  /* Clears the fixed #titlebar, which overlays this panel. The old shell
+     put the same offset on #nav-toolbar (shell.css:212) because the shell
+     itself owned that row; here the sidebar panels are the topmost content
+     in the column, so the offset belongs on their shared container. */
+  padding-top: var(--toolbar-height);
+  box-sizing: border-box;
+  /* The dragged width arrives as a custom property from Sidebar.tsx rather
+     than as an inline `flex`, so the rule lives here with the min/max it has
+     to sit between. */
+  flex: 0 0 var(--app-sidebar-width, 260px);
+  min-width: calc(var(--panel-nav-min) * 1px);
+  max-width: calc(var(--panel-nav-max) * 1px);
+  border-right: 1px solid var(--border);
+  background: rgba(var(--sidebar-bg-rgb), var(--sidebar-opacity));
+  overflow: hidden;
+}
+
+.sidebar-panel {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.tile-persona-badge {
+  max-width: 100px;
+  flex-shrink: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding: 1px 5px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  background: var(--muted-background);
+  font-size: 10px;
+}

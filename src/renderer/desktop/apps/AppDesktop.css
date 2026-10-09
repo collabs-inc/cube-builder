@@ -1,0 +1,167 @@
+.app-main-apps, .mobile-app-shell {
+  /* Resolve the theme ground here, before built-in controls override their
+     own --background. Every first-party app paints the same glass. */
+  --first-party-app-bg: color-mix(in srgb, var(--background) 55%, transparent);
+  --app-settings-content-width: 800px;
+}
+.app-main-apps {
+  --workspace-nav-width: min(var(--studio-sidebar-width, 256px), max(160px, calc(100vw - var(--app-left) - var(--app-edge-inset) - 280px)));
+  /* Studio's header row: the project list's heading and the screen tabs share it. */
+  --studio-header: 44px;
+  --studio-sidebar-left-inset: 6px;
+  /* One window-edge inset for every app and sidebar state. The docked sidebar
+     gutter and collapsed app title keep their own spacing. */
+  --app-left: calc(max(var(--app-sidebar-space, 240px), var(--rail-gutter)) + var(--rail-gutter));
+  --app-edge-inset: 6px;
+  /* Closed: clear the titlebar. Docked: use the shared window-edge inset. */
+  /* The standalone workspace has no outer Cube titlebar to clear. */
+  --app-viewport-top: var(--app-edge-inset);
+  --app-viewport-inset: var(--app-viewport-top) var(--app-edge-inset) var(--app-edge-inset) var(--app-left);
+  /* Visible card edges include both the rail and pane gutters. The screen
+     controls use these edges as their origin, including on an empty screen. */
+  --studio-content-left: calc(var(--app-left) + var(--workspace-nav-width) + 2 * var(--rail-gutter));
+  --studio-content-top: calc(var(--app-viewport-top) + var(--studio-header) + var(--rail-gutter));
+  --studio-controls-center: calc((var(--app-viewport-top) + var(--studio-content-top)) / 2);
+  --studio-screen-controls-inset: 2px;
+}
+.app-main-apps:has(.app-launcher.is-docked) { --app-viewport-top: var(--app-edge-inset); }
+.app-main-apps[data-studio-sidebar-open="false"] { --workspace-nav-width: 0px; }
+.app-main-apps:not(:has(.app-launcher.is-docked)) { --app-left: var(--app-edge-inset); }
+/* Native drag regions must end at the sidebar, before the app's top controls. */
+.app-shell:has(.app-launcher.is-docked) #titlebar,
+.app-shell .app-main-apps:has(.app-launcher.is-docked)::before { right: calc(100% - var(--app-sidebar-space)); }
+.app-main-apps[data-workspace-visible="false"]:has(.app-launcher.is-docked) .desktop-band { right: calc(100% - var(--app-sidebar-space)); }
+/* App chrome is independent of workspace placement. Hidden app views retain
+   their DOM; the permanent Rail is laid out at the same size behind them. */
+.app-launcher-content { display: flex; flex: 1; min-height: 0; flex-direction: column; padding: 6px 10px 10px; -webkit-app-region: no-drag; }
+.app-screen[hidden], .app-builtin-body[hidden] { display: none; }
+.app-launcher-list { display: flex; flex: 1; flex-direction: column; gap: 1px; min-height: 0; margin-top: 8px; overflow-y: auto; }
+.app-launcher-work { display: flex; flex: none; flex-direction: column; gap: 1px; }
+.app-launcher-work::before { content: ""; flex: none; height: 1px; margin: 2px 8px; background: var(--border); }
+.app-launcher-work [data-app-dragging="true"] { position: relative; z-index: 1; cursor: grabbing; }
+.app-launcher-system { display: flex; flex-direction: column; gap: 1px; margin-top: auto; padding-top: 12px; }
+.app-launcher-entry { position: relative; flex: none; min-width: 0; }
+.app-launcher-entry .app-launcher-status { margin-inline: 4px; }
+.app-row-manage { position: absolute; right: 4px; top: 50%; width: 24px; height: 24px; transform: translateY(-50%); opacity: 0; pointer-events: none; }
+.app-launcher-entry:hover .app-row-manage, .app-launcher-entry:focus-within .app-row-manage { opacity: 1; pointer-events: auto; }
+.app-launcher-entry:hover .app-launcher-status, .app-launcher-entry:focus-within .app-launcher-status { opacity: 0; }
+.app-launcher-row {
+  display: flex;
+  align-items: center;
+  flex: none;
+  gap: 10px;
+  width: 100%;
+  min-height: 32px;
+  padding: 6px 8px;
+  margin: 0;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: color-mix(in srgb, var(--foreground) 82%, transparent);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--motion-fast) ease, color var(--motion-fast) ease;
+}
+.app-launcher-row .app-icon { color: color-mix(in srgb, var(--foreground) 62%, transparent); transition: color var(--motion-fast) ease; }
+.app-launcher-row .app-icon[data-app-icon="workspace"] { color: var(--foreground); }
+.app-launcher-row:hover { background: var(--focus-bg); color: var(--foreground); }
+.app-launcher-row:hover .app-icon { color: var(--foreground); }
+.app-launcher-row[aria-current="page"] { background: color-mix(in srgb, var(--foreground) 9%, transparent); color: var(--foreground); }
+.app-launcher-row[aria-current="page"] .app-icon { color: var(--foreground); }
+.app-launcher-row:active { background: color-mix(in srgb, var(--foreground) 13%, transparent); }
+.app-launcher-row:focus-visible, .app-shell-icon-button:focus-visible { outline: 2px solid var(--accent-selection); outline-offset: -2px; }
+.app-launcher-name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-launcher-status { flex: none; width: 6px; height: 6px; border-radius: 50%; background: var(--muted-foreground); opacity: 0.55; }
+.app-launcher-status[data-state="running"] { background: var(--status-open); opacity: 1; }
+.app-launcher-status[data-state="error"] { background: var(--destructive); opacity: 1; }
+/* Keep the docked update action inside the sidebar's titlebar, clear of
+   native traffic lights and the toggle, including at the minimum width. */
+.app-main-apps:has(.app-launcher.is-docked) .desktop-navigation-controls { width: var(--app-sidebar-space); padding: 0 12px 0 calc(var(--traffic-light-inset) + 48px); }
+.desktop-sidebar-update { display: flex; justify-content: flex-end; margin-left: auto; min-width: 0; max-width: 100%; }
+.desktop-sidebar-update .update-pill { min-width: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.app-shell-icon-button { display: inline-flex; align-items: center; justify-content: center; width: 28px; height: 28px; padding: 0; border: 0; border-radius: 6px; background: transparent; color: var(--muted-foreground); cursor: pointer; -webkit-app-region: no-drag; }
+.app-shell-icon-button:hover { background: var(--focus-bg); color: var(--foreground); }
+.desktop-band > .app-current { display: flex; flex: 0 1 auto; min-width: 0; align-items: center; gap: 8px; height: 100%; color: var(--foreground); font-size: 13px; font-weight: 500; -webkit-app-region: drag; }
+.app-current .app-icon { --app-icon-size: 18px; }
+.app-current-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.app-screen { position: absolute; inset: var(--app-viewport-inset); z-index: 20; min-width: 0; background: var(--pane-chrome-bg); border-radius: var(--pane-chrome-radius); box-shadow: var(--pane-chrome-shadow); overflow: hidden; display: flex; flex-direction: column; }
+.app-builtin-body { flex: 1; min-height: 0; display: flex; flex-direction: column; overflow: auto; }
+.app-screen .settings-windowed { flex: 1; width: 100%; height: 100%; border: 0; border-radius: 0; box-shadow: none; animation: none; }
+/* Inside the app pane Settings is one surface, list beside content like Finder: no card within the card. */
+.app-screen .settings-modal.settings-windowed:not(.is-narrow) { background: transparent; }
+.app-screen .settings-modal.settings-windowed:not(.is-narrow) .settings-rail { border-right: 1px solid var(--border); }
+.app-screen .settings-modal.settings-windowed:not(.is-narrow) .settings-shell > .settings-pane { margin: 0; border-radius: 0; background: transparent; box-shadow: none; }
+.app-screen-notice { margin: auto; padding: 32px; color: var(--muted-foreground); font-size: 13px; }
+.app-screen .app-item { flex: 1; min-height: 0; }
+.app-screen .catalog { padding: 28px; }
+.app-screen .catalog-body { max-width: 960px; width: 100%; align-self: center; }
+.app-machine-body { padding: 32px; max-width: calc(var(--app-settings-content-width) + 64px); width: 100%; box-sizing: border-box; margin: 0 auto; }
+.app-builtin-agents .store, .app-builtin-tools .store { width: 100%; max-width: calc(var(--app-settings-content-width) + 56px); margin-inline: auto; }
+.studio-sidebar-toggle { position: absolute; top: calc(var(--studio-controls-center) - 14px); left: calc(var(--app-left) + var(--studio-sidebar-left-inset) + 8px); z-index: 20; }
+.workspace-screen-controls { position: absolute; top: calc(var(--studio-controls-center) - var(--screen-tabs-height) / 2); left: calc(var(--studio-content-left) + var(--studio-screen-controls-inset)); right: var(--app-edge-inset); height: var(--screen-tabs-height); z-index: 20; display: flex; -webkit-app-region: no-drag; }
+.app-main-apps[data-studio-sidebar-open="false"] .workspace-screen-controls { left: calc(var(--studio-content-left) + var(--studio-screen-controls-inset) + 52px); }
+/* Studio is one surface, like Finder or Settings: a rounded viewport with
+   the project list as a column on it and the panes as flat outlined tiles.
+   The surface reuses the app screen's tokens and inset;
+   panes already reach the same edges and radius, so nothing moves. */
+.studio-surface, .app-screen-builtin { --pane-chrome-bg: var(--first-party-app-bg); }
+.studio-surface { position: absolute; inset: var(--app-viewport-inset); background: var(--pane-chrome-bg); border-radius: var(--radius-pane); box-shadow: 0 1px 4px rgb(24 24 24 / 10%); pointer-events: none; }
+.dark .studio-surface { box-shadow: 0 1px 4px rgb(0 0 0 / 24%); }
+/* Installed apps inherit pane chrome; only their full app viewport loses
+   the ring. Studio's internal panes keep their own focus indication. */
+.rail-pane.rail-app-viewport::after { content: none; }
+.studio-surface[data-visible="false"] { display: none; }
+.app-main-apps[data-workspace-visible="true"] > .rail .rail-pane { --pane-chrome-shadow: none; }
+.app-main-apps[data-workspace-visible="true"] > .rail .rail-pane-zoom { display: none; }
+.workspace-navigation { position: absolute; inset: var(--app-viewport-top) auto var(--app-edge-inset) var(--app-left); width: var(--workspace-nav-width); box-sizing: border-box; padding-left: var(--studio-sidebar-left-inset); z-index: 10; display: flex; flex-direction: column; container-type: inline-size; }
+.workspace-navigation[data-visible="false"] { visibility: hidden; pointer-events: none; }
+.workspace-navigation-heading { display: flex; flex: none; align-items: center; justify-content: space-between; gap: 8px; box-sizing: border-box; height: var(--studio-header); padding: var(--rail-gutter) 10px 0 44px; font-size: 12px; color: var(--muted-foreground); }
+.workspace-navigation .files-repos .app-sidebar { flex: 1; min-width: 0; width: 100%; }
+.workspace-navigation .sidebar-panel { min-height: 0; height: 100%; }
+.workspace-navigation .sidebar-foot-tools { display: none; }
+.workspace-navigation .repos-sidebar-actions:not(:has(.billing-banner)) { display: none; }
+.workspace-navigation .sidebar-add-repo-row { padding-block: 8px; }
+/* The rail's outer gutter and the tile's transparent border put the visible
+   edge two gutters beyond the sidebar. Empty screens shade that same edge. */
+.workspace-navigation > .app-sidebar-resize {
+  left: calc(100% + 2 * var(--rail-gutter));
+  right: auto;
+  top: calc(var(--studio-header) + var(--rail-gutter));
+  bottom: calc(2 * var(--rail-gutter));
+  transform: translateX(-50%);
+}
+/* Zoomed tiles cancel the outer gutter and drop their own border. */
+.app-main-apps:has(.rail-pane-zoomed) .workspace-navigation > .app-sidebar-resize {
+  left: 100%;
+  top: calc(var(--studio-header) - var(--rail-gutter));
+  bottom: 0;
+}
+/* The rail's tiles stop one gutter short of the surface's right and bottom
+   edges, as they do beside the project list, so a tile's outline never lies on
+   the surface's own. Unconditional: the rail keeps its size whichever app is
+   showing, so switching apps never resizes a terminal. */
+.app-main-apps > .rail { margin: 0 var(--app-edge-inset) var(--app-edge-inset) calc(var(--studio-content-left) - 2 * var(--rail-gutter)); padding-top: calc(var(--studio-content-top) - 2 * var(--rail-gutter)); }
+.app-main-apps[data-workspace-visible="false"] > .rail { visibility: hidden; pointer-events: none; }
+/* Ready iframe viewers explicitly set visibility:visible. Hide each retained
+   Studio slot as a whole so those descendants cannot paint through another
+   app; keep its geometry and document alive, and leave the promoted app alone. */
+.app-main-apps[data-workspace-visible="false"] > .rail .rail-pane:not(.rail-app-viewport) { opacity: 0; }
+@media (prefers-reduced-motion: reduce) {
+  .app-launcher-row, .app-launcher-row .app-icon { transition: none; }
+  .app-launcher-row:active .app-icon { transform: none; }
+}
+/* The compact machine pager stays in the top controls; titles page with their machine. */
+.studio-machine-switch { flex: none; margin-left: auto; }
+.studio-machine-switch .sidebar-pager { padding: 0; }
+@container (max-width: 190px) { .workspace-navigation-heading { padding-right: 8px; gap: 4px; } }
+.studio-machine-label { flex: none; margin: 0; padding: 6px var(--nav-inset) 12px; color: var(--foreground); font-size: 18px; font-weight: 500; }
+
+/* Forwarding belongs to the client, below the app list, with its own scroll
+   limit so a busy machine cannot push every app out of the sidebar. */
+.app-launcher-content > .ports-section { margin: 10px 0 0; max-height: 35%; overflow-y: auto; }
+.app-launcher-content .ports-site { flex-wrap: wrap; }
+.app-launcher-content .ports-site-title { flex: 1; }
+.app-launcher-content .ports-site .ports-pair { order: 1; flex-basis: 100%; padding-left: 20px; }

@@ -1,0 +1,73 @@
+/* The narrow item screen's slim top strip. A normal flex child of
+   .app-main-narrow (flex-direction: column), so the rail below simply
+   gets the remaining height — no absolute positioning, no z-index games.
+   Safe-area top inset comes from .app-main-narrow's own padding on the
+   web (web.css), not from here. */
+.mobile-item-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  /* Slim on purpose — the strip is chrome over a terminal, and every
+     vertical pixel here is one the session loses. The 44px touch targets
+     survive the 36px band via the buttons' negative block margins below. */
+  min-height: 36px;
+  /* Preload tracks native fullscreen via native-traffic-lights. Browsers
+     and fullscreen windows have a zero inset; narrow windowed Macs do not. */
+  padding: 0 8px 0 calc(2px + var(--traffic-light-inset, 0px));
+  -webkit-app-region: drag;
+  app-region: drag;
+  font-size: 13px;
+}
+
+.mobile-item-header-conversation {
+  background: var(--pane-chrome-bg);
+  border-bottom: none;
+}
+
+/* Touch targets: quiet 44px hit areas in a 36px strip. The buttons stay
+   44px tall for the finger, but the negative block margin makes their
+   layout contribution 36px, so they don't stretch the band — the extra
+   4px of hit area overhangs invisibly (no background, nothing clipped:
+   the header doesn't set overflow). */
+.mobile-item-back,
+.mobile-item-rename {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  margin-block: -4px;
+  flex: 0 0 auto;
+  border: none;
+  background: none;
+  color: inherit;
+  font: inherit;
+  padding: 0;
+}
+
+.mobile-item-title {
+  flex: 1 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.mobile-item-rename-input {
+  -webkit-app-region: no-drag;
+  app-region: no-drag;
+  flex: 1 1 auto;
+  min-width: 0;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid currentColor;
+  outline: none;
+  padding: 2px 0;
+}

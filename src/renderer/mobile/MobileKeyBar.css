@@ -1,0 +1,62 @@
+/* The strip under the terminal on the narrow item screen. A normal flex
+   child of .app-main-narrow (column), so the rail above gives up exactly
+   its height. It owns the bottom safe-area inset: the home indicator
+   used to be cleared by .app-main-narrow's padding (web.css), which read
+   as an empty row under the terminal; with the bar there the inset pads
+   the bar instead, and web.css drops the container's padding. The inset
+   is taken 12px short: iPhone reports 34px, the indicator itself sits in
+   the bottom ~13px, and the keys are buttons rather than a tab bar — a
+   thumb that overlaps the indicator's margin still lands. */
+.mobile-key-bar {
+  display: flex;
+  align-items: stretch;
+  gap: 4px;
+  flex: 0 0 auto;
+  /* A 36px band, the same as MobileItemHeader's: every vertical pixel here
+     is one the terminal loses, and the keys are wide enough that height
+     is not what makes them hittable. */
+  padding: 3px 6px max(3px, calc(env(safe-area-inset-bottom, 0px) - 12px));
+  background: var(--muted-background);
+  border-top: 1px solid var(--border);
+  /* A double-tap on a key must not zoom the page, and a HELD key — the
+     auto-repeat gesture — must not raise iOS's copy callout. */
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Sharing the width so attachments, terminal keys and Paste fit a 320px
+   screen with no scroll. */
+.mobile-key {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 30px;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  line-height: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-key:active {
+  background: var(--muted-background);
+}
+
+/* Longer labels get more width while sharing the row's typography. */
+.mobile-key-word {
+  flex-grow: 1.6;
+}
+
+.mobile-attachments {
+  display: flex;
+  flex: 1 1 0;
+  min-width: 0;
+}

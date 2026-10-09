@@ -32,3 +32,33 @@ test('corrupt state is preserved for recovery rather than silently overwritten',
     assert.match(registry.warning ?? '', /recovery/);
   } finally { await rm(root, { recursive: true, force: true }); }
 });
+
+test('catalog identity survives an empty restart and changes after state is reset', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'builder-identity-'));
+  try {
+    const first = await Registry.open(root);
+    const epoch = first.snapshot().epoch;
+    assert.equal(typeof epoch, 'string');
+    assert.ok(epoch.length > 0);
+    assert.equal((await Registry.open(root)).snapshot().epoch, epoch);
+    await first.mutate(null, draft => { draft.repos.push({ id: 'repo', root: '/tmp/repo', name: 'Repo', worktrees: [] }); });
+    assert.equal((await Registry.open(root)).snapshot().epoch, epoch);
+    await rm(join(root, 'registry.json'));
+    const reset = await Registry.open(root);
+    assert.notEqual(reset.snapshot().epoch, epoch);
+    assert.equal(reset.snapshot().revision, 0);
+  } finally { await rm(root, { recursive: true, force: true }); }
+});
+
+test('an existing registry gains a durable identity without losing rows or revision', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'builder-migration-'));
+  try {
+    const repos = [{ id: 'repo', root: '/tmp/repo', name: 'Repo', worktrees: [] }];
+    await writeFile(join(root, 'registry.json'), JSON.stringify({ version: 1, revision: 8, repos, items: [] }));
+    const registry = await Registry.open(root);
+    assert.equal(typeof registry.snapshot().epoch, 'string');
+    assert.equal(registry.snapshot().revision, 8);
+    assert.deepEqual(registry.snapshot().repos, repos);
+    assert.deepEqual((await Registry.open(root)).snapshot(), registry.snapshot());
+  } finally { await rm(root, { recursive: true, force: true }); }
+});

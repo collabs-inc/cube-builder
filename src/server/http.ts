@@ -1,3 +1,4 @@
+import { FileDownloads } from './ported/file-downloads.js';
 import { createServer, type IncomingMessage, type ServerResponse } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { resolve, extname, sep } from 'node:path';
@@ -15,6 +16,7 @@ import { Repos } from './repos.js';
 import { Files } from './files.js';
 import { Previews } from './previews.js';
 import { Watches } from './watches.js';
+import { RepoObservers } from './repo-observers.js';
 
 const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
 export function json(res: ServerResponse, status: number, value: unknown): void {
@@ -25,7 +27,7 @@ export async function readBody(req: IncomingMessage): Promise<unknown> {
   let size = 0;
   for await (const chunk of req) {
     size += chunk.length;
-    if (size > 12 * 1024 * 1024) throw new BuilderError('too-large', 'Request exceeds 12 MiB');
+    if (size > 360 * 1024 * 1024) throw new BuilderError('too-large', 'Request exceeds 360 MiB');
     chunks.push(Buffer.from(chunk));
   }
   try { return JSON.parse(Buffer.concat(chunks).toString('utf8')); }
@@ -40,10 +42,13 @@ export async function startServer(options: { port: number; stateDir: string; web
   const terminals = new Terminals(registry, worker);
   await terminals.reconcile();
   const repos = new Repos(registry), files = new Files(registry), previews = new Previews(registry);
+  const downloads = new FileDownloads();
+  const repoObservers = new RepoObservers(registry,repos,message=>broadcast(sockets,{type:'error',message}));
+  await repoObservers.start();
   const watches = new Watches(registry, files);
   watches.on('changed', paths => broadcast(sockets, { type: 'files', paths }));
   watches.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
-  const dispatch = createMethods(registry, terminals, repos, files, previews);
+  const dispatch = createMethods(registry, terminals, repos, files, previews, downloads);
   registry.on('changed', snapshot => broadcast(sockets, { type: 'snapshot', snapshot }));
   terminals.on('event', event => broadcast(sockets, { type: 'terminal', event }));
   terminals.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
@@ -55,6 +60,7 @@ export async function startServer(options: { port: number; stateDir: string; web
   });
   async function handle(req: IncomingMessage, res: ServerResponse): Promise<void> {
     const url = new URL(req.url ?? '/', 'http://localhost');
+    if (url.pathname === '/download' && req.method === 'GET') { await downloads.serve(req,res); return; }
     if (url.pathname === '/health' && req.method === 'GET') { json(res, 200, { status: 'ok' }); return; }
     if (url.pathname.startsWith('/preview/') && req.method === 'GET') { await previews.serve(url.pathname, res, req.headers.range); return; }
     if (url.pathname === '/api') {
@@ -91,7 +97,7 @@ export async function startServer(options: { port: number; stateDir: string; web
       for (const ws of sockets.clients) ws.terminate();
       await new Promise<void>(resolve => sockets.close(() => resolve()));
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-      watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
+      await repoObservers.close(); await downloads.close(); watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
     },
   };
 }

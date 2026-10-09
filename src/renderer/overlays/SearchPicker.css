@@ -1,0 +1,123 @@
+/* Search and a compact seven-row list share one surface across onboarding and
+   creation dialogs. The onboarding host overrides only the color tokens. */
+.search-picker {
+  --picker-ground: color-mix(in srgb, var(--foreground) 3%, var(--background));
+  --picker-edge: var(--border);
+  --picker-ink: var(--foreground);
+  --picker-muted: var(--muted-foreground);
+  --picker-hover: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --picker-selected: color-mix(in srgb, var(--foreground) 10%, transparent);
+  width: 100%;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--picker-ground);
+  border: 1px solid var(--picker-edge);
+  border-radius: 11px;
+  overflow: hidden;
+}
+
+.search-picker-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 15px;
+  border-bottom: 1px solid var(--picker-edge);
+}
+
+.search-picker-icon {
+  flex: none;
+  width: 14px;
+  height: 14px;
+  color: var(--picker-muted);
+}
+
+.search-picker-input {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 0;
+  border: none;
+  background: transparent;
+  font: inherit;
+  font-size: 14px;
+  color: var(--picker-ink);
+  outline: none;
+}
+
+.search-picker-input::placeholder {
+  color: var(--picker-muted);
+}
+
+.search-picker:has(.search-picker-input:focus-visible) {
+  border-color: var(--picker-muted);
+}
+
+.search-picker-list {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  height: 196px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb-hover) transparent;
+}
+
+.search-picker-row {
+  flex: none;
+  width: 100%;
+  min-height: 28px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 4px 15px;
+  border: none;
+  background: transparent;
+  color: var(--picker-ink);
+  text-align: left;
+  font: inherit;
+  line-height: 20px;
+  cursor: pointer;
+}
+
+.search-picker-row:hover {
+  background: var(--picker-hover);
+}
+
+.search-picker-row[aria-selected="true"] {
+  background: var(--picker-selected);
+}
+
+.search-picker-row:focus-visible,
+.search-picker-row.highlighted {
+  background: var(--picker-selected);
+  outline: none;
+}
+
+.search-picker-name {
+  flex: 1;
+  min-width: 0;
+  font-family: var(--font-mono), monospace;
+  font-size: 12.5px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-picker-meta {
+  flex: none;
+  font-size: 11px;
+  color: var(--picker-muted);
+}
+
+.search-picker-empty {
+  flex: none;
+  margin: 0;
+  padding: 12px 15px;
+  font-size: 13px;
+  color: var(--picker-muted);
+}

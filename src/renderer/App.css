@@ -1,0 +1,808 @@
+:root {
+  letter-spacing: 0px;
+  --toolbar-height: 38px;
+  --screen-tabs-height: 24px;
+  --traffic-light-inset: 0px;
+
+  /* Half of the gap between two rail panes: each pane carves this much out
+     of its own rect on every side (see .rail-pane), so two adjacent panes
+     end up 2x this apart, and .rail-content's matching transparent border
+     makes the rail's outer edge read as the same 2x against the window
+     (a border, not padding — see .rail-content). One knob for the whole
+     rhythm — Rail.tsx's RAIL_GUTTER_PX must match it, since the zoomed
+     pane's geometry is written inline and has to cancel it. Declared at
+     :root, NOT on .rail: .view-switcher reads it too and mounts outside
+     the rail (App.tsx), where a .rail-scoped value doesn't resolve —
+     which invalidated its whole `top` and dropped the pill to top: auto,
+     half-clipped under the titlebar. */
+  --rail-gutter: 4px;
+
+  /* @cube/theme's `@theme inline` block maps --color-accent-foreground to
+     this but never declares it, so the app supplies the value. --card comes
+     from @cube/theme itself. */
+  --accent-foreground: rgb(24, 24, 24);
+
+  /* Its pair, which was missed: the theme block maps --color-accent to
+     `var(--accent)` and never declares that either, so `bg-accent` and every
+     `var(--accent)` in the app resolved to nothing at all. The one consumer
+     was Settings' theme toggle, whose "which theme is selected" pill was
+     therefore painted with no colour and could not be seen (#69). Zinc 100
+     against the zinc 900 its foreground already is. */
+  --accent: rgb(244, 244, 244);
+
+  /* Hover/active tints shared by the sidebar panels and the main-area item
+     chrome (FileTreeHost.css, FileItem.css), which each used to declare an
+     identical scoped copy. */
+  --color-hover: color-mix(in srgb, var(--foreground) 6%, transparent);
+  --color-active: color-mix(in srgb, var(--foreground) 12%, transparent);
+
+  /* Selection. The one color in the app that means "this is the thing you
+     are looking at", and it says so in both halves of the window: the
+     sidebar row for the focused item and the border of the pane that item
+     renders in are the same blue, so the two read as one selection rather
+     than as two coincidences.
+
+     It lives here rather than in ReposSidebar.css (where it was
+     `--sb-accent`) for exactly that reason — the moment the canvas spends
+     it too, a sidebar-scoped name is a lie about who owns it.
+
+     Deliberately NOT another step of neutral gray. Hover, active checkout
+     and focused item were all mixes of the same near-black, which made the
+     app's most important state its least visible one. A distinct hue
+     separates "where you are" from every gray the rows use, and from the
+     agent hues, which own a different axis entirely. */
+  --accent-selection: rgb(37, 99, 235);
+
+  /* Neutral glass softens the gradient while letting native vibrancy through. */
+  --sidebar-bg-rgb: 255, 255, 255;
+  --sidebar-opacity: 0.9;
+  /* Give the outer chrome enough contrast against the lighter app surface. */
+  --canvas-bg-rgb: 228, 228, 228;
+  --canvas-opacity: 0.7;
+
+/* Terminals and file trees share a translucent content ground in both
+     workspace views. Other viewers supply their own background. */
+  --pane-term-bg: rgba(255, 255, 255, 0.95);
+}
+
+:root.native-traffic-lights {
+  --traffic-light-inset: 72px;
+}
+
+.dark {
+  --accent-foreground: rgb(250, 250, 250);
+  --accent: rgb(39, 39, 39);
+  /* Lifted and desaturated for the dark ground: the light-mode blue reads
+     as a hole punched in near-black, not as a highlight. */
+  --accent-selection: rgb(116, 160, 255);
+  --sidebar-bg-rgb: 20, 20, 20;
+  --sidebar-opacity: 0.95;
+  --canvas-bg-rgb: 24, 24, 24;
+  --canvas-opacity: 0.56;
+/* Dark xterm is transparent; this ground keeps terminal text readable
+     while retaining a small amount of the workspace tint. */
+  --pane-term-bg: rgba(8, 8, 8, 0.5);
+}
+
+/* html/body/#root sizing, the transparent background, the base font and
+   font-smoothing all come from @cube/theme's `@layer base` (main.tsx). */
+
+/* Interface text is chrome, not content: a Cmd+A (or a drag that wanders)
+   must not paint the sidebar rows, the view pill, tooltips and empty
+   states as a page-wide selection — on the web that's exactly what
+   happened. Declared on body so portaled surfaces (tooltips, modals)
+   inherit it too, with the CONTENT surfaces opting back in beneath:
+   fields below, the file viewer's own `.item-readonly-content
+   { user-select: text }` (FileItem.css), and the two self-managing
+   editors — xterm and Monaco both disable DOM selection internally and
+   render their own, so this changes nothing for them (VS Code ships the
+   same app-wide none). The -webkit- twin matters: Safari needs the
+   explicit re-enable on fields under a none ancestor. */
+body {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+input,
+textarea,
+[contenteditable="true"] {
+  user-select: text;
+  -webkit-user-select: text;
+}
+
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  /* A translucent color wash over native vibrancy. Both appearances share
+     the ramp; the neutral canvas layer above it supplies their contrast. */
+  background: linear-gradient(
+    to bottom,
+    rgb(132 155 208 / 32%) 0%,
+    rgb(189 150 134 / 32%) 100%
+  );
+  color: var(--foreground);
+}
+
+/* -- Tooltips --
+
+   The label `hooks/useTooltips.ts` appends to <body> for any element with
+   `data-tooltip`. It lives here rather than in the sidebar's own
+   stylesheet, where it started, because the engine is app-wide now — sidebar rows, sidebar
+   buttons, pane headers and the narrow chip strip all opt in — and a
+   body-level element styled from a panel's stylesheet is a rule nothing
+   stops from being scoped later and silently broken.
+
+   Fixed rather than absolute: the box is positioned from
+   `getBoundingClientRect`, which is viewport-relative, and the rail and
+   sidebar are both scroll containers that would otherwise shift it.
+
+   Keep this moving overlay opaque: fading a backdrop-filter layer while
+   repositioning it can leave compositor trails over native vibrancy. */
+
+.app-tooltip {
+  position: fixed;
+  z-index: 10000;
+  background: var(--background);
+  border: 1px solid color-mix(in srgb, var(--foreground) 18%, transparent);
+  border-radius: 8px;
+  padding: 5px 10px;
+  font-size: 12px;
+  color: var(--foreground);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgb(0 0 0 / 22%), 0 1px 4px rgb(0 0 0 / 14%);
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.app-tooltip.visible {
+  visibility: visible;
+}
+
+.app-tooltip-shortcut {
+  margin-left: 12px;
+  color: color-mix(in srgb, var(--foreground) 65%, transparent);
+  font-family: inherit;
+  font-size: 11px;
+}
+
+/* -- Titlebar -- */
+
+#titlebar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--toolbar-height);
+  -webkit-app-region: drag;
+  z-index: 100;
+}
+
+/* -- Layout -- */
+
+.app-body {
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+/* .app-sidebar and its width/resize/toggle chrome live in Sidebar.css —
+   including the padding-top that keeps sidebar content clear of #titlebar.
+   .app-body itself must not carry that offset: the old shell ran #panels
+   flush to the window top and let the fixed #titlebar overlay it
+   (shell.css:115), with only the nav's own toolbar insetting itself
+   (shell.css:212). Offsetting the whole body instead left an empty band
+   across the top of the window. */
+
+.app-main {
+  /* The screen strip occupies the titlebar row. */
+  --workspace-top-gap: var(--toolbar-height);
+  flex: 1 1 0;
+  min-width: 200px;
+  display: flex;
+  background: rgba(var(--canvas-bg-rgb), var(--canvas-opacity));
+  /* Above #titlebar's z-index: 100, so the drag region doesn't swallow
+     clicks on the top edge of a terminal or editor — the old shell got the
+     same result by stacking #panel-viewer's webview at z-index 110. The
+     titlebar stays draggable where it overlays the sidebar. */
+  position: relative;
+  z-index: 110;
+  -webkit-app-region: no-drag;
+}
+
+.app-main:not(.app-main-narrow)::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--workspace-top-gap);
+  z-index: 1;
+  -webkit-app-region: drag;
+}
+
+.app-main:has(.rail-pane-zoomed)::before {
+  display: none;
+}
+
+/* Below the breakpoint .app-main holds MobileHome (absolutely positioned,
+   out of flow) and the rail/canvas — a column rather than a row, so a
+   future in-flow narrow child stacks above the rail instead of beside
+   it. */
+.app-main-narrow {
+  flex-direction: column;
+}
+
+/* The rail replaces ItemHost: a native horizontal scroller whose content
+   is as wide as the columns it holds. Every item — displayed or hidden —
+   keeps one absolutely-positioned .rail-pane slot (display:none when
+   hidden) so moving/hiding never remounts an editor or terminal. */
+.rail {
+  /* --rail-gutter, the knob for all of this spacing, lives at :root — the
+     view switcher reads it from outside the rail. */
+  position: relative;
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+  padding-top: var(--workspace-top-gap, var(--toolbar-height));
+}
+
+.rail.scrollbar-hover {
+  /* A reserved vertical gutter makes Chromium's horizontal snap limit
+     differ from clientWidth, leaving screen selection on the prior page. */
+  scrollbar-gutter: auto;
+}
+
+/* Zoom (Task 11's "zoom-pane" shortcut): the active pane's slot is
+   repositioned to fill the rail's viewport (Rail.tsx's zoomed style), so
+   the rail itself must stop scrolling underneath it — otherwise a drag or
+   wheel event could shift the zoomed pane out from under its fixed
+   left/width. */
+.rail.rail-zoomed {
+  overflow: hidden;
+}
+
+/* A zoomed pane takes the WHOLE viewport, titlebar strip included — the
+   view pill hides in this state (see .view-switcher) and the pane header
+   is already no-drag, so nothing needs the band reserved. Guarded by
+   :has() like the pane-hiding rule below: `rail-zoomed` alone can be a
+   canvas-active item with no zoomed pane, and collapsing the padding for
+   it would shift the tiled panes under the strip. The zoomed pane's
+   inline top/height (Rail.tsx) only cancel the gutter, so dropping the
+   padding is what moves its top edge from the strip's bottom to y:0. */
+.rail-zoomed:has(.rail-pane-zoomed) {
+  padding-top: 0;
+}
+
+/* Narrow mode (hooks/useIsNarrow.ts) holds zoom on, so .rail-zoomed above
+   already pins overflow — nothing else to add here. List-first
+   (task-4) retired the switcher strip that used to carry the rail's
+   titlebar clearance on its own padding; the rail is once again the
+   topmost narrow chrome whenever it is visible (the narrow "item"
+   screen), so it keeps `.rail`'s own `padding-top` rather than
+   overriding it to 0. The narrow "home" screen never reaches this
+   concern at all — MobileHome overlays the rail while `.rail-home-hidden`
+   hides it. */
+
+/* List-first: while the narrow home screen shows, the rail stays mounted
+   (keep-alive — PTYs and xterm buffers survive) but paints nothing. A
+   single-class rule on the rail's own element, not a descendant rule, so
+   the cascade audit stays quiet. */
+.rail-home-hidden {
+  display: none;
+}
+
+/* The rail's outer gutter, and it MUST be a transparent border — padding
+   here does nothing at all.
+
+   An absolutely positioned element resolves against its ancestor's padding
+   box: the rectangle bounded by the padding EDGE, which lies just inside
+   the border. The padding area is therefore INSIDE that rectangle, so a
+   positioned ancestor's padding never displaces its abspos children —
+   only its border does. This was `padding` first and the outer gutter
+   rendered at exactly half the gap between panes (4px against 8px), since
+   only the panes' own inset was landing.
+
+   One declaration still moves every pane, handle and drop indicator
+   together, and no geometry in layout-ops.ts changes — it is the same
+   trick .rail-pane uses on itself, which is also why the two halves can
+   no longer drift apart. box-sizing is Tailwind preflight's default but is
+   load-bearing here (height: 100% must stay 100%), so it stays explicit. */
+.rail-content {
+  position: relative;
+  flex: none;
+  height: 100%;
+  box-sizing: border-box;
+  border: var(--rail-gutter) solid transparent;
+}
+
+/* The narrow rail is exactly one viewport wide; the columns' summed pixel
+   width (Rail.tsx's inline style, above the breakpoint) would make the
+   content overflow a screen that cannot scroll. */
+.rail-content-narrow {
+  width: 100%;
+}
+
+/* Independent screens share the legacy scrolling rail. Every snap target
+   spans one viewport; pane slots remain flat so frames are never reparented. */
+.rail-fitted {
+  /* The content border supplies one gutter between the strip's bottom and
+     the artifact move rim, matching the rim's inset from the sidebar. */
+  padding-top: calc((var(--workspace-top-gap, var(--toolbar-height)) + var(--screen-tabs-height)) / 2);
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+
+.rail-screen-snap {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  scroll-snap-align: start;
+  pointer-events: none;
+}
+
+/* An empty screen shades the tile it is waiting for: a faint ground in the
+   box a lone tile's card fills (the pane's 4px border in from the rail
+   gutter's 4px on each side), with the card's radius. */
+.rail-screen-snap:has(> .app-empty-state)::before {
+  content: "";
+  position: absolute;
+  inset: var(--rail-gutter) calc(2 * var(--rail-gutter));
+  background: color-mix(in srgb, var(--foreground) 5%, transparent);
+  border-radius: var(--radius-pane);
+}
+
+.rail-fitted.rail-zoomed {
+  scroll-snap-type: none;
+}
+
+.rail-pane-placeholder {
+  color: var(--muted-foreground);
+}
+
+.rail-placeholder-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 12px;
+}
+
+.rail-placeholder-title {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-placeholder-body {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  overflow: hidden;
+}
+
+.rail-pane-skeleton {
+  width: 100%;
+  max-width: 340px;
+  max-height: 100%;
+  fill: currentColor;
+  color: var(--foreground);
+  opacity: 0.1;
+  pointer-events: none;
+}
+
+/* The preview frame is the pane's own edge; the bars sit inside it at the
+   same size they take in the other skeletons. */
+.rail-pane-skeleton-frame {
+  box-sizing: border-box;
+  max-width: none;
+  height: 100%;
+  padding: 18px;
+  border: 2px solid currentColor;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.rail-pane-skeleton-frame > svg {
+  display: block;
+  width: 100%;
+  max-width: 300px;
+  fill: currentColor;
+}
+
+/* The outer slot preserves railGeometry's rect for drops and resizing.
+   Its transparent border insets each card by half the gap on all sides.
+   The inner surface owns the background, rounded clipping, and shadow,
+   so all three follow the visible card edge. The ring paints above the
+   viewers through ::after; an inset shadow beneath them would be hidden
+   by viewers with an opaque background. */
+.rail-pane {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  border: var(--rail-gutter) solid transparent;
+  border-radius: calc(var(--pane-chrome-radius) + var(--rail-gutter));
+}
+
+/* This box is inside the transparent layout gutter. Its border edge is
+   the visible card edge, so the shadow starts there too. The outer slot
+   stays unclipped; the surface clips viewers to the rounded corners. */
+.rail-pane-surface {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  border-radius: var(--pane-chrome-radius);
+  background: var(--pane-chrome-bg);
+  box-shadow: var(--pane-chrome-shadow);
+  overflow: hidden;
+}
+
+/* The overlay ring sits on the pane's padding box, inside the transparent
+   gutter border. Its radius matches the content corner, and z-index 1
+   keeps it above viewers but below the drag handles. */
+.rail-pane::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: var(--pane-chrome-radius);
+  box-shadow: inset 0 0 0 1px var(--pane-chrome-border);
+  pointer-events: none;
+  z-index: 1;
+  transition: box-shadow var(--motion-surface) var(--ease-smooth);
+}
+
+/* A zoomed pane is lifted over the others (Rail.tsx's zoomed style,
+   z-index 10), so the panes it does not paint over would composite through
+   it. Canvas answers that by HIDING every tile but the fullscreen one
+   (.has-fullscreen-tile, canvas.css); columns now does the same, which is
+   what lets a zoomed pane be translucent at all — see #152. Guarded by
+   :has() because `zoomed` additionally requires the active item to have a
+   pane: an active canvas-only item leaves no .rail-pane-zoomed to lift,
+   and hiding every pane for it would blank the rail. */
+.rail-zoomed:has(.rail-pane-zoomed) .rail-pane:not(.rail-pane-zoomed) {
+  display: none;
+}
+
+/* A zoomed document keeps the card's opaque ground across its title and
+   body. Terminals retain their translucent ground below. */
+.rail-pane.rail-pane-zoomed {
+  /* Edge-to-edge, for the reason canvas.css's .tile-fullscreen already
+     gives: a radius (or a gutter) against the viewport edge reads as a
+     gap, not as a card. Narrow mode holds zoom on, so this is also what
+     keeps a phone full-bleed. Only the pane's OWN inset is dropped here —
+     .rail-content's border shrinks the containing block itself, so the
+     inline geometry Rail.tsx writes for a zoomed pane cancels that half
+     itself (RAIL_GUTTER_PX). */
+  border-width: 0;
+  border-radius: 0;
+}
+
+/* No ring at full viewport — same reason as border-radius: 0 above: a
+   hairline against the viewport edge reads as a gap, not a card. display,
+   not box-shadow: none, so an active zoomed pane cannot get the accent
+   back through the ::after rules' source order. */
+.rail-pane-zoomed::after {
+  display: none;
+}
+
+.rail-pane-zoomed .rail-pane-surface {
+  border-radius: 0;
+  box-shadow: none;
+}
+
+/* The shared header owns appearance; Columns opts out of window dragging. */
+.rail-pane-header {
+  -webkit-app-region: no-drag;
+}
+
+/* Cloud health uses the sidebar's status colors on the glyph itself.
+   Local panes render no badge; see PaneHeader's cloudStatus prop. */
+.rail-pane-provenance {
+  display: flex;
+  align-items: center;
+  flex: none;
+  color: var(--muted-foreground);
+}
+.rail-pane-provenance[data-status="open"] { color: var(--status-open); }
+.rail-pane-provenance[data-status="connecting"] { color: var(--status-connecting); animation: status-pulse 1.2s ease-in-out infinite; }
+.rail-pane-provenance[data-status="error"] { color: var(--destructive); }
+@media (prefers-reduced-motion: reduce) {
+  .rail-pane-provenance[data-status="connecting"] { animation: none; }
+}
+
+/* List-first item screen: below the breakpoint the pane stops dressing as
+   a desktop pane. The titlebar clearance goes (MobileItemHeader, a normal
+   flex sibling above the rail, is the top chrome now — and on the web
+   there is no OS drag strip at all), and so does the pane border: a 1px
+   frame plus the active-accent recolor reads as "one pane among several"
+   — precisely the column vocabulary the phone screen must not speak. The
+   0,2,0 selectors deliberately outrank .rail-pane / .rail-pane-active
+   (0,1,0) — cascade-audit-legible class-scoped-class shape. */
+.rail-narrow {
+  padding-top: 0;
+}
+.rail-narrow .rail-pane {
+  border: none;
+}
+
+/* A cloud pane while the prepaid machine is not running: the placement
+   skeleton under one sentence, in place of the hidden live body. */
+.rail-pane-veil { position: relative; }
+.rail-pane-veil-text {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+/* The sentence sits on a pill of the pane's own surface, so the skeleton
+   bars behind it never run through the letters. Its hairline is its own, not
+   the pane's border, which a selected tile strengthens. No backdrop-filter:
+   over native vibrancy it left compositor ghosts across the whole window
+   (the tooltip's reason too, above). */
+.rail-pane-veil-text > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: var(--pane-chrome-bg);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--foreground) 12%, transparent);
+  font-size: 13px;
+  color: var(--muted-foreground);
+}
+.rail-pane-body.rail-pane-veiled[hidden] { display: none; }
+
+/* .rail-pane-body's box is pane-chrome.css's (.pane-chrome-body, same
+   element); the class remains a hook for the drag rules below. */
+
+.rail-seam-handle,
+.rail-edge-handle {
+  position: absolute;
+  z-index: 3;
+}
+
+.rail-seam-handle {
+  cursor: row-resize;
+}
+
+.rail-edge-handle {
+  cursor: col-resize;
+}
+
+/* During any rail drag, pane bodies must not swallow pointer events
+   (xterm/Monaco capture aggressively). */
+body.rail-dragging .rail-pane-body {
+  pointer-events: none;
+}
+
+body.rail-dragging {
+  cursor: inherit;
+}
+
+body.rail-dragging .rail-pane-header {
+  cursor: grabbing;
+}
+
+/* Pane move-drag: a translucent card follows the pointer while a
+   header-initiated drag is active, and a drop indicator previews where
+   the pane would land — a column edge (rail-drop-column) or a pane seam
+   (rail-drop-seam) — both computed by layout-ops's resolveDropTarget. */
+.rail-drag-ghost {
+  position: fixed;
+  width: 180px;
+  height: 120px;
+  /* No backdrop blur: the screen indicators the card passes over have to
+     stay readable, so the drop target is never guesswork. The tint still
+     has to read as a card rather than an empty outline, so it sits high
+     enough to visibly lighten (or darken, in dark mode) what is behind
+     it while leaving that content legible. */
+  background: color-mix(in srgb, var(--background) 45%, transparent);
+  border: 1px solid color-mix(in srgb, var(--foreground) 35%, transparent);
+  border-radius: calc(var(--radius-pane) + 4px);
+  box-shadow: 0 12px 32px rgb(0 0 0 / 30%), 0 2px 8px rgb(0 0 0 / 18%);
+  pointer-events: none;
+  /* Portaled to body, above the sidebar's toggle and drawer chrome. */
+  z-index: 9500;
+}
+
+.rail-drop-column,
+.rail-drop-seam {
+  position: absolute;
+  background: #000;
+  pointer-events: none;
+  z-index: 4;
+}
+
+html.dark .rail-drop-column,
+html.dark .rail-drop-seam {
+  background: #fff;
+}
+
+.rail-drop-column {
+  width: 2px;
+  top: 0;
+  bottom: 0;
+}
+
+.rail-drop-seam {
+  height: 2px;
+}
+
+.app-empty-state {
+  /* The pane container stays mounted at full width even when empty.
+     Overlay the viewport instead of competing with it in the flex row. */
+  position: absolute;
+  inset: var(--workspace-top-gap, var(--toolbar-height)) 0 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted-foreground);
+  font-family: var(--font-sans);
+  font-size: 13px;
+}
+
+/* The mark above the actions: a watermark, not an illustration — a hint of
+   the foreground, so it reads as texture on the field. */
+.app-empty-state-mark {
+  color: var(--foreground);
+  opacity: 0.15;
+}
+
+.app-empty-state-copy {
+  margin: 0;
+  max-width: min(40ch, calc(100% - 32px));
+  text-align: center;
+  text-wrap: balance;
+}
+
+/* -- Drag-and-drop overlay --
+   Shown for the duration of any window-level drag (dragenter/dragleave
+   counter — see drag-drop.ts's useWindowDragDrop), regardless of where in
+   the window the pointer currently is; only the drop *handler* restricts
+   itself to the main area (classifyDropTarget). pointer-events: none so it
+   never itself becomes a drag/drop target, which would break that
+   classification. */
+
+/* The workspace's own answer to "what will dropping here do", scoped to
+   .app-main. This replaced a window-wide overlay that covered the sidebar
+   and any open modal too — surfaces where a drop does something else, or
+   deliberately nothing. Each zone now draws its own; see drag-drop.ts's
+   dropHintText and TerminalItem's .item-terminal-drop-hint.
+
+   Just the label, floating: no scrim and no border. A pane dims to say
+   "this one takes the drop" — a distinction that only exists because the
+   rest of the workspace does not. Dimming everything right of the
+   sidebar erases it, and is the window-wide overlay again one element
+   in: it obscures every pane to announce something the user already
+   knows they are doing.
+
+   pointer-events: none so the drop still reaches what is underneath. */
+.app-main-drop-hint {
+  position: absolute;
+  inset: 0;
+  z-index: 900;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.app-main-drop-hint-label {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--foreground);
+  background: var(--background);
+  padding: 8px 16px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+/* -- Loading overlay -- */
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+#loading-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 2000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.7);
+  transition: opacity 0.3s ease;
+}
+
+#loading-overlay.fade-out {
+  opacity: 0;
+}
+
+#loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  border-top-color: rgba(255, 255, 255, 0.8);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+#loading-status {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+/* -- Error boundary --
+   .error-card is the top-level (whole-window) variant, backing the single
+   ErrorBoundary App.tsx wraps around AppShell: position:fixed/inset:0 over
+   everything. .error-card-contained (ContainedErrorBoundary, one per
+   workspace item — Task 8) reuses the same card look but sizes to its
+   item's slot instead, via position:absolute/inset:0 inside the
+   position:relative .rail-pane; its "Reload item" button is the reset
+   mechanism (a key bump remounts the crashed child), so one item's crash
+   doesn't take down the whole window and can be dismissed without
+   reloading. */
+
+.error-card {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  text-align: center;
+  padding: 24px;
+}
+
+.error-card-contained {
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+}
+
+.error-card-title {
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.error-card-message {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--muted-foreground);
+  max-width: 480px;
+}
+
+.error-card-reload-button {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.error-card-reload-button:hover {
+  background: rgba(128, 128, 128, 0.1);
+}

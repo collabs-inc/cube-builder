@@ -1,0 +1,206 @@
+/* New Worktree dialog. Master-detail: a fixed left rail of sources, a
+   detail pane to the right. The shared Dialog owns the shell and buttons. Every selector below is class-scoped — no bare
+   element selectors — per CLAUDE.md's cascade-audit hazard: a rescoped
+   `button { ... }` here would outrank this file's own component rules. */
+
+.new-worktree-modal {
+  max-height: calc(100dvh - 64px);
+  overflow-y: auto;
+}
+
+.new-worktree-subtitle {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: -8px 0 8px;
+}
+
+.new-worktree-body {
+  display: flex;
+  gap: 20px;
+  align-items: flex-start;
+  margin-top: 8px;
+}
+
+.new-worktree-rail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 140px;
+  flex-shrink: 0;
+}
+
+.new-worktree-rail-item {
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.new-worktree-rail-item:hover {
+  background: color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+.new-worktree-rail-item.active {
+  background: color-mix(in srgb, var(--foreground) 10%, transparent);
+  color: var(--foreground);
+  font-weight: 500;
+}
+
+.new-worktree-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.new-worktree-label {
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.new-worktree-input {
+  width: 100%;
+  padding: 9px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  color: var(--foreground);
+  font: inherit;
+  font-size: 12px;
+}
+
+.new-worktree-input:focus {
+  outline: none;
+  border-color: color-mix(in srgb, var(--foreground) 35%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--foreground) 5%, transparent);
+}
+
+/* The Base picker. `appearance: none` so it sizes and colors like the Name
+   input beside it instead of rendering the platform's own control; the caret
+   is a sibling icon (currentColor, so it tracks the theme) laid over the
+   padding this reserves for it. */
+.new-worktree-select-wrap {
+  position: relative;
+  display: flex;
+}
+
+.new-worktree-select {
+  appearance: none;
+  padding-right: 24px;
+  cursor: pointer;
+}
+
+.new-worktree-select-caret {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted-foreground);
+  pointer-events: none;
+}
+
+.new-worktree-hint {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.new-worktree-list-row.unavailable {
+  opacity: 0.5;
+}
+
+.new-worktree-paste-row {
+  font-weight: 500;
+  border-bottom: 1px solid var(--border);
+}
+
+/* Keep long checked-out names from displacing the source title. */
+.new-worktree-row-note {
+  max-width: 45%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.new-worktree-list-error.search-picker-empty,
+.new-worktree-error.search-picker-empty {
+  color: var(--destructive);
+}
+
+.new-worktree-note {
+  font-size: 12px;
+  color: var(--muted-foreground);
+  margin: 0;
+}
+
+.new-worktree-preview {
+  margin-top: 4px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12px;
+}
+
+.new-worktree-preview-row {
+  display: flex;
+  gap: 6px;
+}
+
+.new-worktree-preview-label {
+  color: var(--muted-foreground);
+  width: 40px;
+  flex-shrink: 0;
+}
+
+.new-worktree-preview-value {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--font-mono, monospace);
+}
+
+.new-worktree-error {
+  font-size: 12px;
+  color: var(--destructive);
+  margin: 0;
+}
+
+.new-worktree-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+/* Narrow: the two-pane layout stacks — the rail becomes a row of tabs
+   above the form, since a 140px rail beside a form leaves the inputs
+   170px wide at 390px. Anchored to the top rather than centred: this
+   dialog opens the keyboard, and on iOS the keyboard overlays the layout
+   viewport without resizing it, so a vertically centred sheet ends up
+   half under the keys. */
+@media (max-width: 519px) { /* keep in step with NARROW_MAX_WIDTH_PX (useIsNarrow.ts) */
+  .new-worktree-overlay {
+    align-items: flex-start;
+    padding-top: max(48px, 8vh);
+  }
+
+  .new-worktree-body {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: 0;
+  }
+
+  .new-worktree-rail {
+    flex-direction: row;
+    flex-wrap: wrap;
+    width: auto;
+  }
+}

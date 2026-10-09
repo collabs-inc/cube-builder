@@ -18,7 +18,9 @@ the full license texts; `package-lock.json` records exact resolved versions.
 - xterm.js and its addons: MIT, copyright the xterm.js authors.
 - node-pty: MIT, copyright its contributors. The durable worker runtime copies
   node-pty's license together with its JavaScript and native runtime files.
-- PDF.js (`pdfjs-dist`): Apache License 2.0, copyright Mozilla Foundation.
+- Article parsing uses `@cao-mei-you-ren/postlight_parser`, a maintained MIT
+  fork of Postlight Parser, through the `@postlight/parser` package alias.
+  Source: <https://github.com/CaoMeiYouRen/parser>.
 - React: MIT, copyright Meta Platforms, Inc. and affiliates.
 - Phosphor Icons: MIT, copyright Phosphor Icons.
 

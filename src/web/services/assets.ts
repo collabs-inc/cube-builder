@@ -4,8 +4,7 @@ export function bytesToBase64(bytes: Uint8Array) {
   return btoa(binary);
 }
 export async function previewPath(path: string) {
-  const item = await services.call('files.open', { path });
-  return (await services.call('previews.create', { itemId: item.id })).url;
+  return (await services.call('previews.file', { path })).url;
 }
 export async function resolveImage(reference: string, notePath: string) {
   const path = reference.startsWith('/') ? reference : `${notePath.slice(0, notePath.lastIndexOf('/'))}/${reference}`;

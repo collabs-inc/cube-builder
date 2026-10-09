@@ -1,0 +1,385 @@
+/* Settings uses a softly elevated frame with a muted navigation rail.
+ * The selected destination sits on a raised rounded surface; the content
+ * pane keeps its own heading and scrolling region. Narrow layouts use
+ * the sheet projection below.
+ *
+ * Keep selectors class-based so shared resets cannot override controls. */
+
+:root {
+  /* Give rows enough width to keep descriptions and controls together.
+     min() below keeps the frame inside smaller desktop windows; the narrow
+     projection remains a sheet without a minimum width or height. */
+  --settings-frame-width: 880px;
+  --settings-frame-height: 760px;
+  --settings-rail-width: 192px;
+  --settings-background-blur: 12px;
+
+  /* The frame's own gutter — the rail's title and version sit on it.
+     The nav rows inset themselves further, so their pill floats inside this
+     column rather than spanning it (see .settings-nav-row). */
+  --settings-inset: 12px;
+
+  /* A rail row's minimum box. Its padding usually decides the real height;
+     this is the floor for a row whose label wraps to nothing unusual.
+     Deliberately roomier than a sidebar row: this is a seven-item table of
+     contents that wants air between destinations, not a dense list of
+     things you scroll. */
+  --settings-row-height: 30px;
+
+  /* Matched to --focus-bg. Used by the narrow drill-down's list rows, which
+     ARE press targets and so do take a fill. */
+  --settings-row-hover: color-mix(in srgb, var(--foreground) 6%, transparent);
+
+  /* The pane's gutter. Content spans the pane between two of these rather
+     than being capped and left-aligned: a fixed measure left a ragged band of
+     empty pane down the right-hand side, and rows that did not move when the
+     panel did. The Controls pane earns its rules back instead (see
+     SettingGroup's `ruled`), which is what the cap was standing in for. */
+  --settings-pane-inset: 26px;
+
+  /* The narrow projection's row: a phone has no hover, and 24px is not a
+     touch target. Same reasoning as the sidebar drawer's 32px row actions. */
+  --settings-touch-row-height: 40px;
+
+  /* How much window shows above the narrow sheet. A floor, not a target:
+     at zero the panel reads as a takeover and lands on the traffic lights;
+     30px of visible window is what makes it read as a sheet over the app.
+     Widened by the safe-area inset where there is one, so a notched phone
+     does not spend the whole gap on the notch — plus 12px, so the sheet's
+     top edge and its back/close control clear the status bar's clock
+     rather than butting against it (the gap equalled the inset exactly
+     until 2026-09-02, and the ‹ Settings control sat under the time). */
+  --settings-narrow-top-gap: max(30px, calc(env(safe-area-inset-top, 0px) + 12px));
+}
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9500;
+}
+
+.settings-backdrop {
+  position: absolute;
+  inset: 0;
+  /* Dim separately from the app's blur so the modal itself stays sharp. */
+  background: rgba(0, 0, 0, 0.35);
+}
+
+/* Blur only the rendered app while Settings is open. Filtering this source
+   layer avoids a backdrop-filter sampling the native vibrancy surface. Keep
+   it static; animating filtered terminal/iframe layers can leave trails. */
+.app-shell:has(.settings-overlay) .app-body {
+  filter: blur(var(--settings-background-blur));
+}
+
+.settings-modal {
+  /* Shared by every pane, including embedded billing. Keep these scoped:
+     onboarding, standalone billing, and other dialogs use their own scale. */
+  --settings-text-size: 13px;
+  --settings-caption-size: 12px;
+  --settings-section-size: 14px;
+  --settings-title-size: 20px;
+  --settings-row-padding: 8px;
+  --settings-action-padding: 6px 10px;
+  --settings-group-gap: 18px;
+  --settings-header-gap: 20px;
+  --settings-spec-size: 20px;
+  position: relative;
+  font-family: var(--font-inter);
+  font-size: var(--settings-text-size);
+  line-height: 1.5;
+  width: min(var(--settings-frame-width), calc(100vw - 96px));
+  height: min(var(--settings-frame-height), calc(100vh - 96px));
+  border-radius: var(--radius-dialog);
+  overflow: hidden;
+  box-shadow: var(--shadow-dialog);
+  animation: surface-enter var(--motion-surface) var(--ease-smooth);
+  border: 1px solid var(--border);
+  background: var(--background);
+  color: var(--foreground);
+}
+
+.settings-modal:focus-visible {
+  outline: none;
+}
+
+/* Two columns: rail, then pane. The narrow projection overrides this to a
+   single stacked column (.settings-shell-narrow). */
+.settings-shell {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+}
+
+/* The panel's identity, heading the rail's column. Sits on the same 8px
+   inner gutter as the close control and the version, so the rail's three
+   fixed elements share one left edge that the nav rows sit within.
+   Text only — the flex row it used to be existed to seat an icon beside it,
+   and that icon made the heading read as one more clickable destination. */
+.settings-title {
+  margin: 16px 0 0;
+  padding: 0 8px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.settings-rail {
+  width: var(--settings-rail-width);
+  flex: none;
+  display: flex;
+  flex-direction: column;
+  /* More above than below: the close control needs to clear the frame's
+     rounded corner without looking dropped into it. */
+  padding: 16px var(--settings-inset) var(--settings-inset);
+  border-right: 1px solid color-mix(in srgb, var(--border) 50%, transparent);
+  background: var(--muted-background);
+}
+
+/* Leads the column, on the rail's inner gutter. Top-aligned, not centred:
+   it is the first item in a column, not a fixture in a bar. */
+.settings-rail-close {
+  display: flex;
+  align-items: flex-start;
+  padding: 0 8px;
+}
+
+.settings-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 12px;
+}
+
+.settings-nav-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: var(--settings-row-height);
+  /* Inset within the rail's gutter, so the row is a label in a column rather
+     than a band cutting across it. */
+  padding: 6px 10px;
+  border: 0;
+  border-radius: 10px;
+  background: transparent;
+  color: var(--muted-foreground);
+  font: inherit;
+  font-size: var(--settings-text-size);
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: color var(--motion-fast) ease, background var(--motion-fast) ease, box-shadow var(--motion-fast) ease;
+}
+
+/* A raised selection separates the active destination from hover. */
+.settings-nav-row:hover {
+  color: var(--foreground);
+  background: var(--settings-row-hover);
+}
+
+.settings-nav-row.is-selected {
+  color: var(--foreground);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-control);
+}
+
+.settings-nav-row:focus-visible {
+  outline: 2px solid var(--ring, var(--foreground));
+  outline-offset: -2px;
+}
+
+/* Also the way into the changelog, so it is a button — but it keeps looking
+   like a caption, because a version number that shouts is a version number
+   nobody reads. */
+.settings-version {
+  margin-top: auto;
+  padding: 4px 8px;
+  border: 0;
+  background: transparent;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 11px;
+  color: var(--muted-foreground);
+  text-align: left;
+  cursor: pointer;
+  transition: color 80ms ease;
+}
+
+.settings-rail-update {
+  padding: 6px 8px 0;
+}
+
+.settings-version:hover,
+.settings-version.is-selected {
+  color: var(--foreground);
+}
+
+.settings-version:focus-visible {
+  outline: 2px solid var(--ring, var(--foreground));
+  outline-offset: -2px;
+}
+
+/* Scrollbars inherit the shared theme's transparent track and hover thumb. */
+.settings-pane {
+  flex: 1;
+  min-width: 0;
+  overflow-y: auto;
+  padding: 24px var(--settings-pane-inset);
+}
+
+/* The modal (not the navigator's embedded Settings) is a base layer with
+   its pane as a tile, like the workspace: the rail sits on the ground, and
+   the selected pane is an inset card with the tiles' ground, edge and
+   shadow. */
+.settings-modal:not(.settings-navigator):not(.is-narrow) {
+  /* Opaque over the dimmed app: settings text must read against a solid
+     ground, not whatever the workspace behind it happens to show. */
+  background: var(--muted-background);
+  /* Quieter edges than --border: the frame and the pane tile are grounds
+     a step apart, and a 14% rule on each read louder than either ground. */
+  border-color: color-mix(in srgb, var(--foreground) 8%, transparent);
+}
+.settings-modal:not(.settings-navigator):not(.is-narrow) .settings-rail { background: transparent; border-right: 0; }
+.settings-modal:not(.settings-navigator):not(.is-narrow) .settings-shell > .settings-pane {
+  margin: 8px 8px 8px 0;
+  border-radius: calc(var(--radius-dialog) - 6px);
+  background: var(--background);
+  box-shadow: 0 1px 4px rgb(24 24 24 / 0.10), 0 0 0 1px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+.dark .settings-modal:not(.settings-navigator):not(.is-narrow) .settings-shell > .settings-pane {
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.24), 0 0 0 1px color-mix(in srgb, var(--foreground) 6%, transparent);
+}
+
+/* Content spans the pane, gutter to gutter. */
+.settings-content {
+  width: 100%;
+}
+
+/* Billing owns its content inset; the shell supplies only the Settings title. */
+.settings-pane-billing { padding: 0; }
+.settings-pane.settings-pane-billing .setting-pane-header { margin: 0; padding: 24px var(--settings-pane-inset) 0; }
+
+/*
+ * ── The narrow projection ──
+ *
+ * A projection of the same state, not a second panel: `activePane` is the
+ * same value in both layouts, and one boolean (`drilledIn`) decides whether
+ * the list or the pane is showing. Crossing the breakpoint resets nothing.
+ *
+ * The breakpoint is the app's existing one — NARROW_MAX_WIDTH_PX in
+ * hooks/useIsNarrow.ts — and the two have to agree: the hook decides which
+ * layout renders, this decides how the frame is shaped. Change one, change
+ * the other.
+ */
+@media (max-width: 519px) { /* keep in step with NARROW_MAX_WIDTH_PX (useIsNarrow.ts) */
+  /* Anchored to the bottom so the gap is above it, where the window controls
+     are — centring would split the gap and put half of it under the sheet. */
+  .settings-overlay {
+    align-items: flex-end;
+  }
+
+  .settings-modal {
+    /* Percentages of the overlay, not viewport units: the overlay is fixed
+       inset:0, so 100% is the viewport the user can actually see, while
+       iOS Safari's 100vh is the LARGE viewport — the height with the URL
+       bar collapsed. Sized by 100vh, a bottom-anchored sheet overflowed
+       the visible viewport upward by the URL bar's height and pushed its
+       own header bar off the top of the screen. */
+    width: 100%;
+    height: calc(100% - var(--settings-narrow-top-gap));
+    /* Only the top corners: the bottom two are off-screen, and rounding them
+       would show the backdrop through a sliver at the foot of the sheet. */
+    border-radius: 12px 12px 0 0;
+    border-bottom: none;
+  }
+}
+
+.settings-shell-narrow {
+  flex-direction: column;
+}
+
+.settings-narrow-bar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px var(--settings-inset);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 70%, transparent);
+}
+
+/* Drilled in, the bar stacks: the way back on top, the pane's own title
+   under it. Side by side, a back control and a title compete for the same
+   role — "where am I" — and the title loses at 375px. */
+.settings-shell-narrow .settings-narrow-bar:has(.settings-back) {
+  flex-direction: column;
+  align-items: stretch;
+  gap: 6px;
+}
+
+.settings-narrow-title {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 600;
+}
+
+/*
+ * `align-self` and `text-align` both matter, and for different reasons: the
+ * bar stretches its children, and a stretched <button> centres its own label,
+ * so without these the control sat marooned in the middle of the bar while
+ * the title under it started at the gutter.
+ *
+ * Not the accent colour. Blue reads as a hyperlink into somewhere else, and
+ * this goes back up the panel you are already in — every other control in
+ * Settings is foreground ink, and this is not the one exception.
+ */
+.settings-back {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.settings-back:hover {
+  color: var(--muted-foreground);
+}
+
+.settings-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.settings-list-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* A phone has no hover and 24px is not a touch target — the same reasoning
+     the sidebar drawer's 32px row actions carry. */
+  min-height: var(--settings-touch-row-height);
+  padding: 2px var(--settings-inset);
+  border: 0;
+  background: transparent;
+  color: var(--foreground);
+  font: inherit;
+  font-size: 15px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.settings-list-row:active {
+  background: var(--settings-row-hover);
+}
+
+.settings-list-label {
+  flex: 1;
+}
+
+.settings-list-chevron {
+  color: var(--muted-foreground);
+}

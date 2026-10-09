@@ -10,91 +10,6 @@
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
   },
   {
-    "file": "test/web/layout-ops.test.ts",
-    "source": "src/windows/app/src/state/layout-ops.test.ts",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "test/web/screen-ops.test.ts",
-    "source": "src/windows/app/src/state/screen-ops.test.ts",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/state/layout-ops.ts",
-    "source": "src/windows/app/src/state/layout-ops.ts",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/state/screen-ops.ts",
-    "source": "src/windows/app/src/state/screen-ops.ts",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/items/use-pointer-drag.ts",
-    "source": "src/windows/app/src/items/use-pointer-drag.ts",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/items/pane-chrome.css",
-    "source": "src/windows/app/src/items/pane-chrome.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/items/ViewSwitcher.css",
-    "source": "src/windows/app/src/items/ViewSwitcher.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/items/FileItem.css",
-    "source": "src/windows/app/src/items/FileItem.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/items/ArtifactItem.css",
-    "source": "src/windows/app/src/items/ArtifactItem.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/items/artifact-item-logic.ts",
-    "source": "src/windows/app/src/items/artifact-item-logic.ts",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/sidebar/MiniRepoRow.tsx",
-    "source": "src/windows/app/src/sidebar/MiniRepoRow.tsx",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/sidebar/MiniFolderRow.tsx",
-    "source": "src/windows/app/src/sidebar/MiniFolderRow.tsx",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/sidebar/DisclosureRow.tsx",
-    "source": "src/windows/app/src/sidebar/DisclosureRow.tsx",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/sidebar/ReposSidebar.css",
-    "source": "src/windows/app/src/sidebar/ReposSidebar.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/sidebar/MiniRepoTree.css",
-    "source": "src/windows/app/src/sidebar/MiniRepoTree.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/source-app.css",
-    "source": "src/windows/app/src/App.css",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
-    "file": "src/web/cube-icons.tsx",
-    "source": "src/windows/app/src/desktop/apps/cube-icons.tsx",
-    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
-  },
-  {
     "file": "src/theme/styles.css",
     "source": "packages/theme/src/styles.css",
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
@@ -427,6 +342,1491 @@
   {
     "file": "test/web/attention-input.test.ts",
     "source": "src/main/cubed/attention/input.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/Rail.tsx",
+    "source": "src/windows/app/src/items/Rail.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/ReposSidebar.tsx",
+    "source": "src/windows/app/src/sidebar/ReposSidebar.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/apps/WorkspaceNavigation.tsx",
+    "source": "src/windows/app/src/desktop/apps/WorkspaceNavigation.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ViewSwitcher.tsx",
+    "source": "src/windows/app/src/items/ViewSwitcher.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/workspace.ts",
+    "source": "src/windows/app/src/state/workspace.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/types.ts",
+    "source": "src/windows/app/src/services/types.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/App.tsx",
+    "source": "src/windows/app/src/App.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/types.ts",
+    "source": "packages/shared/src/types.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/path-utils.ts",
+    "source": "packages/shared/src/path-utils.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/filetree/tree-pane-parent.ts",
+    "source": "src/windows/app/src/filetree/tree-pane-parent.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/filetree/tree-pane-name.ts",
+    "source": "src/windows/app/src/filetree/tree-pane-name.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/sidebar-reveal.ts",
+    "source": "src/windows/app/src/state/sidebar-reveal.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/screen-navigation.ts",
+    "source": "src/windows/app/src/state/screen-navigation.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/layout-ops.ts",
+    "source": "src/windows/app/src/state/layout-ops.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/canvas-center.ts",
+    "source": "src/windows/app/src/state/canvas-center.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/canvas-reveal.ts",
+    "source": "src/windows/app/src/state/canvas-reveal.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/canvas-ops.ts",
+    "source": "src/windows/app/src/state/canvas-ops.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/screen-ops.ts",
+    "source": "src/windows/app/src/state/screen-ops.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/screen-viewport-size.ts",
+    "source": "src/windows/app/src/state/screen-viewport-size.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/catalog.ts",
+    "source": "src/windows/app/src/state/catalog.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/screen-scroll-position.ts",
+    "source": "src/windows/app/src/state/screen-scroll-position.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/catalog.ts",
+    "source": "packages/shared/src/catalog.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/site.ts",
+    "source": "packages/shared/src/site.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/catalog-order.ts",
+    "source": "packages/shared/src/catalog-order.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/app.ts",
+    "source": "packages/shared/src/app.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/manual-pricing.ts",
+    "source": "packages/shared/src/manual-pricing.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/pricing.ts",
+    "source": "packages/shared/src/pricing.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/app-plane-outcome.ts",
+    "source": "packages/shared/src/app-plane-outcome.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/workspace.test.ts",
+    "source": "src/windows/app/src/state/workspace.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/catalog.test.ts",
+    "source": "src/windows/app/src/state/catalog.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/screen-ops.test.ts",
+    "source": "src/windows/app/src/state/screen-ops.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/layout-ops.test.ts",
+    "source": "src/windows/app/src/state/layout-ops.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/index.ts",
+    "source": "src/windows/app/src/services/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/SidebarSections.tsx",
+    "source": "src/windows/app/src/sidebar/SidebarSections.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/studio-repo-view.ts",
+    "source": "src/windows/app/src/state/studio-repo-view.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sections/BrowseFiles.tsx",
+    "source": "src/windows/app/src/sections/BrowseFiles.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/run-command-in-terminal.ts",
+    "source": "src/windows/app/src/items/run-command-in-terminal.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/apps/AppSidebarResize.tsx",
+    "source": "src/windows/app/src/desktop/apps/AppSidebarResize.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/Sidebar.css",
+    "source": "src/windows/app/src/sidebar/Sidebar.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/FilesWindow.css",
+    "source": "src/windows/app/src/desktop/FilesWindow.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/use-pointer-drag.ts",
+    "source": "src/windows/app/src/items/use-pointer-drag.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/app-navigation.ts",
+    "source": "src/windows/app/src/state/app-navigation.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/apps/AppSidebarResize.css",
+    "source": "src/windows/app/src/desktop/apps/AppSidebarResize.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/analytics.ts",
+    "source": "packages/shared/src/analytics.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/ssh-telemetry.ts",
+    "source": "packages/shared/src/ssh-telemetry.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/cubed-attach.ts",
+    "source": "packages/shared/src/cubed-attach.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/cubed-manifest-schema.ts",
+    "source": "packages/shared/src/cubed-manifest-schema.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/cubed-protocol.ts",
+    "source": "packages/shared/src/cubed-protocol.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/daemon-log.ts",
+    "source": "packages/shared/src/daemon-log.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/TerminalItem.tsx",
+    "source": "src/windows/app/src/items/TerminalItem.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/type-into-terminal.ts",
+    "source": "src/windows/app/src/items/type-into-terminal.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/launch-menu.ts",
+    "source": "packages/shared/src/launch-menu.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/agent-protocol.ts",
+    "source": "packages/shared/src/agent-protocol.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/capabilities.ts",
+    "source": "packages/shared/src/capabilities.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/file-download.ts",
+    "source": "packages/shared/src/file-download.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/repo-create.ts",
+    "source": "packages/shared/src/repo-create.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/artifact.ts",
+    "source": "packages/shared/src/artifact.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/pipe-records.ts",
+    "source": "packages/shared/src/pipe-records.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/agent-catalog.ts",
+    "source": "packages/shared/src/agent-catalog.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/agent-catalog-schema.ts",
+    "source": "packages/shared/src/agent-catalog-schema.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/agent-catalog.generated.ts",
+    "source": "packages/shared/src/agent-catalog.generated.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/analytics/capture.ts",
+    "source": "src/windows/app/src/analytics/capture.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/hooks/useAppTheme.ts",
+    "source": "src/windows/app/src/hooks/useAppTheme.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/live-status.ts",
+    "source": "src/windows/app/src/state/live-status.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/agent/create-agent-item.ts",
+    "source": "src/windows/app/src/items/agent/create-agent-item.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/attach-scheduler.ts",
+    "source": "src/windows/app/src/items/attach-scheduler.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/attach-policy.ts",
+    "source": "src/windows/app/src/items/attach-policy.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/backfill.ts",
+    "source": "src/windows/app/src/items/backfill.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/restore-session.ts",
+    "source": "src/windows/app/src/items/restore-session.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/repos.ts",
+    "source": "src/windows/app/src/state/repos.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/open-file.ts",
+    "source": "src/windows/app/src/items/open-file.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/terminal-path-open.ts",
+    "source": "src/windows/app/src/items/terminal-path-open.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/terminal-command.ts",
+    "source": "src/windows/app/src/items/terminal-command.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/terminal-item-logic.ts",
+    "source": "src/windows/app/src/items/terminal-item-logic.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/drag-drop.ts",
+    "source": "src/windows/app/src/drag-drop.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/drop-target.ts",
+    "source": "src/windows/app/src/state/drop-target.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/TerminalItem.css",
+    "source": "src/windows/app/src/items/TerminalItem.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/file-drag.ts",
+    "source": "packages/shared/src/file-drag.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/repo-views.ts",
+    "source": "src/windows/app/src/state/repo-views.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/feature-flags.ts",
+    "source": "src/windows/app/src/feature-flags.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/SearchPicker.css",
+    "source": "src/windows/app/src/overlays/SearchPicker.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/cloud-placeholder.ts",
+    "source": "src/windows/app/src/items/cloud-placeholder.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/pdf.ts",
+    "source": "packages/shared/src/pdf.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/ui.ts",
+    "source": "src/windows/app/src/state/ui.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/group-entries.ts",
+    "source": "src/windows/app/src/sidebar/group-entries.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sections/ColumnBrowser.tsx",
+    "source": "src/windows/app/src/sections/ColumnBrowser.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/index.ts",
+    "source": "packages/components/src/TreeView/index.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sections/ColumnBrowser.css",
+    "source": "src/windows/app/src/sections/ColumnBrowser.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/TreeView.tsx",
+    "source": "packages/components/src/TreeView/TreeView.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/SearchSortControls.tsx",
+    "source": "packages/components/src/TreeView/SearchSortControls.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/WorkspaceTree.tsx",
+    "source": "packages/components/src/TreeView/WorkspaceTree.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/useWorkspaceFileTree.ts",
+    "source": "packages/components/src/TreeView/useWorkspaceFileTree.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/useFileTree.ts",
+    "source": "packages/components/src/TreeView/useFileTree.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/types.ts",
+    "source": "packages/components/src/TreeView/types.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/Helpers.ts",
+    "source": "packages/components/src/TreeView/Helpers.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/useMultiSelect.ts",
+    "source": "packages/components/src/TreeView/useMultiSelect.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/useInlineRename.ts",
+    "source": "packages/components/src/TreeView/useInlineRename.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/useDragDrop.ts",
+    "source": "packages/components/src/TreeView/useDragDrop.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/external-drop.ts",
+    "source": "packages/components/src/TreeView/external-drop.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/fileIcons.tsx",
+    "source": "packages/components/src/TreeView/fileIcons.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/treeError.ts",
+    "source": "packages/components/src/TreeView/treeError.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/useImageThumbnail.ts",
+    "source": "packages/components/src/TreeView/useImageThumbnail.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/image.ts",
+    "source": "packages/shared/src/image.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/backend-pool.ts",
+    "source": "packages/shared/src/backend-pool.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/ptyd-protocol.ts",
+    "source": "packages/shared/src/ptyd-protocol.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/machine-copy.ts",
+    "source": "src/windows/app/src/machine-copy.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/remote-backend.ts",
+    "source": "packages/shared/src/remote-backend.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/wire.ts",
+    "source": "packages/shared/src/wire.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/SidebarSections.css",
+    "source": "src/windows/app/src/sidebar/SidebarSections.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/sidebar-focus.ts",
+    "source": "src/windows/app/src/state/sidebar-focus.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/hidden-artifacts.ts",
+    "source": "src/windows/app/src/state/hidden-artifacts.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/reorder-catalog.ts",
+    "source": "src/windows/app/src/sidebar/reorder-catalog.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/attention/AttentionDot.tsx",
+    "source": "src/windows/app/src/attention/AttentionDot.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/attention/store.ts",
+    "source": "src/windows/app/src/attention/store.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/ReposSidebar.css",
+    "source": "src/windows/app/src/sidebar/ReposSidebar.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/MiniRepoTree.css",
+    "source": "src/windows/app/src/sidebar/MiniRepoTree.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/MiniRepoRow.tsx",
+    "source": "src/windows/app/src/sidebar/MiniRepoRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/MiniFolderRow.tsx",
+    "source": "src/windows/app/src/sidebar/MiniFolderRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/mini-sections.ts",
+    "source": "src/windows/app/src/sidebar/mini-sections.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/sidebar-worktree-view.ts",
+    "source": "src/windows/app/src/state/sidebar-worktree-view.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/working-checkout.ts",
+    "source": "packages/shared/src/working-checkout.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/HistoryArrows.tsx",
+    "source": "src/windows/app/src/sidebar/HistoryArrows.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/AddLocalRepoModal.tsx",
+    "source": "src/windows/app/src/sidebar/AddLocalRepoModal.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/CreateRepoModal.tsx",
+    "source": "src/windows/app/src/sidebar/CreateRepoModal.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/choose-repo-action.ts",
+    "source": "src/windows/app/src/sidebar/choose-repo-action.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/add-repo-request.ts",
+    "source": "src/windows/app/src/sidebar/add-repo-request.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/row-actions.tsx",
+    "source": "src/windows/app/src/sidebar/row-actions.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/DisclosureRow.tsx",
+    "source": "src/windows/app/src/sidebar/DisclosureRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/disclosure.ts",
+    "source": "src/windows/app/src/sidebar/disclosure.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/sidebar-disclosure.ts",
+    "source": "src/windows/app/src/state/sidebar-disclosure.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/sidebar-tile-reveal.ts",
+    "source": "src/windows/app/src/state/sidebar-tile-reveal.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/SortableRow.tsx",
+    "source": "src/windows/app/src/sidebar/SortableRow.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/sidebar-order.ts",
+    "source": "src/windows/app/src/sidebar/sidebar-order.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/build-item-entry.ts",
+    "source": "src/windows/app/src/sidebar/build-item-entry.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/machine-sites.ts",
+    "source": "src/windows/app/src/sidebar/machine-sites.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/text-presentation.ts",
+    "source": "src/windows/app/src/sidebar/text-presentation.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/row-icons.tsx",
+    "source": "src/windows/app/src/sidebar/row-icons.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/ConfirmDialog.tsx",
+    "source": "src/windows/app/src/overlays/ConfirmDialog.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/focus-guard.ts",
+    "source": "src/windows/app/src/sidebar/focus-guard.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/item-focus.ts",
+    "source": "src/windows/app/src/state/item-focus.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/use-file-import.ts",
+    "source": "src/windows/app/src/sidebar/use-file-import.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/TransferStrip.tsx",
+    "source": "src/windows/app/src/sidebar/TransferStrip.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/unscoped-directories.ts",
+    "source": "src/windows/app/src/sidebar/unscoped-directories.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/styles/TransferStrip.css",
+    "source": "src/windows/app/src/sidebar/styles/TransferStrip.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/import-payload.ts",
+    "source": "src/windows/app/src/sidebar/import-payload.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/repo-actions.ts",
+    "source": "src/windows/app/src/state/repo-actions.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/agent/default-agent.ts",
+    "source": "src/windows/app/src/items/agent/default-agent.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/CreateRepoModal.css",
+    "source": "src/windows/app/src/sidebar/CreateRepoModal.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/desktop.ts",
+    "source": "src/windows/app/src/state/desktop.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/rail-slot.ts",
+    "source": "src/windows/app/src/items/rail-slot.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/attention/attention.ts",
+    "source": "src/windows/app/src/attention/attention.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/agent/agent-status.ts",
+    "source": "src/windows/app/src/items/agent/agent-status.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/Dialog.tsx",
+    "source": "src/windows/app/src/overlays/Dialog.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/dialog-behavior.ts",
+    "source": "src/windows/app/src/overlays/dialog-behavior.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/Dialog.css",
+    "source": "src/windows/app/src/overlays/Dialog.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/dialog-focus.ts",
+    "source": "src/windows/app/src/overlays/dialog-focus.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/prism-mark.tsx",
+    "source": "src/windows/app/src/sidebar/prism-mark.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/assets/claude-logo.png",
+    "source": "src/windows/app/src/assets/claude-logo.png",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/agent/available-agents.ts",
+    "source": "src/windows/app/src/items/agent/available-agents.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/repo-ready.ts",
+    "source": "src/windows/app/src/state/repo-ready.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/ConfirmDialog.css",
+    "source": "src/windows/app/src/overlays/ConfirmDialog.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/machine-section.ts",
+    "source": "src/windows/app/src/state/machine-section.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/agent/installed-agent-menu.ts",
+    "source": "src/windows/app/src/items/agent/installed-agent-menu.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/artifact-urls.ts",
+    "source": "src/windows/app/src/items/artifact-urls.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/PromptDialog.tsx",
+    "source": "src/windows/app/src/overlays/PromptDialog.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/worktree-copy.ts",
+    "source": "src/windows/app/src/sidebar/worktree-copy.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/NewWorktreeModal.tsx",
+    "source": "src/windows/app/src/sidebar/NewWorktreeModal.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/worktree-naming.ts",
+    "source": "packages/shared/src/worktree-naming.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/NewWorktreeDetail.tsx",
+    "source": "src/windows/app/src/sidebar/NewWorktreeDetail.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/worktree-lists.ts",
+    "source": "src/windows/app/src/sidebar/worktree-lists.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/worktree-source.ts",
+    "source": "src/windows/app/src/sidebar/worktree-source.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/NewWorktreeModal.css",
+    "source": "src/windows/app/src/sidebar/NewWorktreeModal.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/WorktreeSourceList.tsx",
+    "source": "src/windows/app/src/sidebar/WorktreeSourceList.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/PromptDialog.css",
+    "source": "src/windows/app/src/overlays/PromptDialog.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/artifact-item-logic.ts",
+    "source": "src/windows/app/src/items/artifact-item-logic.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/navigation-history.ts",
+    "source": "src/windows/app/src/state/navigation-history.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/HistoryArrows.css",
+    "source": "src/windows/app/src/sidebar/HistoryArrows.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/screen-scroll.ts",
+    "source": "src/windows/app/src/items/screen-scroll.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/attention/watermarks.ts",
+    "source": "src/windows/app/src/attention/watermarks.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/attention/attention.css",
+    "source": "src/windows/app/src/attention/attention.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/shortcuts.ts",
+    "source": "packages/shared/src/shortcuts.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/screen-layout-preview.ts",
+    "source": "src/windows/app/src/state/screen-layout-preview.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ViewSwitcher.css",
+    "source": "src/windows/app/src/items/ViewSwitcher.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ScreenLayoutMiniature.tsx",
+    "source": "src/windows/app/src/items/ScreenLayoutMiniature.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/hooks/useEdgeFades.ts",
+    "source": "src/windows/app/src/hooks/useEdgeFades.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/filepath.ts",
+    "source": "packages/shared/src/filepath.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/pane-caret.ts",
+    "source": "src/windows/app/src/items/pane-caret.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/PaneSkeleton.tsx",
+    "source": "src/windows/app/src/items/PaneSkeleton.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/hooks/useIsNarrow.ts",
+    "source": "src/windows/app/src/hooks/useIsNarrow.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/ErrorBoundary.tsx",
+    "source": "src/windows/app/src/ErrorBoundary.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/FileItem.tsx",
+    "source": "src/windows/app/src/items/FileItem.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ArtifactItem.tsx",
+    "source": "src/windows/app/src/items/ArtifactItem.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/TerminalHeaderIcon.tsx",
+    "source": "src/windows/app/src/items/TerminalHeaderIcon.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/FileTreeItem.tsx",
+    "source": "src/windows/app/src/items/FileTreeItem.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/EmptyState.tsx",
+    "source": "src/windows/app/src/items/EmptyState.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/EmptyQuickActions.tsx",
+    "source": "src/windows/app/src/items/EmptyQuickActions.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/EmptyQuickActions.css",
+    "source": "src/windows/app/src/items/EmptyQuickActions.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/filetree/FileTreeHost.tsx",
+    "source": "src/windows/app/src/filetree/FileTreeHost.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/FileTreeItem.css",
+    "source": "src/windows/app/src/items/FileTreeItem.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/components/TreeView/TreeView.css",
+    "source": "packages/components/src/TreeView/TreeView.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/filetree/FileTreeHost.css",
+    "source": "src/windows/app/src/filetree/FileTreeHost.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/filetree/active-host.ts",
+    "source": "src/windows/app/src/filetree/active-host.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/nav-selection.ts",
+    "source": "src/windows/app/src/sidebar/nav-selection.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/nav-status.ts",
+    "source": "src/windows/app/src/sidebar/nav-status.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/TerminalHeaderIcon.css",
+    "source": "src/windows/app/src/items/TerminalHeaderIcon.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ArtifactLoading.tsx",
+    "source": "src/windows/app/src/items/ArtifactLoading.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/file-item-logic.ts",
+    "source": "src/windows/app/src/items/file-item-logic.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ArtifactItem.css",
+    "source": "src/windows/app/src/items/ArtifactItem.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/PaneNotice.tsx",
+    "source": "src/windows/app/src/items/PaneNotice.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ArtifactLoading.css",
+    "source": "src/windows/app/src/items/ArtifactLoading.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/viewer-item.ts",
+    "source": "packages/shared/src/viewer-item.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/browser-image.ts",
+    "source": "packages/shared/src/browser-image.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/cube-file-url.ts",
+    "source": "packages/shared/src/cube-file-url.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/extract-cover-image.ts",
+    "source": "packages/shared/src/extract-cover-image.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/FileItem.css",
+    "source": "src/windows/app/src/items/FileItem.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/sidebar/sidebar-order.test.ts",
+    "source": "src/windows/app/src/sidebar/sidebar-order.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/rail-slot.test.ts",
+    "source": "src/windows/app/src/items/rail-slot.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/apps/AppViewport.tsx",
+    "source": "src/windows/app/src/desktop/apps/AppViewport.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/apps/AppDesktop.tsx",
+    "source": "src/windows/app/src/desktop/apps/AppDesktop.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/SettingsModal.tsx",
+    "source": "src/windows/app/src/overlays/SettingsModal.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/hooks/useViewportHeightVar.ts",
+    "source": "src/windows/app/src/hooks/useViewportHeightVar.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/hooks/useTooltips.ts",
+    "source": "src/windows/app/src/hooks/useTooltips.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/file-events.ts",
+    "source": "src/windows/app/src/state/file-events.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/workspace-persistence.ts",
+    "source": "src/windows/app/src/workspace-persistence.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/narrow-history.ts",
+    "source": "src/windows/app/src/state/narrow-history.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/state/unload-guard.ts",
+    "source": "src/windows/app/src/state/unload-guard.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/shortcuts.ts",
+    "source": "src/windows/app/src/shortcuts.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/filetree/tree-pane-lifecycle.ts",
+    "source": "src/windows/app/src/filetree/tree-pane-lifecycle.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/SettingsModal.css",
+    "source": "src/windows/app/src/overlays/SettingsModal.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/settings/rows.tsx",
+    "source": "src/windows/app/src/overlays/settings/rows.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/settings/AppearancePane.tsx",
+    "source": "src/windows/app/src/overlays/settings/AppearancePane.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/settings/HotkeysPane.tsx",
+    "source": "src/windows/app/src/overlays/settings/HotkeysPane.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/settings/AgentsPane.tsx",
+    "source": "src/windows/app/src/overlays/settings/AgentsPane.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/overlays/settings/rows.css",
+    "source": "src/windows/app/src/overlays/settings/rows.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/attention/AttentionObserver.tsx",
+    "source": "src/windows/app/src/attention/AttentionObserver.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileHome.tsx",
+    "source": "src/windows/app/src/mobile/MobileHome.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileItemHeader.tsx",
+    "source": "src/windows/app/src/mobile/MobileItemHeader.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileKeyBar.tsx",
+    "source": "src/windows/app/src/mobile/MobileKeyBar.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/add-repo.ts",
+    "source": "src/windows/app/src/desktop/add-repo.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/desktop/apps/AppDesktop.css",
+    "source": "src/windows/app/src/desktop/apps/AppDesktop.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileKeyBar.css",
+    "source": "src/windows/app/src/mobile/MobileKeyBar.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/key-bar-keys.ts",
+    "source": "src/windows/app/src/mobile/key-bar-keys.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/press-repeat.ts",
+    "source": "src/windows/app/src/mobile/press-repeat.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileAttachments.tsx",
+    "source": "src/windows/app/src/mobile/MobileAttachments.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileItemHeader.css",
+    "source": "src/windows/app/src/mobile/MobileItemHeader.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/mobile/MobileHome.css",
+    "source": "src/windows/app/src/mobile/MobileHome.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/ViewSwitcher.test.tsx",
+    "source": "src/windows/app/src/items/ViewSwitcher.test.tsx",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/App.css",
+    "source": "src/windows/app/src/App.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/items/pane-chrome.css",
+    "source": "src/windows/app/src/items/pane-chrome.css",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/context-menu/ContextMenu.ts",
+    "source": "src/windows/web/shim/context-menu/ContextMenu.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/context-menu/ContextMenu.test.ts",
+    "source": "src/windows/web/shim/context-menu/ContextMenu.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/prefs.ts",
+    "source": "src/windows/web/shim/prefs.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/prefs.test.ts",
+    "source": "src/windows/web/shim/prefs.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/workspace.ts",
+    "source": "src/windows/web/shim/workspace.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/workspace.test.ts",
+    "source": "src/windows/web/shim/workspace.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/storage.ts",
+    "source": "src/windows/web/shim/storage.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/renderer/services/browser-shortcuts.ts",
+    "source": "src/windows/web/shim/desktop.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/tree.ts",
+    "source": "src/main/cubed/tree.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/filter.ts",
+    "source": "src/main/cubed/filter.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/scoped-path.ts",
+    "source": "src/main/cubed/scoped-path.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/exec.ts",
+    "source": "src/main/cubed/exec.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github.ts",
+    "source": "src/main/cubed/github.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github-auth.ts",
+    "source": "src/main/cubed/github-auth.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/repo-publish.ts",
+    "source": "src/main/cubed/repo-publish.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktrees.ts",
+    "source": "src/main/cubed/worktrees.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/managed-paths.ts",
+    "source": "src/main/cubed/managed-paths.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/tree.test.ts",
+    "source": "src/main/cubed/tree.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github.test.ts",
+    "source": "src/main/cubed/github.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/github-auth.test.ts",
+    "source": "src/main/cubed/github-auth.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/repo-publish.test.ts",
+    "source": "src/main/cubed/repo-publish.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktrees.test.ts",
+    "source": "src/main/cubed/worktrees.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/file-patterns.ts",
+    "source": "packages/shared/src/file-patterns.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/binary-sample.ts",
+    "source": "packages/shared/src/binary-sample.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/clones.ts",
+    "source": "src/main/cubed/clones.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/file-downloads.ts",
+    "source": "src/main/cubed/file-downloads.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/file-downloads.test.ts",
+    "source": "src/main/cubed/file-downloads.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/import-service.ts",
+    "source": "src/main/import-service.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/import-service.test.ts",
+    "source": "src/main/import-service.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/postlight-parser.d.ts",
+    "source": "src/main/postlight-parser.d.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/remote-target.ts",
+    "source": "packages/router/src/remote-target.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/harness.ts",
+    "source": "packages/router/src/harness.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/terminal-target.ts",
+    "source": "src/main/terminal-target.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/head-watch.ts",
+    "source": "src/main/cubed/head-watch.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/head-watch.test.ts",
+    "source": "src/main/cubed/head-watch.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktree-watch.ts",
+    "source": "src/main/cubed/worktree-watch.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktree-watch.test.ts",
+    "source": "src/main/cubed/worktree-watch.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/worktree-config.ts",
+    "source": "packages/shared/src/worktree-config.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/agent-discovery.ts",
+    "source": "src/main/cubed/agent-discovery.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/agent-discovery.test.ts",
+    "source": "src/main/cubed/agent-discovery.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/claude-registry.ts",
+    "source": "src/main/cubed/claude-registry.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/claude-registry.test.ts",
+    "source": "src/main/cubed/claude-registry.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-locks.ts",
+    "source": "src/main/cubed/codex-locks.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-locks.test.ts",
+    "source": "src/main/cubed/codex-locks.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-thread-root.ts",
+    "source": "src/main/cubed/codex-thread-root.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-thread-root.test.ts",
+    "source": "src/main/cubed/codex-thread-root.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/import-name.ts",
+    "source": "src/main/cubed/files.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/local-files.ts",
+    "source": "src/main/files.ts",
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
   }
 ]

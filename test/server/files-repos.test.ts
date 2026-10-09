@@ -54,6 +54,16 @@ test('repositories, worktrees, conflict-aware saves and sandboxed previews use t
     assert.equal((await fetch(base + preview.url.replace('demo.html', 'escape.txt'))).status, 403);
     assert.equal((await fetch(base + preview.url.replace('demo.html', '.git/config'))).status, 403);
     assert.equal((await fetch(base + '/preview/unknown/demo.html')).status, 404);
+    // Native PDF viewers cannot run inside a CSP sandbox. Only an explicit
+    // non-tree PDF capability gets fixed, nonsniffable document delivery.
+    await writeFile(join(repoPath,'report.pdf'),'%PDF-1.4\n');
+    const document=await call('previews.file',{path:join(repoPath,'report.pdf')});
+    const pdfResponse=await fetch(base+document.url);
+    assert.equal(pdfResponse.headers.get('content-type'),'application/pdf');
+    assert.equal(pdfResponse.headers.get('x-content-type-options'),'nosniff');
+    assert.doesNotMatch(pdfResponse.headers.get('content-security-policy')??'',/sandbox/);
+    const nestedPdf=await fetch(base+preview.url.replace('demo.html','report.pdf'));
+    assert.match(nestedPdf.headers.get('content-security-policy')??'',/sandbox/);
     await call('repos.remove', { id: repo.id });
     assert.equal(await readFile(file, 'utf8'), 'saved');
     const folder = join(root, 'plain directory'); await mkdir(folder);

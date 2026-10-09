@@ -1,0 +1,4 @@
+.terminal-header-icon { position: relative; display: inline-flex; align-items: center; justify-content: center; flex: none; width: 16px; height: 18px; color: var(--muted-foreground); }
+.terminal-header-icon.agent-claude { color: var(--agent-claude); }
+.terminal-header-icon.agent-codex { color: var(--agent-codex); }
+.terminal-header-icon.agent-opencode { color: var(--agent-opencode); }
