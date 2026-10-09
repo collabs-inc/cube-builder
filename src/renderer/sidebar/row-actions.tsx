@@ -284,7 +284,7 @@ function itemMenuItems(
   return [
     ...(openHere ? [{ id: "open-here", label: "Open here" }] : []),
     ...(item?.type === "artifact" ? [{ id: "open-in-browser", label: "Open in browser" }] : []),
-    ...(item && canCopyArtifactUrl(item, services.desktop.capabilities.localRepos)
+    ...(item && canCopyArtifactUrl(item, services.desktop.capabilities.revealInFinder)
       ? [{ id: "copy-url", label: "Copy URL" }] : []),
     { id: "rename", label: "Rename" },
     // An artifact exists while it is valid (its file exists, its port

@@ -46,7 +46,7 @@ describe("panedItemIds", () => {
 
 describe("paneTitle", () => {
   test("personas use their name or Persona, never their context-folder path", () => {
-    const persona = item({ id: "persona", type: "agent", role: "persona", harness: "codex", cwd: "/Users/test/.cube/personas/uuid" });
+    const persona = item({ id: "persona", type: "agent", role: "persona", harness: "codex", cwd: "/home/test/.cube/personas/uuid" });
     expect(paneTitle(persona)).toBe("Persona");
     expect(paneTitle({ ...persona, agentTitle: "Release planning" })).toBe("Release planning");
     expect(paneTitle({ ...persona, agentTitle: "Release planning", userTitle: "My helper" })).toBe("My helper");

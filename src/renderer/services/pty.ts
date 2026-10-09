@@ -49,8 +49,9 @@ export function createPtyService(connection:BuilderConnection,create:(options:Pt
    else if(streams.has(item.sessionId))void drain(item.sessionId);
   }
  });
- const meta=(item:TerminalItem)=>({shell:item.command,cwd:item.cwd,createdAt:item.createdAt,displayName:item.title,target:item.harness??item.command,cwdHostPath:item.cwd,agentSessionId:item.agentSessionId});
+ const meta=(item:TerminalItem)=>({shell:item.command,cwd:item.cwd,createdAt:item.createdAt,displayName:item.title,target:item.harness??'shell',cwdHostPath:item.cwd,agentSessionId:item.agentSessionId});
  return {
+  async stopAll(){await connection.api.call('terminals.stopAll',{});await connection.refresh()},
   create,
   write(id,data){void connection.api.call('terminals.write',{id:row(id).id,bytes:bytesToBase64(new TextEncoder().encode(data))}).catch(error=>console.error('[terminal] input failed',error))},
   async resize(id,cols,rows){await connection.api.call('terminals.resize',{id:row(id).id,cols,rows})},
@@ -62,7 +63,7 @@ export function createPtyService(connection:BuilderConnection,create:(options:Pt
     await connection.api.call('terminals.resize',{id:item.id,cols,rows});
     const reply=await connection.api.call('terminals.read',{id:item.id,since:options?.sinceSeq??0,maxBytes:options?.maxBytes});
     s.cursor=Math.max(s.cursor,reply.seq);
-    return {sessionId:id,shell:item.command,displayName:item.title,target:item.harness??item.command,command:item.command,cwdHostPath:item.cwd,
+    return {sessionId:id,shell:item.command,displayName:item.title,target:item.harness??'shell',command:item.command,cwdHostPath:item.cwd,
      seq:reply.seq,scrollback:(reply.reset||!options?.sinceSeq?reply.modes:'')+new TextDecoder().decode(decode(reply.data)),scrollbackStart:reply.start,reset:reply.reset,exited:reply.exited,...(reply.exitCode!==null?{exitCode:reply.exitCode}:{})};
    });
   },

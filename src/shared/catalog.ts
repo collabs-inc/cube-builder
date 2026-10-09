@@ -27,7 +27,7 @@ export function projectCatalog(snapshot: BuilderSnapshot): CatalogDocument {
   const owner = family.filter(r => {const root=r.root.replaceAll('\\','/').replace(/\/$/,'');return path===root||path.startsWith(root+'/');}).sort((a,b)=>b.root.length-a.root.length)[0];
   const base = {id:item.id,repoId:owner?.id ?? item.repoId ?? undefined,createdAt:item.createdAt,cwd:item.cwd,
    userTitle:item.userTitle,agentTitle:item.agentTitle,updatedAt:item.updatedAt};
-  if(item.type === 'term') return {...base,type:'term',ptySessionId:item.sessionId,target:item.harness ?? item.command,
+  if(item.type === 'term') return {...base,type:'term',ptySessionId:item.sessionId,target:item.harness ?? 'shell',
    agentSessionId:item.agentSessionId,workingDir:item.cwd,
    agentActivity:item.attention==='working'?'running':item.attention==='waiting'?'blocked':undefined,
    turnEndedAt:item.turnEndedAt,turnEndedLaunchId:item.sessionId,

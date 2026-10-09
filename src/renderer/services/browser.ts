@@ -1,7 +1,7 @@
 import type { Services, PtyCreateOptions, PtySession } from './types';
 import type { PersistableWorkspaceState } from '../state/workspace';
 import { services as http } from '../../web/services/http';
-import { BuilderConnection, Signal } from './connection';
+import { BuilderConnection } from './connection';
 import { createCatalogService, requireInstallation } from './catalog';
 import { createRepoServices } from './repos';
 import { createFilesService } from './files';
@@ -11,7 +11,6 @@ import { createPrefsApi } from './prefs';
 import { createWorkspaceApi } from './workspace';
 import { configureDrafts } from './drafts';
 import { chooseFolder } from '../overlays/FolderPicker';
-import type { SiteFrameOutcome } from '@port/shared/site';
 
 export async function createBrowserServices():Promise<Services & {dispose():void}> {
  const connection=new BuilderConnection(http);
@@ -28,7 +27,6 @@ export async function createBrowserServices():Promise<Services & {dispose():void
   return {sessionId:item.sessionId,shell:item.command,command:item.command,args:item.args,displayName:item.title,target:item.harness??'shell',cwdHostPath:item.cwd,seq:0,resumed:item.resumed};
  }
  const pty=createPtyService(connection,launch),files=createFilesService(connection);
- const sitesChanged=new Signal<[]>(),siteFrames=new Signal<[SiteFrameOutcome]>();
  const backend:Services & {dispose():void}={
   log:line=>console.info('[builder]',line),
   computer:{localInfo:()=>http.call('computer.info',{})},
@@ -43,8 +41,7 @@ export async function createBrowserServices():Promise<Services & {dispose():void
    if(!item)throw new Error('Artifact no longer exists');
    const {url}=await http.call('previews.create',{itemId:item.id});return new URL(url+'?theme='+args.theme,location.href).href;
   }},
-  sites:{async url(machineId){requireInstallation(machineId);throw new Error('Site preview transport is not connected yet')},onChanged:sitesChanged.on,onFrameOutcome:siteFrames.on},
-  dispose(){desktop.dispose();files.dispose();pty.dispose();connection.dispose();sitesChanged.clear();siteFrames.clear()}
+  dispose(){desktop.dispose();files.dispose();pty.dispose();connection.dispose()}
  };
  return backend;
 }

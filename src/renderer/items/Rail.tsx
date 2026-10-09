@@ -1067,7 +1067,7 @@ export function Rail({ visible: workspaceVisible = true }: { visible?: boolean }
                 event.preventDefault();
                 const selected = await services.desktop.showContextMenu([
                   { id: "open-in-browser", label: "Open in browser" },
-                  ...(canCopyArtifactUrl(item, services.desktop.capabilities.localRepos) ? [{ id: "copy-url", label: "Copy URL" }] : []),
+                  ...(canCopyArtifactUrl(item, services.desktop.capabilities.revealInFinder) ? [{ id: "copy-url", label: "Copy URL" }] : []),
                   { id: "hide-artifact", label: "Hide artifact" },
                 ]);
                 if (selected === "hide-artifact") hidePane(itemId);

@@ -4,6 +4,7 @@ import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
 import { resolveCommand } from './agents.js';
 import { Attention } from './attention.js';
+import { AgentSessions } from './agent-sessions.js';
 import { injectAttentionArgs } from './attention/hooks.js';
 import { EventEmitter } from 'node:events';
 import { basename } from 'node:path';
@@ -17,9 +18,12 @@ import { text, integer } from './validation.js';
 
 export class Terminals extends EventEmitter {
   private attention: Attention;
+  private agentSessions: AgentSessions;
   private launching = new Map<string, Promise<TerminalItem>>();
   constructor(private registry: Registry, private worker: WorkerClient) {
-    super(); this.attention = new Attention(registry, error => this.emit('failure', error)); worker.on('event', this.onEvent);
+    super(); this.attention = new Attention(registry, error => this.emit('failure', error));
+    this.agentSessions=new AgentSessions(registry,()=>worker.list());
+    worker.on('event', this.onEvent);
   }
   private onEvent = (event: TerminalEvent) => {
     const item = this.registry.snapshot().items.find(i => i.type === 'term' && i.sessionId === event.id);
@@ -99,5 +103,5 @@ export class Terminals extends EventEmitter {
   resize(params: { id: string; cols: number; rows: number }) { const row = this.item(params.id); if (!row.exited) return this.worker.resize(row.sessionId, params.cols, params.rows); }
   async close(id: string) { const row = this.item(id); try { await this.worker.forget(row.sessionId); } catch (error) { if (!(error instanceof BuilderError) || error.code !== 'session-missing') throw error; } this.attention.exited(id); await this.registry.mutate(null, draft => { draft.items = draft.items.filter(i => i.id !== id); }); }
   async stopAll() { await this.worker.stopAll(); await this.reconcile(); }
-  dispose() { this.worker.off('event', this.onEvent); this.attention.dispose(); }
+  dispose() { this.worker.off('event', this.onEvent); this.attention.dispose(); this.agentSessions.close(); }
 }

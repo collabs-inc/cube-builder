@@ -1838,5 +1838,70 @@
     "file": "src/server/ported/terminal-target.ts",
     "source": "src/main/terminal-target.ts",
     "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/head-watch.ts",
+    "source": "src/main/cubed/head-watch.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/head-watch.test.ts",
+    "source": "src/main/cubed/head-watch.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktree-watch.ts",
+    "source": "src/main/cubed/worktree-watch.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/worktree-watch.test.ts",
+    "source": "src/main/cubed/worktree-watch.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/port-shared/worktree-config.ts",
+    "source": "packages/shared/src/worktree-config.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/agent-discovery.ts",
+    "source": "src/main/cubed/agent-discovery.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/agent-discovery.test.ts",
+    "source": "src/main/cubed/agent-discovery.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/claude-registry.ts",
+    "source": "src/main/cubed/claude-registry.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/claude-registry.test.ts",
+    "source": "src/main/cubed/claude-registry.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-locks.ts",
+    "source": "src/main/cubed/codex-locks.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-locks.test.ts",
+    "source": "src/main/cubed/codex-locks.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-thread-root.ts",
+    "source": "src/main/cubed/codex-thread-root.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
+  },
+  {
+    "file": "src/server/ported/codex-thread-root.test.ts",
+    "source": "src/main/cubed/codex-thread-root.test.ts",
+    "revision": "600e05f2294df5c71026b723915306a74c8cfd3a"
   }
 ]

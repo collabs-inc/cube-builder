@@ -2,7 +2,8 @@ import { git } from './git.js';
 import { integer } from './validation.js';
 import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { mkdir } from 'node:fs/promises';
+import { mkdir, readFile, realpath } from 'node:fs/promises';
+import { parseWorktreeConfig, WORKTREE_CONFIG_PATH } from '../port-shared/worktree-config.js';
 import { Registry } from './registry.js';
 import { Repos, isWithin } from './repos.js';
 import { Terminals } from './terminals.js';
@@ -26,6 +27,7 @@ export class WorkspaceRepos {
  constructor(private registry:Registry,private repos:Repos,private terminals:Terminals){
   this.worktrees=new CubedWorktrees(undefined,join(registry.stateDir,'worktrees'));
   this.clones=new CubedClones({reposDir:join(registry.snapshot().capabilities.home,'repos')});
+  for(const repo of registry.snapshot().repos)for(const tree of repo.worktrees)if(tree.creation?.state==='pending')this.startCreation(repo.id,tree.id);
  }
  checkout(id:string){const row=projectCatalog(this.registry.snapshot()).repos.find(r=>r.id===id);if(!row)throw new BuilderError('repo-missing','Repository no longer exists');return row}
  async create(args:CreateRepoArgs){
@@ -57,7 +59,14 @@ export class WorkspaceRepos {
   try {
    await mkdir(join(tree.root,'..'),{recursive:true});
    const source=tree.source??{from:'branch'};
-   await this.worktrees.add({repoPath:parent.root,path:tree.root,branch:tree.createdOnBranch!,source:source.from==='new'||source.from==='issue'?{from:source.from,baseBranch:tree.baseBranch!}:source.from==='pr'?{from:'pr',number:source.number}:{from:'branch'}},mayWrite);
+   const checkoutPath=await realpath(tree.root).catch(()=>tree.root);
+   const existing=(await this.worktrees.checkouts({repoPath:parent.root})).checkouts.some(checkout=>checkout.path===checkoutPath&&!checkout.missing);
+   if(!existing)await this.worktrees.add({repoPath:parent.root,path:tree.root,branch:tree.createdOnBranch!,source:source.from==='new'||source.from==='issue'?{from:source.from,baseBranch:tree.baseBranch!}:source.from==='pr'?{from:'pr',number:source.number}:{from:'branch'}},mayWrite);
+   const config=await readFile(join(parent.root,WORKTREE_CONFIG_PATH),'utf8').then(parseWorktreeConfig,()=>null);
+   if(config?.copy.length){
+    const {failures}=await this.worktrees.copyFiles({repoPath:parent.root,path:tree.root,entries:config.copy},mayWrite);
+    for(const failure of failures)console.warn(`[worktrees] couldn't copy ${failure.entry}: ${failure.error}`);
+   }
    await this.repos.refresh(parentId);
    await this.registry.mutate(null,d=>{const row=d.repos.find(r=>r.id===parentId)?.worktrees.find(t=>t.id===id);if(row)delete row.creation});
   } catch(error) {

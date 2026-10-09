@@ -151,6 +151,7 @@ export type PtyExitCallback = (payload: PtyExitPayload) => void;
 export type PtyStatusCallback = (payload: PtyStatusPayload) => void;
 
 export interface PtyService {
+  stopAll(): Promise<void>;
   stashFile(sessionId: string, bytes: string, mime: string, name?: string): Promise<{ path: string }>;
   create(opts: PtyCreateOptions): Promise<PtySession>;
   write(sessionId: string, data: string): void;
@@ -595,22 +596,11 @@ export interface DesktopService {
   };
 }
 
-// -- sites (detected localhost dev servers shown as artifacts) --------------
-
-export interface SitesService {
-  /** Desktop: the loopback URL a site tile or browser opens. Web: rejects with SITE_NEEDS_DESKTOP. */
-  url(machineId: string, site: import("@port/shared/site").SiteLocator): Promise<string>;
-  /** Forwarding mappings changed or recovered; re-resolve site URLs. */
-  onChanged(cb: () => void): Unsubscribe;
-  onFrameOutcome(cb: (outcome: import("@port/shared/site").SiteFrameOutcome) => void): Unsubscribe;
-}
-
 export interface Services {
   log(line: string): void;
   artifacts: { artifactUrl(machineId: string, args: import("@port/shared/artifact").ArtifactUrlArgs): Promise<string> };
   /** The Computer page's view of THIS host — see ComputerService. */
   computer: ComputerService;
-  sites: SitesService;
   pty: PtyService;
   files: FilesService;
   repos: ReposService;

@@ -1,4 +1,5 @@
 import { projectCatalog } from '../../shared/catalog';
+import { LOCAL_MACHINE_ID } from '@port/shared/types';
 import type { BuilderConnection } from './connection';
 import { requireInstallation } from './catalog';
 import type { ReposService, WorktreesService } from './types';
@@ -10,10 +11,10 @@ export function createRepoServices(connection:BuilderConnection,openFolder:()=>P
   async publish(machineId,args){requireInstallation(machineId);const result=await connection.api.call('workspaceRepos.publish',args);await connection.refresh();return result},
   async add(){const path=await openFolder();if(!path)return null;const row=await connection.api.call('repos.add',{path});await connection.refresh();return {repo:projectCatalog(connection.snapshot).repos.find(r=>r.id===row.id)!}},
   async remove(id,operationId){const result=await connection.api.call('workspaceRepos.detach',{id,operationId});await connection.refresh();return result},
-  async statusSnapshot(){return Object.fromEntries(projectCatalog(connection.snapshot).repos.map(r=>[r.id,{status:'open' as const}]))},
+  async statusSnapshot(){return Object.fromEntries([LOCAL_MACHINE_ID,...projectCatalog(connection.snapshot).repos.map(r=>r.id)].map(id=>[id,{status:'open' as const}]))},
   onStatus(cb){
    const changed=connection.changed.on(snapshot=>{for(const repo of projectCatalog(snapshot).repos)cb({repoId:repo.id,status:'open'})});
-   const connected=connection.connected.on(ready=>{for(const repo of projectCatalog(connection.snapshot).repos)cb({repoId:repo.id,status:ready?'open':'connecting'})});
+   const connected=connection.connected.on(ready=>{for(const repoId of [LOCAL_MACHINE_ID,...projectCatalog(connection.snapshot).repos.map(r=>r.id)])cb({repoId,status:ready?'open':'connecting'})});
    return ()=>{changed();connected()};
   }
  };

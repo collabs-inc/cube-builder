@@ -16,6 +16,7 @@ import { Repos } from './repos.js';
 import { Files } from './files.js';
 import { Previews } from './previews.js';
 import { Watches } from './watches.js';
+import { RepoObservers } from './repo-observers.js';
 
 const MIME: Record<string, string> = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.mjs': 'text/javascript', '.css': 'text/css', '.svg': 'image/svg+xml', '.png': 'image/png', '.woff2': 'font/woff2', '.json': 'application/json' };
 export function json(res: ServerResponse, status: number, value: unknown): void {
@@ -42,6 +43,8 @@ export async function startServer(options: { port: number; stateDir: string; web
   await terminals.reconcile();
   const repos = new Repos(registry), files = new Files(registry), previews = new Previews(registry);
   const downloads = new FileDownloads();
+  const repoObservers = new RepoObservers(registry,repos,message=>broadcast(sockets,{type:'error',message}));
+  await repoObservers.start();
   const watches = new Watches(registry, files);
   watches.on('changed', paths => broadcast(sockets, { type: 'files', paths }));
   watches.on('failure', error => broadcast(sockets, { type: 'error', message: errorPayload(error).message }));
@@ -94,7 +97,7 @@ export async function startServer(options: { port: number; stateDir: string; web
       for (const ws of sockets.clients) ws.terminate();
       await new Promise<void>(resolve => sockets.close(() => resolve()));
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-      await downloads.close(); watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
+      await repoObservers.close(); await downloads.close(); watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
     },
   };
 }

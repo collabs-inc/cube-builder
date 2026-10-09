@@ -15,6 +15,7 @@ import { availableAgentTargets } from "../../items/agent/available-agents";
 import { runCommandInFreshTerminal } from "../../items/run-command-in-terminal";
 import { closePanel } from "../../state/desktop";
 import { RadioRow, SettingAction, SettingGroup } from "./rows";
+import { confirmDialog } from '../ConfirmDialog';
 
 /** The Cmd+N accelerator, written the way HotkeysPane writes shortcuts. */
 function newAgentShortcut(): string {
@@ -108,6 +109,16 @@ export default function AgentsPane({ visible = true }: { visible?: boolean } = {
             </div>
           ))}
         </div>
+      </SettingGroup>
+      <SettingGroup label="Running sessions">
+        <p className="setting-note">Terminals and agents keep running when you close, reload, or update Builder. Stop them here before shutting down their work.</p>
+        <SettingAction onClick={()=>{void confirmDialog({
+          message:'Stop all Builder sessions?',
+          detail:'This stops every terminal and agent launched by this Builder installation. Other apps and sessions are unaffected.',
+          buttons:['Cancel','Stop all sessions'],
+          onConfirm:()=>services.pty.stopAll(),
+          pendingMessage:'Stopping sessions…',
+        })}}>Stop all sessions</SettingAction>
       </SettingGroup>
     </div>
   );
