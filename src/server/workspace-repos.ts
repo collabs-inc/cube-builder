@@ -1,6 +1,6 @@
 import { git } from './git.js';
 import { integer } from './validation.js';
-import { join } from 'node:path';
+import { join, basename } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { mkdir, readFile, realpath } from 'node:fs/promises';
 import { parseWorktreeConfig, WORKTREE_CONFIG_PATH } from '../port-shared/worktree-config.js';
@@ -12,7 +12,7 @@ import { CubedWorktrees } from './ported/worktrees.js';
 import { CubedGithub } from './ported/github.js';
 import { CubedRepoPublisher } from './ported/repo-publish.js';
 import { projectCatalog } from '../shared/catalog.js';
-import { slugifyBranch, issueBranchName } from '../port-shared/worktree-naming.js';
+import { slugifyBranch, issueBranchName, freeWorktreePath } from '../port-shared/worktree-naming.js';
 import type { CreateRepoArgs, PublishRepoArgs } from '../port-shared/repo-create.js';
 import type { WorktreeCreate } from '../shared/catalog.js';
 import { BuilderError } from '../shared/errors.js';
@@ -43,10 +43,10 @@ export class WorkspaceRepos {
   const branch=source.from==='branch'||source.from==='pr'?args.name:source.from==='issue'?issueBranchName(source.number,args.name):slugifyBranch(args.name);
   if(source.from==='pr'||source.from==='issue')integer(source.number,'issue or pull request number',1,Number.MAX_SAFE_INTEGER);
   await git(parent.root,['check-ref-format','--branch',branch]);
-  const id=randomUUID(),path=join(this.worktrees.worktreesDir,parent.id,id,slugifyBranch(args.name).replaceAll('/','-'));
+  const id=randomUUID();
   let baseBranch=args.baseBranch;
   if(source.from==='new'||source.from==='issue')baseBranch??=(await this.worktrees.repoInfo({repoPath:parent.root})).defaultBranch??'main';
-  await this.registry.mutate(null,d=>{const row=d.repos.find(r=>r.id===parent.id);if(!row)throw new Error('Repository removed');row.worktrees.push({id,root:path,name:args.name,branch:null,main:false,createdOnBranch:branch,source,baseBranch,createdAt:new Date().toISOString(),creation:{state:'pending'}})});
+  await this.registry.mutate(null,d=>{const row=d.repos.find(r=>r.id===parent.id);if(!row)throw new Error('Repository removed');const path=freeWorktreePath(this.worktrees.worktreesDir,basename(parent.root),slugifyBranch(branch),d.repos.flatMap(r=>r.worktrees.map(w=>w.root)));row.worktrees.push({id,root:path,name:args.name,branch:null,main:false,createdOnBranch:branch,source,baseBranch,createdAt:new Date().toISOString(),creation:{state:'pending'}})});
   this.startCreation(parent.id,id);return {id};
  }
  private startCreation(parentId:string,id:string){

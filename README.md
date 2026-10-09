@@ -40,7 +40,7 @@ when you install the app there.
 
 ## Use your workspace
 
-Choose **Open folder** to register a directory. You can create or clone a Git
+Choose **Add Repo → Add existing repo** to register a directory. You can create or clone a Git
 repository, create worktrees, browse and upload files, edit Markdown or source,
 and open image, PDF, and HTML previews. Removing a repository registration keeps
 its files on disk. Removing a worktree checks for uncommitted work and live
@@ -51,10 +51,11 @@ and sign in to those CLIs on the same machine before launching them. Builder use
 per-launch attention hooks and never rewrites your global agent configuration.
 Resume is an explicit agent action; opening Builder never resumes agents for you.
 
-Layouts and display preferences are specific to each browser. Repositories,
+Layouts, unsaved drafts, and display preferences are specific to each browser. Repositories,
 files, and terminals are shared by browsers connected to the same installation.
 HTML previews run in opaque sandboxed frames and cannot call Builder's control
-API. Conflicting file edits keep your draft available to download or reload.
+API. Conflicting file edits preserve your draft: choose **Copy draft** to keep its
+text or **Reload from disk** to discard it in favor of the current file.
 
 ## Terminal lifetime and data
 
@@ -63,8 +64,8 @@ app keeps its terminal processes running. The terminal worker and its native
 runtime live outside the replaceable app checkout. Reopening Builder reconnects
 to those sessions. A machine reboot ends processes; it does not relaunch them.
 
-**Close terminal** ends that terminal. **Settings → Stop all terminals** ends all
-Builder terminals. Stop terminals before uninstalling if you want them to end:
+**Close terminal** ends that terminal. **Settings → Agents → Stop all sessions**
+ends all Builder terminals. Stop terminals before uninstalling if you want them to end:
 uninstalling the HTTP app leaves running worker sessions alive. You can reinstall
 with the same state directory to reconnect and stop them.
 
@@ -94,7 +95,8 @@ npm test
 node scripts/check-public.mjs
 ```
 
-The browser acceptance runner uses `cube-browser` locally and Playwright in CI. It creates disposable
+The browser acceptance runner uses `cube-browser` locally and Playwright in CI.
+It creates disposable
 repositories and state, drives real terminals and editors, and tests sandboxed
 previews. Run it after building:
 
@@ -102,10 +104,18 @@ previews. Run it after building:
 node --import tsx test/browser/run.ts
 ```
 
-Linux was exercised locally with real PTYs, browser interaction, and Cube's
-install/update/uninstall lifecycle. The host fixture is maintained in Cube's
-own test suite. The CI matrix also targets macOS; a configured CI job
-is not a claim that a macOS run has passed.
+The tests exercise real PTYs, the original sidebar and pane workflows, draft
+recovery, Git worktrees, and terminal survival across server restarts. Cube's
+Electron process isolation and stalled-app recovery belong to its host test
+suite; running Builder in an iframe alone does not establish process isolation.
+The CI matrix targets Linux and macOS.
+
+The frontend is a direct port of Cube Builder at revision
+`600e05f2294df5c71026b723915306a74c8cfd3a`: its components, styles, layout
+operations, and workspace stores run inside this app. The service adapters use
+Builder's own HTTP and WebSocket backend. Cube launcher, account, cloud-machine,
+and host-settings features remain outside this app. HTML file previews are
+supported; Cube's dev-server discovery and port-forwarding UI are host features.
 
 Adapted source files are listed in `scripts/extraction-manifest.json`. See
 [NOTICE.md](NOTICE.md) for third-party notices and [LICENSE](LICENSE) for the

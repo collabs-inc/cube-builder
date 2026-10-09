@@ -26,6 +26,7 @@ test('original worktree operations retain sidebar identity through creation, ref
   const row=service.checkout(created.id);
   assert.equal(row.worktreeOf?.creation,undefined,JSON.stringify(row));
   assert.equal(row.head?.branch,'feature');
+  assert.equal(row.root,join(dir,'state','worktrees','repo','feature'));
   assert.equal(await readFile(join(row.root,'.env'),'utf8'),'PORT=4321');
   await registry.mutate(null,d=>{d.repos[0]!.worktrees.find(w=>w.id===created.id)!.creation={state:'pending'}});
   const restarted=new WorkspaceRepos(registry,repos,{close(){throw Error('No sessions in fixture')}} as unknown as Terminals);

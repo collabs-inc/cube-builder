@@ -39,7 +39,7 @@ export function createMethods(registry: Registry, terminals: Terminals, repos: R
     'workspaceWorktrees.retry': async p => {await workspaceRepos.retry(p.id);return null},
     'workspaceWorktrees.remove': async p => {await workspaceRepos.removeWorktree(p.id,p.force);return null},
     'workspaceWorktrees.inspect': p => workspaceRepos.worktrees.inspect({path:workspaceRepos.checkout(p.id).root}),
-    'workspaceWorktrees.info': p => workspaceRepos.worktrees.repoInfo({repoPath:workspaceRepos.checkout(p.id).root}),
+    'workspaceWorktrees.info': async p => ({...await workspaceRepos.worktrees.repoInfo({repoPath:workspaceRepos.checkout(p.id).root}),worktreesDir:workspaceRepos.worktrees.worktreesDir}),
     'workspaceWorktrees.branches': p => workspaceRepos.worktrees.branches({repoPath:workspaceRepos.checkout(p.id).root}),
     'workspaceWorktrees.prs': p => workspaceRepos.github.listPrs({repoPath:workspaceRepos.checkout(p.id).root}),
     'workspaceWorktrees.issues': p => workspaceRepos.github.listIssues({repoPath:workspaceRepos.checkout(p.id).root}),

@@ -50,22 +50,6 @@ const RAIL: { kind: SourceKind; label: string }[] = [
 ];
 
 /**
- * The daemon's managed worktrees root is `$HOME/.cube/worktrees` (cubed's
- * `worktreesDir` — src/main/cubed/server.ts). The renderer cannot know that
- * HOME (a cloud repo's daemon has a different one), so the preview shows the
- * tilde form and maps sibling rows' absolute paths into the same root, which
- * is what makes the `-2` collision suffix comparable at all.
- */
-const MANAGED_ROOT = "~/.cube/worktrees";
-const MANAGED_ROOT_MARKER = "/.cube/worktrees/";
-
-function underManagedRoot(absPath: string): string {
-  const at = absPath.indexOf(MANAGED_ROOT_MARKER);
-  if (at === -1) return absPath;
-  return `${MANAGED_ROOT}/${absPath.slice(at + MANAGED_ROOT_MARKER.length)}`;
-}
-
-/**
  * Where the worktree will land. The daemon builds the directory under
  * `basename(parent.root)` and slugs the branch first (WorktreeCreation.create),
  * so a PR branch like `dependabot/npm_and_yarn/x` previews as the path it will
@@ -73,16 +57,16 @@ function underManagedRoot(absPath: string): string {
  * renderer-visible root, so its name — the bare repo name it was cloned as —
  * stands in for the basename.
  */
-function previewPathFor(parent: RepoInfo, branch: string, siblings: RepoInfo[]): string {
+function previewPathFor(root: string | null, parent: RepoInfo, branch: string, siblings: RepoInfo[]): string {
+  if(!root)return "Loading…";
   if (!branch) return "";
   const repoSlug = parent.path
     ? (parent.path.split("/").filter(Boolean).pop() ?? parent.name)
     : parent.name;
   const taken = siblings
     .map((w) => w.path)
-    .filter((p): p is string => Boolean(p))
-    .map(underManagedRoot);
-  return freeWorktreePath(MANAGED_ROOT, repoSlug, slugifyBranch(branch), taken);
+    .filter((p): p is string => Boolean(p));
+  return freeWorktreePath(root, repoSlug, slugifyBranch(branch), taken);
 }
 
 /**
@@ -97,12 +81,14 @@ function useRepoInfo(
   machineId: string | null,
   parentId: string,
   setState: Dispatch<SetStateAction<DialogState>>,
-): boolean {
+): {hasGithubRemote:boolean;worktreesDir:string|null} {
+  const [worktreesDir,setWorktreesDir]=useState<string|null>(null);
   const [hasGithubRemote, setHasGithubRemote] = useState(ASSUME_GITHUB_REMOTE);
 
   useEffect(() => {
     if (!open) return;
     setHasGithubRemote(ASSUME_GITHUB_REMOTE);
+    setWorktreesDir(null);
   }, [open, parentId]);
 
   useEffect(() => {
@@ -113,6 +99,7 @@ function useRepoInfo(
       .then((info) => {
         if (cancelled) return;
         setHasGithubRemote(info.hasGithubRemote);
+        setWorktreesDir(info.worktreesDir??null);
         if (!info.hasGithubRemote) {
           setState((s) => (s.source === "pr" || s.source === "issue" ? selectSource(s, "new") : s));
         }
@@ -127,7 +114,7 @@ function useRepoInfo(
     };
   }, [open, machineId, parentId, setState]);
 
-  return hasGithubRemote;
+  return {hasGithubRemote,worktreesDir};
 }
 
 interface DialogForm {
@@ -253,7 +240,7 @@ export default function NewWorktreeModal({ open, onClose, parent, machineId }: P
   const [pending, setPending] = useState(false);
   const nameInputRef = useRef<HTMLInputElement>(null);
 
-  const hasGithubRemote = useRepoInfo(open, machineId, parentId, setState);
+  const {hasGithubRemote,worktreesDir} = useRepoInfo(open, machineId, parentId, setState);
   const { siblings, checkedOutBy } = useCheckedOutRows(repos, parentId);
   const lists = useSourceLists({ open, source: state.source, machineId, parentId, checkedOutBy });
 
@@ -328,7 +315,7 @@ export default function NewWorktreeModal({ open, onClose, parent, machineId }: P
             onQueryChange={setQuery}
             onOpenExisting={openExisting}
             collision={collision}
-            previewPath={previewPathFor(parent, branch, siblings)}
+            previewPath={previewPathFor(worktreesDir, parent, branch, siblings)}
             nameInputRef={nameInputRef}
           />
         </div>

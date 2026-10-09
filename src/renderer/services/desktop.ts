@@ -12,7 +12,7 @@ export function createDesktopService(connection:BuilderConnection,openFolder:()=
  const files=new Signal<[string|null]>(),folders=new Signal<[string]>(),terminals=new Signal<[string,LaunchChoice?]>();
  const shortcuts=new Signal<[string]>(),settings=new Signal<['open'|'close',string|null]>(),drag=new Signal<[boolean]>(),agents=new Signal<[AgentActivityEvent]>();
  const menu=createContextMenuController(document,platform);
- let settingsOpen=false,paths:string[]=[],theme='system';
+ let settingsOpen=false,paths:string[]=[],theme='dark';
  const media=window.matchMedia('(prefers-color-scheme: dark)');
  const applyTheme=()=>{const dark=isDarkMode(theme,media.matches);document.documentElement.classList.toggle('dark',dark);document.documentElement.style.colorScheme=dark?'dark':'light'};
  const setSettings=(open:boolean,pane:string|null=null)=>{settingsOpen=open;settings.emit(open?'open':'close',pane)};
@@ -26,7 +26,7 @@ export function createDesktopService(connection:BuilderConnection,openFolder:()=
  };
  window.addEventListener('keydown',keydown,true);media.addEventListener('change',applyTheme);
  const queryTheme=new URLSearchParams(location.search).get('theme');
- void prefs.getPref('theme').then(value=>{theme=queryTheme??(typeof value==='string'?value:'system');applyTheme()});
+ void prefs.getPref('theme').then(value=>{theme=queryTheme??(typeof value==='string'?value:'dark');applyTheme()});
  return {
   capabilities:{localRepos:true,images:true,nativeMenus:false,updater:false,revealInFinder:false,folderPicker:true},
   getPlatform:()=>platform,getConfig:prefs.getConfig,getAppVersion:prefs.getAppVersion,getDeviceId:prefs.getDeviceId,

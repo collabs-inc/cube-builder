@@ -33,7 +33,7 @@ export class Terminals extends EventEmitter {
     this.emit('event', { ...event, id: item.id });
     if (event.type === 'exit') void this.registry.mutate(null, draft => {
       const row = draft.items.find(i => i.id === item.id);
-      if (row?.type === 'term') { row.exited = true; row.exitCode = event.exitCode; row.updatedAt = new Date().toISOString(); }
+      if (row?.type === 'term' && row.sessionId === event.id) { row.exited = true; row.exitCode = event.exitCode; row.updatedAt = new Date().toISOString(); }
     }).catch(error => this.emit('failure', error));
   };
   async reconcile() {

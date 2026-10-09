@@ -112,3 +112,20 @@ test('crash recovery of a replacement preserves the item order, title and creati
   await terminals.reconcile();assert.equal(registry.snapshot().items.length,2);
  } finally {await worker.stopAll();terminals.dispose();await registry.flush();worker.disconnect();await rm(stateDir,{recursive:true,force:true,maxRetries:5,retryDelay:50})}
 });
+
+test('an exit queued behind a replacement cannot mark the new terminal exited',async()=>{
+ const {EventEmitter}=await import('node:events');
+ const dir=await mkdtemp(join(tmpdir(),'builder-exit-race-'));
+ const registry=await Registry.open(dir);
+ const worker=Object.assign(new EventEmitter(),{list:async()=>[]});
+ await registry.mutate(null,d=>{d.items.push({id:'tile',type:'term',repoId:null,cwd:dir,title:'Shell',createdAt:'',updatedAt:'',sessionId:'old',requestId:'original',command:'/bin/sh',args:[],exited:false,exitCode:null});});
+ const terminals=new Terminals(registry,worker as unknown as import('../../src/server/worker-client.js').WorkerClient);
+ try {
+  const replacement=registry.mutate(null,d=>{const row=d.items[0]!;if(row.type==='term')row.sessionId='replacement';});
+  worker.emit('event',{type:'exit',id:'old',exitCode:7});
+  await replacement;await registry.flush();
+  const row=registry.snapshot().items[0]!;
+  assert.equal(row.type==='term'&&row.sessionId,'replacement');
+  assert.equal(row.type==='term'&&row.exited,false);
+ } finally {terminals.dispose();await registry.flush();await rm(dir,{recursive:true,force:true});}
+});

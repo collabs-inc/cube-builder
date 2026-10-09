@@ -405,6 +405,7 @@ export interface WorktreeInspectResult {
 }
 
 export interface WorktreeRepoInfo {
+  worktreesDir?: string;
   hasGithubRemote: boolean;
   /** Short name, e.g. "main". Null when it cannot be determined. */
   defaultBranch: string | null;

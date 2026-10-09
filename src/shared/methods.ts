@@ -14,7 +14,7 @@ export interface MethodMap {
   'workspaceWorktrees.retry': {params:{id:string};result:null};
   'workspaceWorktrees.remove': {params:{id:string;force?:boolean};result:null};
   'workspaceWorktrees.inspect': {params:{id:string};result:import('../server/ported/worktrees.js').WorktreeInspect};
-  'workspaceWorktrees.info': {params:{id:string};result:{hasGithubRemote:boolean;defaultBranch:string|null}};
+  'workspaceWorktrees.info': {params:{id:string};result:{hasGithubRemote:boolean;defaultBranch:string|null;worktreesDir:string}};
   'workspaceWorktrees.branches': {params:{id:string};result:{branches:{name:string;remote:boolean}[]}};
   'workspaceWorktrees.prs': {params:{id:string};result:{prs:import('../server/ported/github.js').GithubPr[]}};
   'workspaceWorktrees.issues': {params:{id:string};result:{issues:import('../server/ported/github.js').GithubIssue[]}};
