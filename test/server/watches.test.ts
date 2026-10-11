@@ -41,7 +41,7 @@ test('excluded trees consume no recursive watches; source edits and new director
   watches.on('changed', (paths: string[]) => paths.forEach(path => changed.add(path)));
   try {
     await new Promise(resolve => setTimeout(resolve, 300));
-    assert.ok(await watchCount() - before < 20, 'ignored directories must be pruned before allocating watches');
+    assert.ok(await watchCount() > before && await watchCount() - before < 20, 'ignored directories must be pruned before allocating watches');
     const source = join(root, 'src', 'code.ts');
     await writeFile(source, 'first'); await until(() => changed.has(source));
     changed.clear(); await writeFile(source, 'second'); await until(() => changed.has(source));
@@ -65,7 +65,7 @@ test('opening a standalone file does not recursively watch its siblings', { skip
   const before = await watchCount(); const watches = new Watches(registry, files);
   try {
     await new Promise(resolve => setTimeout(resolve, 300));
-    assert.ok(await watchCount() - before < 10, 'standalone file parent watch must be shallow');
+    assert.ok(await watchCount() > before && await watchCount() - before < 10, 'standalone file parent watch must be shallow');
   } finally { await watches.close(); await registry.flush(); await rm(temp, { recursive: true, force: true }); }
 });
 
@@ -99,6 +99,11 @@ test('watch setup prunes excluded directories before requesting native subscript
     assert.deepEqual(recursive, [], 'native recursive watches cannot prune excluded trees');
     await until(() => allocated.includes(join(root, 'src')));
     assert.equal(allocated.some(path => /node_modules|\.git/.test(path)), false);
+    const outside = join(temp, 'outside'); await mkdir(outside);
+    for (let i = 0; i < 30; i++) await writeFile(join(outside, `sibling-${i}.txt`), 'unrelated');
+    await files.open(join(outside, 'sibling-0.txt'));
+    await until(() => allocated.includes(outside));
+    assert.deepEqual(allocated.filter(path => path.startsWith(outside)), [outside], 'standalone files need only one parent watch');
   } finally { await watches.close(); await registry.flush(); await rm(temp, { recursive: true, force: true }); }
   assert.equal(active, 0, 'shutdown must release every subscription');
 });
