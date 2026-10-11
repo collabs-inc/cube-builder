@@ -1,7 +1,7 @@
 import { syncBuiltinESMExports } from 'node:module';
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, readdir, readFile, rm, symlink } from 'node:fs/promises';
+import { mkdtemp, mkdir, writeFile, readdir, readFile, rm, symlink, realpath } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { Registry } from '../../src/server/registry.js';
@@ -25,7 +25,7 @@ async function until(check: () => boolean | Promise<boolean>) {
 }
 
 test('excluded trees consume no recursive watches; source edits and new directories stay live', { skip: process.platform !== 'linux' }, async () => {
-  const temp = await mkdtemp(join(tmpdir(), 'builder-watch-budget-'));
+  const temp = await realpath(await mkdtemp(join(tmpdir(), 'builder-watch-budget-')));
   const root = join(temp, 'repo');
   const registry = await Registry.open(join(temp, 'state'));
   const files = new Files(registry);
@@ -57,7 +57,7 @@ test('excluded trees consume no recursive watches; source edits and new director
 });
 
 test('opening a standalone file does not recursively watch its siblings', { skip: process.platform !== 'linux' }, async () => {
-  const temp = await mkdtemp(join(tmpdir(), 'builder-file-watch-budget-'));
+  const temp = await realpath(await mkdtemp(join(tmpdir(), 'builder-file-watch-budget-')));
   const registry = await Registry.open(join(temp, 'state')); const files = new Files(registry);
   for (let i = 0; i < 30; i++) await mkdir(join(temp, 'unrelated', `dir-${i}`), { recursive: true });
   for (let i = 0; i < 30; i++) await writeFile(join(temp, `sibling-${i}.txt`), 'unrelated');
@@ -85,7 +85,7 @@ test('watch setup prunes excluded directories before requesting native subscript
   });
   syncBuiltinESMExports();
   t.after(() => { t.mock.restoreAll(); syncBuiltinESMExports(); });
-  const temp = await mkdtemp(join(tmpdir(), 'builder-watch-traversal-'));
+  const temp = await realpath(await mkdtemp(join(tmpdir(), 'builder-watch-traversal-')));
   const root = join(temp, 'repo');
   await mkdir(join(root, 'node_modules', 'nested'), { recursive: true });
   await mkdir(join(root, '.git', 'objects'), { recursive: true });
