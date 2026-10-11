@@ -1,12 +1,24 @@
-import { watch, type FSWatcher } from 'node:fs';
+import { watch, type FSWatcher } from 'chokidar';
+import { watch as watchParent, type FSWatcher as NativeWatcher } from 'node:fs';
 import { readdir, stat } from 'node:fs/promises';
-import { join, dirname, extname } from 'node:path';
+import { join, dirname, extname, relative } from 'node:path';
 import { EventEmitter } from 'node:events';
 import { Registry } from './registry.js';
 import { Files } from './files.js';
 
+const EXCLUDED = new Set(['.git', 'node_modules', 'bower_components', 'dist', 'build', 'out', '.next', '.cache', '.venv', 'venv', 'site-packages', '__pycache__', '.builder-save']);
+
+export function watchFailure(error: unknown, root: string): Error {
+  if ((error as NodeJS.ErrnoException)?.code === 'ENOSPC') {
+    return new Error(`Builder cannot watch ${root}: Linux inotify watch capacity is exhausted (not disk space). Reduce watched repositories or ask the machine administrator to raise fs.inotify.max_user_watches to at least 524288. Open files still refresh by polling.`, { cause: error });
+  }
+  return error instanceof Error ? error : new Error(String(error));
+}
+
 export class Watches extends EventEmitter {
-  private watchers = new Map<string, FSWatcher>();
+  private watchers = new Map<string, FSWatcher | NativeWatcher>();
+  private modes = new Map<string, boolean>();
+  private closing = new Set<Promise<void>>();
   private paths = new Set<string>();
   private timer?: ReturnType<typeof setTimeout>;
   private closed = false;
@@ -17,23 +29,66 @@ export class Watches extends EventEmitter {
   private sync = () => {
     if (this.closed) return;
     const snapshot = this.registry.snapshot();
-    const roots = new Set(snapshot.repos.flatMap(r => [r.root, ...r.worktrees.map(w => w.root)]));
-    // Watch only an opened file's parent when it is outside a registered repo.
-    for (const item of snapshot.items) if (item.type !== 'term' && ![...roots].some(root => item.filePath.startsWith(root + '/'))) roots.add(dirname(item.filePath));
-    for (const [root, watcher] of this.watchers) if (!roots.has(root)) { watcher.close(); this.watchers.delete(root); }
-    for (const root of roots) if (!this.watchers.has(root)) {
-      try {
-        const watcher = watch(root, { recursive: true }, (_event, name) => {
-          if (!name || name.split(/[\\/]/).some(part => ['.git', 'node_modules', '.builder-save'].includes(part) || part.startsWith('.builder-save-'))) return;
-          this.paths.add(join(root, name));
-          clearTimeout(this.timer); this.timer = setTimeout(() => { void this.flush(); }, 150);
-        });
-        watcher.on('error', error => this.emit('failure', error));
-        this.watchers.set(root, watcher);
-        if (snapshot.repos.some(r => r.root === root || r.worktrees.some(w => w.root === root))) void this.discover(root).catch(error => this.emit('failure', error));
-      } catch (error) { queueMicrotask(() => this.emit('failure', error)); }
+    const repoRoots = new Set(snapshot.repos.flatMap(r => [r.root, ...r.worktrees.map(w => w.root)]));
+    const roots = new Map([...repoRoots].map(root => [root, true]));
+    // Standalone files need only their immediate parent, never its descendants.
+    for (const item of snapshot.items) if (item.type !== 'term' && ![...repoRoots].some(root => item.filePath.startsWith(root + '/'))) {
+      if (!roots.has(dirname(item.filePath))) roots.set(dirname(item.filePath), false);
+    }
+    for (const [root, watcher] of this.watchers) if (!roots.has(root) || roots.get(root) !== this.modes.get(root)) {
+      this.release(watcher); this.watchers.delete(root); this.modes.delete(root);
+    }
+    for (const [root, recursive] of roots) if (!this.watchers.has(root)) {
+      if (!recursive) {
+        try {
+          const watcher = watchParent(root, (_event, name) => {
+            if (name && !String(name).startsWith('.builder-save')) this.changed(join(root, String(name)));
+          });
+          watcher.on('error', error => {
+            watcher.close();
+            if (this.watchers.get(root) === watcher) { this.watchers.delete(root); this.modes.delete(root); }
+            if (!this.closed) this.emit('failure', watchFailure(error, root));
+          });
+          this.watchers.set(root, watcher); this.modes.set(root, false);
+          console.info(`Builder watch: root=${root} recursive=false directories=1`);
+        } catch (error) { queueMicrotask(() => { if (!this.closed) this.emit('failure', watchFailure(error, root)); }); }
+        continue;
+      }
+      const watcher = watch(root, {
+        // Filtering happens during traversal, before native watches are allocated.
+        ignored: path => relative(root, path).split(/[\\/]/).some(part => EXCLUDED.has(part) || part.startsWith('.builder-save-')),
+        followSymlinks: false,
+        ignoreInitial: false,
+      });
+      let reported = false;
+      watcher.on('error', error => {
+        // A failed crawl can report thousands of ENOSPC errors, one per entry.
+        if (!reported && !this.closed) { reported = true; this.emit('failure', watchFailure(error, root)); }
+      });
+      watcher.on('all', (_event, path) => {
+        if (this.closed || this.watchers.get(root) !== watcher) return;
+        this.changed(path);
+      });
+      watcher.on('ready', () => {
+        if (this.closed || this.watchers.get(root) !== watcher) return;
+        const directories = Object.keys(watcher.getWatched()).length;
+        console.info(`Builder watch: root=${root} recursive=${recursive} directories=${directories}`);
+      });
+      this.watchers.set(root, watcher); this.modes.set(root, recursive);
+      if (recursive) void this.discover(root).catch(error => { if (!this.closed) this.emit('failure', error); });
     }
   };
+  private changed(path: string) {
+    if (this.closed) return;
+    this.paths.add(path);
+    clearTimeout(this.timer); this.timer = setTimeout(() => { void this.flush(); }, 150);
+  }
+  private release(watcher: FSWatcher | NativeWatcher) {
+    const closing = Promise.resolve(watcher.close());
+    this.closing.add(closing);
+    void closing.finally(() => this.closing.delete(closing));
+  }
+
   private async pollOpened() {
     if (this.closed || this.polling) return; this.polling = true;
     try {
@@ -63,5 +118,5 @@ export class Watches extends EventEmitter {
       }
     }
   }
-  close() { this.closed = true; clearInterval(this.pollTimer); clearTimeout(this.timer); this.registry.off('changed', this.sync); for (const watcher of this.watchers.values()) watcher.close(); this.watchers.clear(); }
+  async close() { this.closed = true; clearInterval(this.pollTimer); clearTimeout(this.timer); this.registry.off('changed', this.sync); for (const watcher of this.watchers.values()) this.release(watcher); this.watchers.clear(); this.modes.clear(); this.paths.clear(); await Promise.all(this.closing); }
 }

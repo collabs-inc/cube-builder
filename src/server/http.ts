@@ -97,7 +97,7 @@ export async function startServer(options: { port: number; stateDir: string; web
       for (const ws of sockets.clients) ws.terminate();
       await new Promise<void>(resolve => sockets.close(() => resolve()));
       await new Promise<void>((resolve, reject) => server.close(error => error ? reject(error) : resolve()));
-      await repoObservers.close(); await downloads.close(); watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
+      await repoObservers.close(); await downloads.close(); await watches.close(); terminals.dispose(); await registry.flush(); worker.disconnect();
     },
   };
 }
